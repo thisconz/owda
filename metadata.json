@@ -1,0 +1,6 @@
+{
+  "name": "owda",
+  "description": "A high-performance chemistry engine for symbolic reasoning, reaction solving, and molecular visualization.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["chemistry_solver", "molecular_visualization", "ai_reasoning"]
+}
