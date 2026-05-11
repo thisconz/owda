@@ -43,8 +43,8 @@ export const SideBar: React.FC<SideBarProps> = ({ activeTab, setActiveTab, openS
         </motion.div>
         
         <div className="mt-6 flex flex-col items-center gap-1">
-           <span className="text-[10px] font-black tracking-[0.4em] uppercase text-owda-snow/90 leading-none">Zenthar</span>
-           <span className="text-[7px] font-mono text-owda-teal/50 tracking-[0.2em]">CORE_INTERFACE_V2</span>
+           <span className="text-[10px] font-black tracking-[0.4em] uppercase text-owda-snow/90 leading-none">OWDA</span>
+           <span className="text-[7px] font-mono text-owda-teal/50 tracking-[0.2em]">CORE_INTERFACE_{process.env.V}</span>
         </div>
       </div>
 

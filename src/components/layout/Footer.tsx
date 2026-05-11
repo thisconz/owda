@@ -37,7 +37,7 @@ export const Footer = () => {
             <span className={`transition-colors duration-300 ${isProcessing ? 'text-owda-teal font-bold' : 'text-owda-snow/60'}`}>
               {isProcessing ? 'NODE_COMPUTE::SOLVING' : 'SYSTEM_IDLE'}
             </span>
-            <span className="text-[7px] text-owda-gray/50 uppercase tracking-widest font-bold">Kernel_v2.0</span>
+            <span className="text-[7px] text-owda-gray/50 uppercase tracking-widest font-bold">Kernel_{process.env.V}</span>
           </div>
         </div>
 
@@ -104,7 +104,7 @@ export const Footer = () => {
           </div>
           <div className="flex items-center gap-1.5 text-owda-gray/30">
             <Code2 className="w-3 h-3" />
-            <span className="text-[8px]">ZENTHAR_OS v2.4.1</span>
+            <span className="text-[8px]">OWDA.OS {process.env.V}</span>
           </div>
         </div>
 

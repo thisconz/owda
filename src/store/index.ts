@@ -1,13 +1,33 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { EngineState, ChemicalReaction, ReactionError } from '../types';
+import {
+  EngineState,
+  ChemicalReaction,
+  ReactionError,
+  ExplanationStep,
+  ReactionHistoryEntry,
+} from '../types';
 
-/**
- * OWDA Store Version 3.0
- * Features: Persistence, Computed State, and Atomic Resets
- */
+// ─── Settings ────────────────────────────────────────────────────────────────
+
+export interface SolverSettings {
+  enableAI: boolean;
+  enforceStoichiometry: boolean;
+  syncDelay: number;
+  theme: 'dark' | 'terminal';
+}
+
+const DEFAULT_SETTINGS: SolverSettings = {
+  enableAI: true,
+  enforceStoichiometry: true,
+  syncDelay: 0,
+  theme: 'dark',
+};
+
+// ─── Store Interface ──────────────────────────────────────────────────────────
+
 interface OWDAStore extends EngineState {
-  // Atomic Actions
+  settings: SolverSettings;
   actions: {
     setInputExpression: (expr: string) => void;
     setReaction: (reaction: ChemicalReaction | undefined) => void;
@@ -15,26 +35,36 @@ interface OWDAStore extends EngineState {
     setProcessing: (loading: boolean) => void;
     toggleViewMode: () => void;
     addToHistory: (expr: string) => void;
+    setSteps: (steps: ExplanationStep[]) => void;
+    appendReactionLog: (entry: ReactionHistoryEntry) => void;
     setError: (error: ReactionError | undefined) => void;
     clearError: () => void;
     resetWorkspace: () => void;
+    updateSettings: (patch: Partial<SolverSettings>) => void;
   };
 }
+
+// ─── Initial State ────────────────────────────────────────────────────────────
 
 const initialState: EngineState = {
   inputExpression: '',
   currentReaction: undefined,
+  currentSteps: [],
   activationEnergy: undefined,
   history: [],
+  reactionLog: [],
   isProcessing: false,
   viewMode: '3d',
   error: undefined,
 };
 
+// ─── Store ───────────────────────────────────────────────────────────────────
+
 export const useOWDAStore = create<OWDAStore>()(
   persist(
     (set) => ({
       ...initialState,
+      settings: DEFAULT_SETTINGS,
 
       actions: {
         setInputExpression: (inputExpression) => set({ inputExpression }),
@@ -42,7 +72,6 @@ export const useOWDAStore = create<OWDAStore>()(
         setReaction: (currentReaction) =>
           set((state) => ({
             currentReaction,
-            // Side effect: only clear error if a valid reaction is provided
             error: currentReaction ? undefined : state.error,
             isProcessing: false,
           })),
@@ -59,39 +88,51 @@ export const useOWDAStore = create<OWDAStore>()(
         addToHistory: (expr) =>
           set((state) => {
             if (!expr || state.history[0] === expr) return state;
-            return {
-              history: [expr, ...state.history].slice(0, 50),
-            };
+            return { history: [expr, ...state.history].slice(0, 50) };
           }),
+
+        setSteps: (currentSteps) => set({ currentSteps }),
+
+        appendReactionLog: (entry) =>
+          set((state) => ({
+            reactionLog: [entry, ...state.reactionLog].slice(0, 100),
+          })),
 
         setError: (error) => set({ error, isProcessing: false }),
 
         clearError: () => set({ error: undefined }),
 
-        resetWorkspace: () => set({ ...initialState, history: [] }),
+        resetWorkspace: () =>
+          set({ ...initialState, history: [], reactionLog: [] }),
+
+        updateSettings: (patch) =>
+          set((state) => ({ settings: { ...state.settings, ...patch } })),
       },
     }),
     {
-      name: 'owda-synthesis-storage',
+      name: 'owda-synthesis-storage-v4',
       storage: createJSONStorage(() => localStorage),
-      // Only persist history and viewMode, keep engine state volatile
-      partialize: (state) => ({ 
-        history: state.history, 
-        viewMode: state.viewMode 
+      partialize: (state) => ({
+        history: state.history,
+        viewMode: state.viewMode,
+        reactionLog: state.reactionLog,
+        settings: state.settings,
       }),
     }
   )
 );
 
-/**
- * Custom Selectors (Performance Optimization)
- * Prevents unnecessary re-renders of the WorkspacePage
- */
+// ─── Selectors ───────────────────────────────────────────────────────────────
+
 export const useOWDAActions = () => useOWDAStore((state) => state.actions);
 export const useCurrentReaction = () => useOWDAStore((state) => state.currentReaction);
-export const useIsExothermic = () => useOWDAStore((state) => {
-  if (state.currentReaction?.isBalanced) {
-    return state.currentReaction.enthalpy < 0;
-  }
-  return undefined;
-});
+export const useCurrentSteps = () => useOWDAStore((state) => state.currentSteps);
+export const useSolverSettings = () => useOWDAStore((state) => state.settings);
+
+export const useIsExothermic = () =>
+  useOWDAStore((state) => {
+    const r = state.currentReaction;
+    if (r && r.isBalanced) return r.enthalpy < 0;
+    return undefined;
+  });
+  
