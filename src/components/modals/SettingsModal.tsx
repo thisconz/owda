@@ -15,7 +15,12 @@ import {
   Sliders,
   CheckCircle2,
 } from 'lucide-react';
-import { useOWDAStore, useSolverSettings } from '../../store';
+import {
+  useOWDAStore,
+  useSolverSettings,
+  AI_MODELS,
+  AIModelType,
+} from '../../store';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -160,7 +165,62 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   </span>
                 </header>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+                  {/* AI Model Selector */}
+                  <div className="p-4 border-2 border-[#1A1A1A] bg-[#EAE8E4] shadow-[4px_4px_0px_#1A1A1A] space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black text-[#1A1A1A] uppercase tracking-widest flex items-center gap-2">
+                        <Bot className="w-3 h-3 text-[#1A1A1A]" />
+                        AI Model
+                      </span>
+
+                      <span className="text-[10px] px-2 py-1 border-2 border-[#1A1A1A] bg-[#D4FF00] font-black uppercase">
+                        {settings.AIModel}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-2">
+                      {AI_MODELS.map((model) => {
+                        const active =
+                          settings.AIModel === model.id;
+
+                        return (
+                          <button
+                            key={model.id}
+                            onClick={() =>
+                              updateSettings({
+                                AIModel:
+                                  model.id as AIModelType,
+                              })
+                            }
+                            className={`p-3 border-2 border-[#1A1A1A] text-left transition-all shadow-[2px_2px_0px_#1A1A1A]
+                            ${
+                              active
+                                ? 'bg-[#D4FF00]'
+                                : 'bg-white hover:bg-[#EAE8E4]'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <div className="text-[10px] font-black uppercase tracking-wider">
+                                  {model.label}
+                                </div>
+
+                                <div className="text-[10px] font-mono mt-1">
+                                  {model.provider}
+                                </div>
+                              </div>
+
+                              {active && (
+                                <CheckCircle2 className="w-4 h-4" />
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  
                   {/* AI Toggle Card */}
                   <div className="p-4 border-2 border-[#1A1A1A] bg-[#EAE8E4] shadow-[4px_4px_0px_#1A1A1A] space-y-3">
                     <div className="flex items-center justify-between">
