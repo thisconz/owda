@@ -37,28 +37,28 @@ const SystemToggle = ({
 }) => (
   <button
     onClick={onClick}
-    className="flex items-start justify-between w-full p-3 rounded-lg border border-white/5 bg-white/2 hover:bg-white/5 transition-all group text-left"
+    className="flex items-start justify-between w-full p-3 border-2 border-[#1A1A1A] bg-white shadow-[2px_2px_0px_#1A1A1A] hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_#1A1A1A] transition-all active:translate-y-0.5 active:shadow-none group text-left"
   >
-    <div className="flex flex-col">
-      <span className="text-[10px] font-mono uppercase tracking-wider text-owda-gray group-hover:text-owda-snow">
+    <div className="flex flex-col pr-4">
+      <span className="text-[10px] font-black uppercase tracking-wider text-[#1A1A1A]">
         {label}
       </span>
       {description && (
-        <span className="text-[8px] font-mono text-owda-gray/40 mt-0.5 leading-tight">
+        <span className="text-[10px] font-bold text-[#1A1A1A] mt-1 leading-tight">
           {description}
         </span>
       )}
     </div>
     <div
-      className={`w-8 h-4 rounded-full relative transition-colors shrink-0 mt-0.5 ${
-        active ? 'bg-owda-teal/40' : 'bg-white/10'
+      className={`w-10 h-6 border-2 border-[#1A1A1A] relative transition-colors shrink-0 ${
+        active ? 'bg-[#D4FF00]' : 'bg-[#EAE8E4]'
       }`}
     >
       <div
-        className={`absolute top-1 left-1 w-2 h-2 rounded-full transition-all ${
+        className={`absolute top-0.5 w-4 h-4 border-2 border-[#1A1A1A] bg-white transition-all ${
           active
-            ? 'translate-x-4 bg-owda-teal shadow-[0_0_8px_#56a099]'
-            : 'bg-owda-gray'
+            ? 'left-4'
+            : 'left-1'
         }`}
       />
     </div>
@@ -117,25 +117,24 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             role="dialog"
             aria-modal="true"
             aria-label="System Configuration"
-            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] max-w-2xl bg-[#050510] border border-owda-teal/30 rounded-xl shadow-[0_0_80px_rgba(0,0,0,0.8),inset_0_0_20px_rgba(86,160,153,0.05)] z-70 overflow-hidden flex flex-col"
+            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[95%] max-w-2xl bg-white border-4 border-[#1A1A1A] shadow-[8px_8px_0px_#1A1A1A] z-70 overflow-hidden flex flex-col"
           >
             {/* Grid background */}
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-size-[32px_32px] pointer-events-none opacity-20" />
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(26,26,26,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(26,26,26,0.05)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none opacity-50" />
 
             {/* Header */}
-            <div className="p-5 border-b border-owda-teal/10 flex items-center justify-between bg-linear-to-r from-white/3 to-transparent relative z-10">
+            <div className="p-5 border-b-4 border-[#1A1A1A] flex items-center justify-between bg-[#EAE8E4] relative z-10">
               <div className="flex items-center gap-4">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-owda-teal/20 blur-md rounded-full" />
-                  <Settings className="w-5 h-5 text-owda-teal relative animate-[spin_20s_linear_infinite]" />
+                <div className="relative border-2 border-[#1A1A1A] p-2 bg-white shadow-[2px_2px_0px_#1A1A1A]">
+                  <Settings className="w-5 h-5 text-[#1A1A1A] relative animate-[spin_20s_linear_infinite]" />
                 </div>
                 <div>
-                  <h2 className="text-xs font-black tracking-[0.3em] uppercase text-owda-snow leading-none">
+                  <h2 className="text-xs font-black tracking-[0.3em] uppercase text-[#1A1A1A] leading-none">
                     Root Configuration
                   </h2>
                   <div className="flex items-center gap-2 mt-1.5">
-                    <span className="w-1 h-1 bg-owda-teal rounded-full animate-pulse" />
-                    <code className="text-[9px] text-owda-teal/60 font-mono tracking-widest">
+                    <span className="w-2 h-2 border border-[#1A1A1A] bg-[#D4FF00] animate-pulse" />
+                    <code className="text-[10px] text-[#1A1A1A] font-mono font-black tracking-widest bg-white border border-[#1A1A1A] px-1">
                       VER_4.0.0_ALPHA
                     </code>
                   </div>
@@ -143,9 +142,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               </div>
               <button
                 onClick={onClose}
-                className="group p-2 rounded-lg transition-colors hover:bg-white/5"
+                className="group p-2 border-2 border-[#1A1A1A] bg-white transition-transform hover:bg-[#ff6b6b] hover:text-white active:translate-y-0.5 active:shadow-none shadow-[2px_2px_0px_#1A1A1A]"
               >
-                <X className="w-5 h-5 text-owda-gray group-hover:text-owda-snow transition-colors" />
+                <X className="w-5 h-5 text-[#1A1A1A] group-hover:text-white transition-colors" />
               </button>
             </div>
 
@@ -154,30 +153,30 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
               {/* Section: Inference Core */}
               <section className="space-y-4">
-                <header className="flex items-center gap-2 text-owda-teal opacity-80">
-                  <Cpu className="w-3.5 h-3.5" />
-                  <span className="text-[10px] font-bold uppercase tracking-[0.25em]">
+                <header className="flex items-center gap-2 text-[#1A1A1A] border-b-2 border-[#1A1A1A] pb-2">
+                  <Cpu className="w-4 h-4" />
+                  <span className="text-[10px] font-black uppercase tracking-[0.25em]">
                     Inference Core
                   </span>
                 </header>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* AI Toggle Card */}
-                  <div className="p-4 rounded-xl border border-white/5 bg-white/1 space-y-3">
+                  <div className="p-4 border-2 border-[#1A1A1A] bg-[#EAE8E4] shadow-[4px_4px_0px_#1A1A1A] space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold text-owda-snow uppercase tracking-widest flex items-center gap-2">
+                      <span className="text-[10px] font-black text-[#1A1A1A] uppercase tracking-widest flex items-center gap-2">
                         {settings.enableAI ? (
-                          <Bot className="w-3 h-3 text-emerald-400" />
+                          <Bot className="w-3 h-3 text-[#1A1A1A]" />
                         ) : (
-                          <BotOff className="w-3 h-3 text-owda-gray" />
+                          <BotOff className="w-3 h-3 text-[#1A1A1A]" />
                         )}
                         AI Analysis
                       </span>
                       <span
-                        className={`text-[8px] px-1.5 py-0.5 rounded font-mono border ${
+                        className={`text-[10px] px-2 py-0.5 font-mono font-black border-2 border-[#1A1A1A] ${
                           settings.enableAI
-                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                            : 'bg-white/5 text-owda-gray border-white/10'
+                            ? 'bg-[#D4FF00] text-[#1A1A1A]'
+                            : 'bg-white text-[#1A1A1A]'
                         }`}
                       >
                         {settings.enableAI ? 'ACTIVE' : 'DISABLED'}
@@ -192,16 +191,16 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   </div>
 
                   {/* Stoichiometry Mode Card */}
-                  <div className="p-4 rounded-xl border border-white/5 bg-white/1 space-y-3">
+                  <div className="p-4 border-2 border-[#1A1A1A] bg-[#EAE8E4] shadow-[4px_4px_0px_#1A1A1A] space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold text-owda-snow uppercase tracking-widest flex items-center gap-2">
-                        <Binary className="w-3 h-3 text-owda-blue" /> Reasoning
+                      <span className="text-[10px] font-black text-[#1A1A1A] uppercase tracking-widest flex items-center gap-2">
+                        <Binary className="w-3 h-3 text-[#1A1A1A]" /> Reasoning
                       </span>
                       <span
-                        className={`text-[8px] px-1.5 py-0.5 rounded font-mono border ${
+                        className={`text-[10px] px-2 py-0.5 font-mono font-black border-2 border-[#1A1A1A] ${
                           settings.enforceStoichiometry
-                            ? 'bg-owda-blue/10 text-owda-blue border-owda-blue/20'
-                            : 'bg-white/5 text-owda-gray border-white/10'
+                            ? 'bg-[#1A1A1A] text-white'
+                            : 'bg-white text-[#1A1A1A]'
                         }`}
                       >
                         {settings.enforceStoichiometry ? 'DETERMINISTIC' : 'HEURISTIC'}
@@ -221,18 +220,18 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
               {/* Section: Sync Delay */}
               <section className="space-y-4">
-                <header className="flex items-center gap-2 text-owda-teal/80">
-                  <Sliders className="w-3.5 h-3.5" />
-                  <span className="text-[10px] font-bold uppercase tracking-[0.25em]">
+                <header className="flex items-center gap-2 text-[#1A1A1A] border-b-2 border-[#1A1A1A] pb-2">
+                  <Sliders className="w-4 h-4" />
+                  <span className="text-[10px] font-black uppercase tracking-[0.25em]">
                     Performance
                   </span>
                 </header>
-                <div className="p-4 rounded-xl border border-white/5 bg-white/1 space-y-3">
+                <div className="p-4 border-2 border-[#1A1A1A] bg-white shadow-[4px_4px_0px_#1A1A1A] space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-bold text-owda-snow uppercase tracking-widest">
+                    <span className="text-[10px] font-black text-[#1A1A1A] uppercase tracking-widest">
                       API Sync Delay
                     </span>
-                    <span className="text-[9px] font-mono text-owda-teal">
+                    <span className="text-[10px] px-2 py-0.5 font-mono font-black border border-[#1A1A1A] bg-[#D4FF00] text-[#1A1A1A]">
                       {settings.syncDelay}ms
                     </span>
                   </div>
@@ -245,9 +244,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     onChange={(e) =>
                       updateSettings({ syncDelay: parseInt(e.target.value, 10) })
                     }
-                    className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-owda-teal"
+                    className="w-full h-2 bg-black border-2 border-[#1A1A1A] rounded-none appearance-none cursor-pointer accent-[#D4FF00]"
                   />
-                  <div className="flex justify-between text-[8px] font-mono text-owda-gray/40">
+                  <div className="flex justify-between text-[10px] font-mono font-bold text-[#1A1A1A]">
                     <span>0ms (instant)</span>
                     <span>3000ms</span>
                   </div>
@@ -256,36 +255,36 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
               {/* Section: Data Pipeline */}
               <section className="space-y-4">
-                <header className="flex items-center gap-2 text-owda-blue opacity-80">
-                  <Database className="w-3.5 h-3.5" />
-                  <span className="text-[10px] font-bold uppercase tracking-[0.25em]">
+                <header className="flex items-center gap-2 text-[#1A1A1A] border-b-2 border-[#1A1A1A] pb-2">
+                  <Database className="w-4 h-4" />
+                  <span className="text-[10px] font-black uppercase tracking-[0.25em]">
                     Data Pipeline
                   </span>
                 </header>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {[
                     { icon: Network,  label: 'Gemini AI Mirror',    status: settings.enableAI ? 'ACTIVE' : 'OFFLINE', ok: settings.enableAI },
                     { icon: Database, label: 'Local Stoich Cache',  status: '24.2 MB',  ok: true },
                   ].map((item, i) => (
                     <div
                       key={i}
-                      className="flex items-center justify-between p-3 rounded-lg border border-white/5 bg-white/1 group"
+                      className="flex items-center justify-between p-3 border-2 border-[#1A1A1A] bg-white shadow-[2px_2px_0px_#1A1A1A] group hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_#1A1A1A] transition-all"
                     >
                       <div className="flex items-center gap-3">
-                        <item.icon className="w-4 h-4 text-owda-gray group-hover:text-owda-snow transition-colors" />
-                        <span className="text-[10px] font-mono uppercase tracking-widest text-owda-snow/80">
+                        <item.icon className="w-5 h-5 text-[#1A1A1A]" />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-[#1A1A1A]">
                           {item.label}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Activity
                           className={`w-3 h-3 ${
-                            item.ok ? 'text-emerald-500 animate-pulse' : 'text-owda-gray'
+                            item.ok ? 'text-emerald-500 animate-pulse' : 'text-[#1A1A1A]'
                           }`}
                         />
                         <span
-                          className={`text-[9px] font-mono ${
-                            item.ok ? 'text-emerald-400' : 'text-owda-gray'
+                          className={`text-[10px] px-1 font-mono font-black border border-[#1A1A1A] ${
+                            item.ok ? 'text-[#1A1A1A] bg-[#D4FF00]' : 'text-white bg-[#1A1A1A]'
                           }`}
                         >
                           {item.status}
@@ -298,20 +297,20 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
               {/* Section: Danger Zone */}
               <section className="space-y-4">
-                <header className="flex items-center gap-2 text-red-400/70">
-                  <Power className="w-3.5 h-3.5" />
-                  <span className="text-[10px] font-bold uppercase tracking-[0.25em]">
+                <header className="flex items-center gap-2 text-[#1A1A1A] border-b-2 border-[#1A1A1A] pb-2">
+                  <Power className="w-4 h-4" />
+                  <span className="text-[10px] font-black uppercase tracking-[0.25em]">
                     Danger_Zone
                   </span>
                 </header>
-                <div className="p-4 rounded-xl border border-red-500/10 bg-red-500/3">
-                  <p className="text-[9px] font-mono text-owda-gray/60 mb-3">
-                    Purges all reaction history, logs, and resets settings to factory defaults.
-                    This action is irreversible.
+                <div className="p-5 border-2 border-[#1A1A1A] bg-[#ff6b6b] shadow-[4px_4px_0px_#1A1A1A]">
+                  <p className="text-[10px] font-black text-white mb-4">
+                    PURGES ALL REACTION HISTORY, LOGS, AND RESETS SETTINGS TO FACTORY DEFAULTS.
+                    THIS ACTION IS IRREVERSIBLE.
                   </p>
                   <button
                     onClick={handleFactoryReset}
-                    className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-red-400 border border-red-500/30 rounded-lg hover:bg-red-500/10 transition-all"
+                    className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-[#1A1A1A] bg-white border-2 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A] hover:bg-[#EAE8E4] transition-all active:translate-y-0.5 active:shadow-none"
                   >
                     Factory_Reset
                   </button>
@@ -320,31 +319,31 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t border-owda-teal/10 bg-white/2 flex flex-col sm:flex-row justify-between items-center gap-4 relative z-10">
-              <div className="flex items-center gap-2 text-owda-teal/40">
-                <Power className="w-3 h-3" />
-                <span className="text-[8px] uppercase font-mono tracking-tighter">
+            <div className="p-5 border-t-4 border-[#1A1A1A] bg-[#EAE8E4] flex flex-col sm:flex-row justify-between items-center gap-4 relative z-10">
+              <div className="flex items-center gap-2 text-[#1A1A1A]">
+                <Power className="w-4 h-4" />
+                <span className="text-[10px] uppercase font-black tracking-tighter">
                   Changes apply immediately to the store
                 </span>
               </div>
               <div className="flex gap-3 w-full sm:w-auto">
                 <button
                   onClick={onClose}
-                  className="flex-1 sm:flex-none px-5 py-2 text-[10px] uppercase font-bold tracking-widest text-owda-gray hover:text-owda-snow transition-colors"
+                  className="flex-1 sm:flex-none px-5 py-2 text-[10px] uppercase font-black tracking-widest text-[#1A1A1A] bg-white border-2 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A] hover:bg-[#EAE8E4] transition-all active:translate-y-0.5 active:shadow-none"
                 >
                   Close
                 </button>
                 <button
                   onClick={handleApply}
-                  className="flex-1 sm:flex-none px-8 py-2.5 bg-linear-to-r from-owda-teal to-owda-blue text-[#050510] text-[10px] font-black uppercase tracking-[0.2em] rounded hover:shadow-[0_0_20px_rgba(86,160,153,0.4)] transition-all active:scale-95 flex items-center justify-center gap-2"
+                  className="flex-1 sm:flex-none px-8 py-2.5 bg-[#D4FF00] border-2 border-[#1A1A1A] text-[#1A1A1A] text-[10px] font-black uppercase tracking-[0.2em] shadow-[4px_4px_0px_#1A1A1A] hover:bg-white transition-all active:translate-y-1 active:shadow-none flex items-center justify-center gap-2"
                 >
                   {saved ? (
                     <>
-                      <CheckCircle2 className="w-3 h-3" /> Saved!
+                      <CheckCircle2 className="w-4 h-4" /> Saved!
                     </>
                   ) : (
                     <>
-                      Apply Changes <ChevronRight className="w-3 h-3" />
+                      Apply Changes <ChevronRight className="w-4 h-4" />
                     </>
                   )}
                 </button>

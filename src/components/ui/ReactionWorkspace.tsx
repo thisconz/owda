@@ -193,32 +193,29 @@ export const ReactionWorkspace: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col gap-5 p-5 bg-[#050510]/80 backdrop-blur-2xl rounded-2xl border border-white/5 shadow-2xl relative">
-      <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-owda-teal/40 to-transparent" />
-      <div className="absolute -right-20 -top-20 w-64 h-64 bg-owda-blue/5 blur-[100px] rounded-full pointer-events-none" />
-
+    <div className="flex flex-col gap-5 p-5 bg-[#FDFCFB] rounded-none border-0 relative">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between border-b border-[#1A1A1A] pb-4">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-owda-teal/10 rounded-lg">
-            <Terminal className="text-owda-teal w-4 h-4" />
+          <div className="p-2 border border-[#1A1A1A] bg-[#EAE8E4]">
+            <Terminal className="text-[#1A1A1A] w-4 h-4" />
           </div>
           <div>
-            <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-owda-gray">
+            <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-[#1A1A1A]">
               Core_Input_Module
             </h2>
-            <p className="text-[9px] font-mono text-owda-teal/60">
-              Awaiting Stoichiometric String...
+            <p className="text-[9px] font-mono text-[#1A1A1A]/60 font-bold uppercase transition-all mt-1">
+              {isProcessing ? 'System Computing...' : 'Awaiting Synthesis String'}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           {/* AI Status badge */}
           <div
-            className={`flex items-center gap-1.5 px-2 py-1 rounded-full border text-[9px] font-mono ${
+            className={`flex items-center gap-1.5 px-2 py-1 border text-[9px] font-mono font-bold ${
               settings.enableAI
-                ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/5'
-                : 'border-owda-gray/20 text-owda-gray/50 bg-white/3'
+                ? 'border-[#1A1A1A] text-[#1A1A1A] bg-[#D4FF00]'
+                : 'border-[#1A1A1A] text-[#1A1A1A]/50 bg-[#EAE8E4]'
             }`}
           >
             {settings.enableAI ? (
@@ -229,10 +226,10 @@ export const ReactionWorkspace: React.FC = () => {
             {settings.enableAI ? 'AI ON' : 'AI OFF'}
           </div>
           <div
-            className={`px-3 py-1 rounded-full border text-[9px] font-mono transition-colors ${
+            className={`px-3 py-1 border text-[9px] font-mono font-bold transition-colors ${
               isProcessing
-                ? 'border-owda-blue text-owda-blue bg-owda-blue/5 animate-pulse'
-                : 'border-emerald-500/30 text-emerald-500 bg-emerald-500/5'
+                ? 'border-[#1A1A1A] text-white bg-[#1A1A1A] animate-pulse'
+                : 'border-[#1A1A1A] text-[#1A1A1A] bg-white'
             }`}
           >
             {isProcessing ? 'COMPUTING' : 'READY'}
@@ -242,14 +239,9 @@ export const ReactionWorkspace: React.FC = () => {
 
       {/* Input */}
       <div className="relative group">
-        <div
-          className={`absolute -inset-1 bg-linear-to-r from-owda-teal/20 to-owda-blue/20 rounded-2xl blur-lg transition-opacity duration-500 ${
-            isFocused ? 'opacity-100' : 'opacity-0'
-          }`}
-        />
-        <div className="relative flex items-center bg-black/60 border border-white/10 rounded-xl overflow-hidden focus-within:border-owda-teal/50 transition-all">
-          <div className="pl-5 text-owda-teal/40 shrink-0">
-            <Sparkles className="w-5 h-5" />
+        <div className="relative flex items-center bg-white border-2 border-[#1A1A1A] rounded-none overflow-hidden focus-within:border-[#1A1A1A] focus-within:shadow-[4px_4px_0px_#1A1A1A] transition-all">
+          <div className="pl-5 text-[#1A1A1A]/40 shrink-0">
+            <Sparkles className="w-5 h-5 text-[#1A1A1A]" />
           </div>
           <input
             ref={inputRef}
@@ -259,7 +251,7 @@ export const ReactionWorkspace: React.FC = () => {
             onBlur={() => setIsFocused(false)}
             onChange={(e) => setLocalInput(e.target.value)}
             placeholder="e.g.  N2 + H2 -> NH3"
-            className="w-full bg-transparent px-4 py-5 text-lg md:text-2xl text-owda-snow placeholder:text-owda-snow/10 focus:outline-none font-mono"
+            className="w-full bg-transparent px-4 py-5 text-lg md:text-2xl text-[#1A1A1A] placeholder:text-[#1A1A1A]/30 focus:outline-none font-mono font-bold"
             onKeyDown={(e) => {
               if (e.key === 'Enter') handleSolve();
               if (e.key === 'Escape') setShowPicker(false);
@@ -269,10 +261,10 @@ export const ReactionWorkspace: React.FC = () => {
             <button
               onClick={() => setShowPicker((p) => !p)}
               title="Element Picker"
-              className={`p-2.5 rounded-lg border transition-all ${
+              className={`p-2.5 rounded-none border border-[#1A1A1A] transition-all ${
                 showPicker
-                  ? 'bg-owda-teal/15 border-owda-teal/40 text-owda-teal'
-                  : 'border-white/10 text-owda-gray hover:text-owda-snow hover:bg-white/5'
+                  ? 'bg-[#1A1A1A] text-white shadow-[2px_2px_0px_#1A1A1A]'
+                  : 'bg-white text-[#1A1A1A] hover:bg-[#EAE8E4]'
               }`}
             >
               <Table2 className="w-4 h-4" />
@@ -280,7 +272,7 @@ export const ReactionWorkspace: React.FC = () => {
             {localInput && (
               <button
                 onClick={handleClear}
-                className="p-2 text-owda-gray hover:text-owda-snow transition-colors"
+                className="p-2 border border-transparent text-[#1A1A1A] hover:border-[#1A1A1A] transition-colors bg-[#EAE8E4]"
                 title="Clear"
               >
                 <RotateCcw className="w-4 h-4" />
@@ -289,7 +281,7 @@ export const ReactionWorkspace: React.FC = () => {
             <button
               onClick={handleSolve}
               disabled={isProcessing || !localInput.trim()}
-              className="px-6 py-3 bg-owda-teal hover:bg-emerald-400 disabled:opacity-20 disabled:grayscale text-owda-navy rounded-lg transition-all flex items-center gap-2 font-black uppercase text-[10px] tracking-widest shadow-lg active:scale-95"
+              className="px-6 py-3 ml-2 border border-[#1A1A1A] bg-[#D4FF00] hover:bg-[#1A1A1A] disabled:opacity-50 disabled:bg-[#EAE8E4] disabled:text-[#1A1A1A]/50 hover:text-white text-[#1A1A1A] rounded-none transition-all flex items-center gap-2 font-black uppercase text-[10px] tracking-widest active:translate-y-1"
             >
               {isProcessing ? (
                 <Activity className="animate-spin w-3 h-3" />
@@ -319,10 +311,10 @@ export const ReactionWorkspace: React.FC = () => {
                   expandedCategory === cat.category ? null : cat.category
                 )
               }
-              className={`w-full flex items-center justify-between p-3 rounded-xl border text-[10px] font-bold uppercase tracking-widest transition-all ${
+              className={`w-full flex items-center justify-between p-3 rounded-none border-2 border-[#1A1A1A] text-[10px] font-bold uppercase tracking-widest transition-all ${
                 expandedCategory === cat.category
-                  ? 'bg-owda-teal/10 border-owda-teal/40 text-owda-teal'
-                  : 'bg-white/2 border-white/5 text-owda-gray hover:bg-white/5'
+                  ? 'bg-[#1A1A1A] text-white'
+                  : 'bg-[#EAE8E4] text-[#1A1A1A] hover:bg-white shadow-[2px_2px_0px_#1A1A1A]'
               }`}
             >
               <div className="flex items-center gap-2">
@@ -331,7 +323,7 @@ export const ReactionWorkspace: React.FC = () => {
               </div>
               <ChevronDown
                 className={`w-3 h-3 transition-transform ${
-                  expandedCategory === cat.category ? 'rotate-180' : ''
+                  expandedCategory === cat.category ? 'rotate-180 text-white' : 'text-[#1A1A1A]'
                 }`}
               />
             </button>
@@ -342,7 +334,7 @@ export const ReactionWorkspace: React.FC = () => {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="absolute left-0 right-0 mt-2 z-50 bg-[#0a0a1a] border border-white/10 rounded-xl shadow-2xl p-2 flex flex-col gap-1"
+                  className="absolute left-0 right-0 mt-2 z-50 bg-[#FDFCFB] border-2 border-[#1A1A1A] rounded-none shadow-[4px_4px_0px_#1A1A1A] p-2 flex flex-col gap-1"
                 >
                   {cat.items.map((item, idx) => (
                     <button
@@ -352,17 +344,17 @@ export const ReactionWorkspace: React.FC = () => {
                         setExpandedCategory(null);
                         inputRef.current?.focus();
                       }}
-                      className="flex flex-col p-2.5 rounded-lg hover:bg-owda-teal/10 border border-transparent hover:border-owda-teal/20 transition-all text-left group"
+                      className="flex flex-col p-2.5 rounded-none border border-transparent hover:border-[#1A1A1A] hover:bg-[#D4FF00] transition-all text-left group"
                     >
                       <div className="flex justify-between items-center mb-1">
-                        <span className="text-[8px] font-mono text-owda-gray group-hover:text-owda-teal">
+                        <span className="text-[8px] font-mono text-[#1A1A1A] font-bold">
                           {item.label}
                         </span>
-                        <span className="text-[7px] px-1 bg-white/5 rounded text-owda-gray">
+                        <span className="text-[7px] px-1 border border-[#1A1A1A] bg-white rounded-none text-[#1A1A1A] font-bold">
                           {item.difficulty}
                         </span>
                       </div>
-                      <span className="text-xs font-mono text-owda-snow">{item.formula}</span>
+                      <span className="text-xs font-mono font-bold text-[#1A1A1A]">{item.formula}</span>
                     </button>
                   ))}
                 </motion.div>
@@ -380,17 +372,17 @@ export const ReactionWorkspace: React.FC = () => {
             initial={{ opacity: 0, scale: 0.99 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, y: 10 }}
-            className="mt-2 bg-linear-to-b from-white/3 to-transparent border border-white/10 rounded-2xl p-6 relative overflow-hidden"
+            className="mt-2 bg-white border-2 border-[#1A1A1A] rounded-none p-6 relative overflow-hidden shadow-[4px_4px_0px_#1A1A1A]"
           >
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-owda-gray">
+            <div className="flex items-center justify-between border-b border-[#1A1A1A] pb-4 mb-6">
+              <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-[#1A1A1A]">
                 Solution_Manifest
               </h3>
               <span
-                className={`text-[9px] font-mono px-2 py-0.5 rounded border ${
+                className={`text-[9px] font-mono px-2 py-0.5 border-2 border-[#1A1A1A] font-bold text-[#1A1A1A] ${
                   currentReaction.isBalanced
-                    ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/5'
-                    : 'border-red-500/30 text-red-400 bg-red-500/5'
+                    ? 'bg-[#D4FF00]'
+                    : 'bg-[#ff6b6b]'
                 }`}
               >
                 {currentReaction.isBalanced ? '✓ BALANCED' : '✗ UNBALANCED'}
@@ -399,44 +391,44 @@ export const ReactionWorkspace: React.FC = () => {
 
             <div className="flex flex-col items-center justify-center gap-8 py-4">
               {/* Equation */}
-              <div className="flex flex-wrap items-center justify-center gap-4 text-2xl md:text-4xl font-light tracking-tighter text-owda-snow">
+              <div className="flex flex-wrap items-center justify-center gap-4 text-2xl md:text-3xl font-black tracking-tighter text-[#1A1A1A]">
                 <div className="flex items-center gap-3">
                   {currentReaction.reactants.molecules.map((m, i) => (
                     <React.Fragment key={i}>
                       <div className="flex items-center gap-1.5">
                         {m.coefficient > 1 && (
-                          <span className="text-owda-teal font-black text-xl md:text-2xl">
+                          <span className="text-[#1A1A1A] font-black text-xl md:text-2xl mt-1">
                             {m.coefficient}
                           </span>
                         )}
-                        <span className="font-mono bg-white/5 px-3 py-1 rounded-lg border border-white/5">
+                        <span className="font-mono bg-white px-3 py-1 border-2 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A] rounded-none">
                           {m.molecule.formula}
                         </span>
                       </div>
                       {i < currentReaction.reactants.molecules.length - 1 && (
-                        <span className="text-owda-gray/30 text-xl">+</span>
+                        <span className="text-[#1A1A1A] text-xl font-bold">+</span>
                       )}
                     </React.Fragment>
                   ))}
                 </div>
 
-                <ArrowRightLeft className="w-8 h-8 text-owda-teal/40" />
+                <ArrowRightLeft className="w-8 h-8 text-[#1A1A1A] mx-2" />
 
                 <div className="flex items-center gap-3">
                   {currentReaction.products.molecules.map((m, i) => (
                     <React.Fragment key={i}>
                       <div className="flex items-center gap-1.5">
                         {m.coefficient > 1 && (
-                          <span className="text-owda-teal font-black text-xl md:text-2xl">
+                          <span className="text-[#1A1A1A] font-black text-xl md:text-2xl mt-1">
                             {m.coefficient}
                           </span>
                         )}
-                        <span className="font-mono bg-white/5 px-3 py-1 rounded-lg border border-white/5">
+                        <span className="font-mono bg-white px-3 py-1 border-2 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A] rounded-none">
                           {m.molecule.formula}
                         </span>
                       </div>
                       {i < currentReaction.products.molecules.length - 1 && (
-                        <span className="text-owda-gray/30 text-xl">+</span>
+                        <span className="text-[#1A1A1A] text-xl font-bold">+</span>
                       )}
                     </React.Fragment>
                   ))}
@@ -445,7 +437,7 @@ export const ReactionWorkspace: React.FC = () => {
 
               {/* Thermodynamics row */}
               {currentReaction.isBalanced && (
-                <div className="w-full grid grid-cols-3 gap-4 border-t border-white/5 pt-6">
+                <div className="w-full grid grid-cols-3 gap-4 border-t border-[#1A1A1A] pt-6 flex flex-wrap">
                   <ThermMetric
                     label="Enthalpy ΔH"
                     value={`${currentReaction.enthalpy} kJ/mol`}
@@ -480,9 +472,9 @@ const ThermMetric = ({
   value: string;
   good: boolean;
 }) => (
-  <div className="flex flex-col gap-1">
-    <span className="text-[8px] font-mono text-owda-gray uppercase tracking-widest">{label}</span>
-    <span className={`text-sm font-mono font-bold ${good ? 'text-emerald-400' : 'text-orange-400'}`}>
+  <div className="flex flex-col gap-1 p-3 border-2 border-[#1A1A1A] bg-[#EAE8E4]">
+    <span className="text-[8px] font-black text-[#1A1A1A] uppercase tracking-widest">{label}</span>
+    <span className={`text-xs md:text-sm font-mono font-black text-[#1A1A1A]`}>
       {value}
     </span>
   </div>

@@ -5,10 +5,11 @@ import {
   RefreshCw,
   ShieldAlert,
   Clipboard,
+  ClipboardCheck,
   Database,
   Cpu,
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react'; // FIXED: was 'framer-motion'
+import { motion, AnimatePresence } from 'motion/react';
 
 interface Props {
   children: React.ReactNode;
@@ -58,27 +59,43 @@ export class GlobalErrorBoundary extends React.Component<Props, State> {
 
   copyToClipboard = async () => {
     const text = [
+      `Error: ${this.state.error?.name} - ${this.state.error?.message}`,
       this.state.error?.stack,
       '\n\n--- Component Stack ---',
       this.state.errorInfo?.componentStack,
     ]
       .filter(Boolean)
       .join('\n');
+      
     try {
-      await navigator.clipboard.writeText(text);
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        textArea.style.top = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        textArea.remove();
+      }
       this.setState({ copied: true });
       setTimeout(() => this.setState({ copied: false }), 2000);
-    } catch {}
+    } catch (e) {
+      console.error('Clipboard copy failed', e);
+    }
   };
 
   render() {
     if (!this.state.hasError) return this.props.children;
 
     return (
-      <div className="min-h-screen bg-[#050000] text-red-500 font-mono flex flex-col items-center justify-center p-4 sm:p-8 relative overflow-hidden">
-        {/* CRT Scanline */}
-        <div className="absolute inset-0 pointer-events-none z-50 opacity-[0.03] bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-size-[100%_2px,3px_100%]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,var(--tw-gradient-stops))] from-red-600/10 via-transparent to-transparent pointer-events-none" />
+      <div className="min-h-screen bg-[#FDFCFB] text-[#1A1A1A] font-mono flex flex-col items-center justify-center p-4 sm:p-8 relative overflow-hidden">
+        {/* Brutalist Grid Overlay */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(26,26,26,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(26,26,26,0.05)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none z-0 opacity-50" />
 
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
@@ -86,33 +103,31 @@ export class GlobalErrorBoundary extends React.Component<Props, State> {
           className="w-full max-w-5xl z-10 flex flex-col gap-6"
         >
           {/* Header */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between border-b border-red-900/40 pb-6 gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between border-b-4 border-[#1A1A1A] pb-6 gap-4">
             <div className="flex items-center gap-5">
-              <div className="relative">
-                <div className="absolute inset-0 bg-red-500 blur-lg opacity-20 animate-pulse" />
-                <div className="p-4 bg-red-950/30 border border-red-500/50 rounded-2xl relative">
-                  <ShieldAlert className="w-10 h-10 text-red-500" />
-                </div>
+              <div className="p-4 bg-[#ff6b6b] border-2 border-[#1A1A1A] shadow-[4px_4px_0px_#1A1A1A]">
+                <ShieldAlert className="w-10 h-10 text-white" />
               </div>
-              <div>
-                <h1 className="text-3xl font-black tracking-tighter uppercase italic">
+              <div className="flex flex-col">
+                <h1 className="text-4xl font-black tracking-tighter uppercase text-[#1A1A1A] leading-none mb-1">
                   Kernel_Panic
                 </h1>
-                <div className="flex items-center gap-3 mt-1">
-                  <span className="flex items-center gap-1.5 text-[10px] text-red-400/60 bg-red-500/5 px-2 py-0.5 rounded border border-red-500/20">
+                <div className="flex items-center gap-3">
+                  <span className="flex items-center gap-1.5 text-[10px] font-black text-[#1A1A1A] bg-[#D4FF00] px-2 py-0.5 border-2 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A]">
                     <Cpu className="w-3 h-3" /> ADDR: 0x004F22
                   </span>
-                  <span className="text-[10px] text-red-400/60 animate-pulse uppercase tracking-widest">
+                  <span className="text-[10px] text-[#ff6b6b] font-black animate-pulse uppercase tracking-widest bg-white border border-[#1A1A1A] px-1">
                     Faulty_Node_Detected
                   </span>
                 </div>
               </div>
             </div>
             <div className="text-right hidden sm:block">
-              <p className="text-[10px] text-red-900 font-bold uppercase tracking-[0.2em]">
-                OWDA.OS {process.env.V}
+              <p className="text-[12px] text-[#1A1A1A] font-black uppercase tracking-[0.2em] bg-[#D4FF00] px-1 border border-[#1A1A1A] mb-1 inline-block">
+                OWDA.OS {process.env.V || 'v4.0.0'}
               </p>
-              <p className="text-[9px] text-red-500/40 font-mono">
+              <br />
+              <p className="text-[10px] text-[#1A1A1A] font-bold bg-[#EAE8E4] px-1 inline-block border border-[#1A1A1A]">
                 Build_Hash: 8f2d1e_9901
               </p>
             </div>
@@ -121,32 +136,36 @@ export class GlobalErrorBoundary extends React.Component<Props, State> {
           {/* Main Content */}
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Stack Trace */}
-            <div className="lg:col-span-3 bg-black/40 border border-red-500/20 rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col h-[50vh]">
-              <div className="bg-red-500/10 px-4 py-2 border-b border-red-500/20 flex items-center justify-between">
+            <div className="lg:col-span-3 bg-white border-4 border-[#1A1A1A] shadow-[8px_8px_0px_#1A1A1A] flex flex-col h-[50vh] relative">
+              <div className="bg-[#EAE8E4] px-4 py-3 border-b-4 border-[#1A1A1A] flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <TerminalSquare className="w-3 h-3" />
-                  <span className="text-[10px] uppercase font-bold tracking-widest">
+                  <TerminalSquare className="w-4 h-4 text-[#1A1A1A]" />
+                  <span className="text-[12px] text-[#1A1A1A] uppercase font-black tracking-widest">
                     Diagnostic_Logs
                   </span>
                 </div>
                 <button
                   onClick={this.copyToClipboard}
-                  className="text-[9px] hover:text-white transition-colors flex items-center gap-1.5 bg-red-500/20 px-2 py-1 rounded"
+                  className={`text-[10px] font-black uppercase transition-all flex items-center gap-1.5 border-2 border-[#1A1A1A] px-3 py-1.5 shadow-[2px_2px_0px_#1A1A1A] active:translate-y-0.5 active:shadow-none ${
+                    this.state.copied 
+                      ? 'bg-[#D4FF00] text-[#1A1A1A]' 
+                      : 'bg-white hover:bg-[#1A1A1A] hover:text-white text-[#1A1A1A]'
+                  }`}
                 >
-                  <Clipboard className="w-3 h-3" />
+                  {this.state.copied ? <ClipboardCheck className="w-3.5 h-3.5" /> : <Clipboard className="w-3.5 h-3.5" />}
                   {this.state.copied ? 'Copied!' : 'Copy_Trace'}
                 </button>
               </div>
-              <div className="flex-1 p-6 overflow-auto font-mono text-xs sm:text-sm custom-scrollbar">
-                <div className="text-white bg-red-600/20 px-2 py-1 rounded mb-4 inline-block">
+              <div className="flex-1 p-6 overflow-auto font-mono text-xs sm:text-sm custom-scrollbar bg-[#FDFCFB]">
+                <div className="text-white bg-[#ff6b6b] border-2 border-[#1A1A1A] font-black px-3 py-2 shadow-[2px_2px_0px_#1A1A1A] mb-6 inline-block">
                   {this.state.error?.name}: {this.state.error?.message}
                 </div>
-                <div className="text-red-400/80 leading-relaxed whitespace-pre-wrap font-mono text-[11px]">
+                <div className="text-[#1A1A1A] font-bold leading-relaxed whitespace-pre-wrap font-mono text-[11px] bg-white p-4 border-2 border-[#1A1A1A]">
                   {this.state.error?.stack}
                   {this.state.errorInfo?.componentStack && (
-                    <div className="mt-6 pt-6 border-t border-red-900/30 text-red-900">
-                      {'--- Component Tree State ---'}
-                      {this.state.errorInfo.componentStack}
+                    <div className="mt-6 pt-6 border-t-2 border-dashed border-[#1A1A1A]">
+                      <span className="bg-[#EAE8E4] px-1 text-[10px] uppercase font-black mb-2 inline-block">--- Component Tree State ---</span>
+                      <div>{this.state.errorInfo.componentStack}</div>
                     </div>
                   )}
                 </div>
@@ -154,36 +173,35 @@ export class GlobalErrorBoundary extends React.Component<Props, State> {
             </div>
 
             {/* Sidebar Actions */}
-            <div className="flex flex-col gap-4">
-              <div className="p-4 bg-red-500/5 border border-red-500/10 rounded-2xl">
-                <h4 className="text-[10px] font-bold text-red-900 uppercase mb-3 flex items-center gap-2">
-                  <Database className="w-3 h-3" /> Recovery_Options
+            <div className="flex flex-col gap-6">
+              <div className="p-5 bg-white border-4 border-[#1A1A1A] shadow-[4px_4px_0px_#1A1A1A]">
+                <h4 className="text-[12px] font-black text-white bg-[#1A1A1A] px-2 py-1 uppercase mb-4 flex items-center gap-2 w-fit border border-[#1A1A1A]">
+                  <Database className="w-3.5 h-3.5" /> Recovery_Options
                 </h4>
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-3">
                   <button
                     onClick={this.handleSoftReset}
-                    className="w-full py-3 bg-orange-700 hover:bg-orange-600 text-black font-black text-[10px] uppercase rounded-lg transition-all flex items-center justify-center gap-2"
+                    className="w-full py-3 bg-[#D4FF00] hover:bg-[#C2EB00] border-2 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A] active:translate-y-0.5 active:shadow-none text-[#1A1A1A] font-black text-[10px] uppercase transition-all flex items-center justify-center gap-2"
                   >
-                    <AlertTriangle className="w-3 h-3" /> Try_Recover
+                    <AlertTriangle className="w-3.5 h-3.5" /> Try_Recover
                   </button>
                   <button
                     onClick={() => window.location.reload()}
-                    className="w-full py-3 bg-red-600 hover:bg-red-500 text-black font-black text-[10px] uppercase rounded-lg transition-all flex items-center justify-center gap-2"
+                    className="w-full py-3 bg-[#ff6b6b] hover:bg-[#e75353] border-2 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A] active:translate-y-0.5 active:shadow-none text-white font-black text-[10px] uppercase transition-all flex items-center justify-center gap-2"
                   >
-                    <RefreshCw className="w-3 h-3" /> Soft_Reload
+                    <RefreshCw className="w-3.5 h-3.5" /> Soft_Reload
                   </button>
                   <button
                     onClick={this.handleHardReset}
-                    className="w-full py-3 bg-transparent border border-red-500/30 hover:border-red-500 text-red-500 font-bold text-[10px] uppercase rounded-lg transition-all"
+                    className="w-full py-3 bg-white border-2 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A] active:translate-y-0.5 active:shadow-none hover:bg-[#1A1A1A] hover:text-white text-[#1A1A1A] font-black text-[10px] uppercase transition-all"
                   >
                     Purge_Cache & Reboot
                   </button>
                 </div>
               </div>
-              <div className="mt-auto p-4 border border-red-900/20 rounded-2xl opacity-40">
-                <p className="text-[9px] leading-tight">
-                  * CRITICAL: Repeated failures indicate a logic loop in the
-                  Zenthar Engine. Contact engineering if reboot fails.
+              <div className="mt-auto p-4 bg-[#EAE8E4] border-2 border-[#1A1A1A]">
+                <p className="text-[10px] font-bold leading-tight uppercase font-mono text-[#1A1A1A]">
+                  <span className="text-[#ff6b6b]">* CRITICAL:</span> Repeated failures indicate a logic loop in the OWDA Engine. Contact engineering.
                 </p>
               </div>
             </div>
@@ -196,12 +214,14 @@ export class GlobalErrorBoundary extends React.Component<Props, State> {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-100 bg-black flex flex-col items-center justify-center gap-4"
+                className="fixed inset-0 z-100 bg-[#D4FF00] flex flex-col items-center justify-center gap-6"
               >
-                <RefreshCw className="w-12 h-12 text-red-600 animate-spin" />
-                <p className="text-red-600 font-mono text-sm animate-pulse uppercase tracking-[0.4em]">
-                  Reinitializing_Core...
-                </p>
+                <div className="p-6 bg-white border-4 border-[#1A1A1A] shadow-[8px_8px_0px_#1A1A1A] flex flex-col items-center gap-4">
+                  <RefreshCw className="w-16 h-16 text-[#1A1A1A] animate-spin" />
+                  <p className="text-[#1A1A1A] font-black font-mono text-xl animate-pulse uppercase tracking-[0.2em] bg-[#EAE8E4] px-2 py-1 border-2 border-[#1A1A1A]">
+                    Reinitializing_Core...
+                  </p>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>

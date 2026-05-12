@@ -25,28 +25,28 @@ import { ExplanationStep } from '../types';
 
 const modeConfig = {
   human: {
-    icon: <BookOpen className="w-3.5 h-3.5" />,
+    icon: <BookOpen className="w-4 h-4 ml-1" />,
     label: 'Basic Overview',
-    border: 'border-emerald-500/20',
-    accent: 'text-emerald-400',
-    bg: 'bg-emerald-500/5',
-    headerBg: 'bg-emerald-500/10',
+    border: 'border-[#1A1A1A]',
+    accent: 'text-[#1A1A1A]',
+    bg: 'bg-white',
+    headerBg: 'bg-[#D4FF00]',
   },
   expert: {
-    icon: <Brain className="w-3.5 h-3.5" />,
+    icon: <Brain className="w-4 h-4 ml-1" />,
     label: 'Mechanism',
-    border: 'border-owda-blue/20',
-    accent: 'text-owda-blue',
-    bg: 'bg-owda-blue/5',
-    headerBg: 'bg-owda-blue/10',
+    border: 'border-[#1A1A1A]',
+    accent: 'text-[#1A1A1A]',
+    bg: 'bg-white',
+    headerBg: 'bg-white',
   },
   machine: {
-    icon: <Code2 className="w-3.5 h-3.5" />,
+    icon: <Code2 className="w-4 h-4 ml-1" />,
     label: 'Thermodynamics',
-    border: 'border-owda-teal/20',
-    accent: 'text-owda-teal',
-    bg: 'bg-owda-teal/5',
-    headerBg: 'bg-owda-teal/10',
+    border: 'border-[#1A1A1A]',
+    accent: 'text-white',
+    bg: 'bg-white',
+    headerBg: 'bg-[#1A1A1A]',
   },
 };
 
@@ -59,22 +59,22 @@ function StepCard({ step, index }: { step: ExplanationStep; index: number }) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.08 }}
-      className={`border ${cfg.border} ${cfg.bg} rounded-2xl overflow-hidden`}
+      className={`border-2 ${cfg.border} ${cfg.bg} rounded-none overflow-hidden shadow-[4px_4px_0px_#1A1A1A]`}
     >
       <button
         onClick={() => setCollapsed((p) => !p)}
-        className={`w-full flex items-center justify-between px-5 py-3 ${cfg.headerBg}`}
+        className={`w-full flex items-center justify-between px-5 py-3 ${cfg.headerBg} border-b-2 border-[#1A1A1A]`}
       >
         <div className="flex items-center gap-2">
           <span className={cfg.accent}>{cfg.icon}</span>
-          <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${cfg.accent}`}>
+          <span className={`text-[11px] font-black uppercase tracking-[0.2em] ${cfg.accent}`}>
             {step.title}
           </span>
         </div>
         {collapsed ? (
-          <ChevronDown className="w-3 h-3 text-owda-gray" />
+          <ChevronDown className={`w-4 h-4 ${cfg.accent}`} />
         ) : (
-          <ChevronUp className="w-3 h-3 text-owda-gray" />
+          <ChevronUp className={`w-4 h-4 ${cfg.accent}`} />
         )}
       </button>
       <AnimatePresence>
@@ -84,29 +84,29 @@ function StepCard({ step, index }: { step: ExplanationStep; index: number }) {
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.25 }}
-            className="overflow-hidden"
+            className="overflow-hidden bg-[#EAE8E4]"
           >
-            <div className="px-5 py-4 prose-sm max-w-none">
+            <div className="px-5 py-4 prose-sm max-w-none text-[#1A1A1A] font-mono">
               <ReactMarkdown
                 components={{
                   p: ({ children }) => (
-                    <p className="text-[12px] text-owda-snow/80 leading-relaxed mb-3 last:mb-0">
+                    <p className="text-[12px] font-bold leading-relaxed mb-3 last:mb-0">
                       {children}
                     </p>
                   ),
                   strong: ({ children }) => (
-                    <strong className="text-owda-teal font-bold">{children}</strong>
+                    <strong className="text-black font-black bg-[#D4FF00] px-1 border border-[#1A1A1A] inline-block -my-0.5">{children}</strong>
                   ),
                   code: ({ children }) => (
-                    <code className="bg-black/40 px-1.5 py-0.5 rounded text-owda-teal font-mono text-[11px]">
+                    <code className="bg-white px-1.5 py-0.5 border border-[#1A1A1A] text-black font-black text-[11px] shadow-[1px_1px_0px_#1A1A1A]">
                       {children}
                     </code>
                   ),
                   ul: ({ children }) => (
-                    <ul className="space-y-1 list-disc pl-4 mb-3">{children}</ul>
+                    <ul className="space-y-1 list-disc pl-5 mb-3 marker:text-[#1A1A1A] font-bold">{children}</ul>
                   ),
                   li: ({ children }) => (
-                    <li className="text-[12px] text-owda-snow/80">{children}</li>
+                    <li className="text-[12px]">{children}</li>
                   ),
                 }}
               >
@@ -177,41 +177,41 @@ export function WorkspacePage() {
       className="w-full max-w-7xl mx-auto flex flex-col gap-5 h-full p-4 lg:p-0 font-sans"
     >
       {/* Header */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0 bg-black/20 p-4 rounded-2xl border border-white/5 backdrop-blur-md">
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 shrink-0 bg-[#EAE8E4] p-5 border-2 border-[#1A1A1A] rounded-none shadow-[4px_4px_0px_#1A1A1A]">
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-owda-teal/10 rounded-xl border border-owda-teal/20 shadow-[0_0_15px_rgba(20,184,166,0.1)]">
-            <Beaker className="w-8 h-8 text-owda-teal" />
+          <div className="p-3 bg-white border-2 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A] rounded-none">
+            <Beaker className="w-8 h-8 text-[#1A1A1A]" />
           </div>
           <div>
-            <h2 className="text-xl font-black tracking-tighter text-owda-snow uppercase italic flex items-center gap-2">
-              <span className="text-owda-gray/50 not-italic font-mono text-sm">/</span>
+            <h2 className="text-xl font-black tracking-tighter text-[#1A1A1A] uppercase italic flex items-center gap-2">
+              <span className="text-[#1A1A1A]/50 not-italic font-mono text-sm">/</span>
               Synthesis_Lab
-              <span className="text-owda-teal px-2 py-0.5 bg-owda-teal/10 rounded text-xs not-italic tracking-normal">
+              <span className="text-[#1A1A1A] px-2 py-0.5 bg-[#D4FF00] border border-[#1A1A1A] text-[10px] not-italic tracking-normal">
                 {process.env.V}
               </span>
             </h2>
             <div className="flex items-center gap-3 mt-0.5">
-              <span className="flex items-center gap-1.5 text-[10px] font-mono text-emerald-500 uppercase">
-                <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="flex items-center gap-1.5 text-[10px] font-mono text-[#1A1A1A] uppercase font-bold">
+                <div className="w-2 h-2 border border-[#1A1A1A] bg-[#D4FF00] animate-pulse" />
                 Auth: System_Admin
               </span>
             </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="h-10 w-px bg-white/10 hidden md:block mx-2" />
+          <div className="h-10 w-px bg-[#1A1A1A] hidden md:block mx-2" />
           <div className="flex flex-col items-end">
             <div className="flex gap-1 mb-1">
               {[1, 2, 3, 4].map((i) => (
                 <div
                   key={i}
-                  className={`w-3 h-1 rounded-full ${
-                    i < 4 ? 'bg-owda-teal' : 'bg-white/10'
+                  className={`w-3 h-1 border border-[#1A1A1A] ${
+                    i < 4 ? 'bg-[#D4FF00]' : 'bg-white'
                   }`}
                 />
               ))}
             </div>
-            <span className="text-[9px] font-mono text-owda-gray uppercase tracking-widest">
+            <span className="text-[9px] font-mono text-[#1A1A1A]/70 uppercase tracking-widest font-bold">
               Processing_Core_Load
             </span>
           </div>
@@ -222,8 +222,7 @@ export function WorkspacePage() {
         {/* Left: Workspace + Charts + AI Analysis */}
         <div className="xl:col-span-8 flex flex-col gap-5 min-h-0">
           <section className="relative group">
-            <div className="absolute -inset-0.5 bg-linear-to-r from-owda-teal/20 to-owda-blue/20 rounded-2xl blur opacity-30 group-hover:opacity-50 transition duration-1000" />
-            <div className="relative bg-[#050510] border border-white/10 rounded-2xl p-1 shadow-2xl">
+            <div className="relative bg-white border-2 border-[#1A1A1A] rounded-none shadow-[8px_8px_0px_#1A1A1A] p-1">
               <ReactionWorkspace />
             </div>
           </section>
@@ -234,78 +233,78 @@ export function WorkspacePage() {
                 key="balanced"
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="grid grid-cols-1 md:grid-cols-2 gap-5"
+                className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-4"
               >
                 {/* Matrix Verification */}
-                <div className="bg-black/40 border border-white/5 rounded-2xl p-5">
+                <div className="bg-[#EAE8E4] border-2 border-[#1A1A1A] rounded-none p-5 shadow-[4px_4px_0px_#1A1A1A]">
                   <div className="flex items-center justify-between mb-5">
-                    <h3 className="text-[10px] font-black text-owda-gray uppercase tracking-[0.2em]">
+                    <h3 className="text-[10px] font-black text-[#1A1A1A] uppercase tracking-[0.2em]">
                       Matrix_Verification
                     </h3>
-                    <Target className="w-4 h-4 text-owda-teal" />
+                    <Target className="w-4 h-4 text-[#1A1A1A]" />
                   </div>
-                  <div className="space-y-4">
-                    <MetricBar label="Atom_Consistency" percent={100} color="bg-emerald-500" />
-                    <MetricBar label="Charge_Balance" percent={100} color="bg-owda-teal" />
+                  <div className="space-y-4 text-[#1A1A1A]">
+                    <MetricBar label="Atom_Consistency" percent={100} color="bg-[#1A1A1A]" />
+                    <MetricBar label="Charge_Balance" percent={100} color="bg-[#1A1A1A]" />
                     <MetricBar
                       label="Mass_Conservation"
                       percent={currentReaction.massConservation ? 100 : 60}
-                      color={currentReaction.massConservation ? 'bg-emerald-500' : 'bg-orange-500'}
+                      color={currentReaction.massConservation ? 'bg-[#1A1A1A]' : 'bg-[#1A1A1A]/50'}
                     />
-                    <div className="pt-2 flex justify-between items-center">
-                      <span className="text-[10px] font-mono text-owda-gray/60 uppercase italic">
+                    <div className="pt-2 flex justify-between items-center border-t border-[#1A1A1A] mt-2">
+                      <span className="text-[10px] font-mono text-[#1A1A1A] uppercase italic mt-2">
                         Status: Verified
                       </span>
-                      <span className="text-[10px] font-mono text-emerald-400">✓ Passed</span>
+                      <span className="text-[10px] font-mono font-bold text-[#1A1A1A] mt-2">✓ Passed</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Energy Profile */}
-                <div className="bg-black/40 border border-white/5 rounded-2xl p-5">
+                <div className="bg-[#EAE8E4] border-2 border-[#1A1A1A] rounded-none p-5 shadow-[4px_4px_0px_#1A1A1A]">
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-[10px] font-black text-owda-gray uppercase tracking-[0.2em]">
+                    <h3 className="text-[10px] font-black text-[#1A1A1A] uppercase tracking-[0.2em]">
                       Energy_Profile
                     </h3>
                     <div className="flex items-center gap-2">
                       <Zap
                         className={`w-4 h-4 ${
-                          isExothermic ? 'text-emerald-400' : 'text-orange-400'
+                          isExothermic ? 'text-[#1A1A1A]' : 'text-[#1A1A1A]/80'
                         }`}
                       />
                       <span
-                        className={`text-[8px] font-mono ${
-                          isExothermic ? 'text-emerald-400' : 'text-orange-400'
+                        className={`text-[8px] font-mono font-bold px-1 py-0.5 border border-[#1A1A1A] ${
+                          isExothermic ? 'bg-[#D4FF00] text-[#1A1A1A]' : 'bg-white text-[#1A1A1A]'
                         }`}
                       >
                         {isExothermic ? 'EXOTHERMIC' : 'ENDOTHERMIC'}
                       </span>
                     </div>
                   </div>
-                  <div className="h-28 w-full">
-                    <ResponsiveContainer width="100%" height="100%">
+                  <div className="h-28 w-full border-t border-[#1A1A1A] pt-4 mt-2">
+                    <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                       <AreaChart data={dynamicEnergyData}>
                         <defs>
                           <linearGradient id="energyGrad" x1="0" y1="0" x2="0" y2="1">
                             <stop
                               offset="5%"
-                              stopColor={isExothermic ? '#10b981' : '#f97316'}
-                              stopOpacity={0.3}
+                              stopColor={isExothermic ? '#D4FF00' : '#EAE8E4'}
+                              stopOpacity={1}
                             />
                             <stop
                               offset="95%"
-                              stopColor={isExothermic ? '#10b981' : '#f97316'}
-                              stopOpacity={0}
+                              stopColor={isExothermic ? '#D4FF00' : '#EAE8E4'}
+                              stopOpacity={1}
                             />
                           </linearGradient>
                         </defs>
                         <Area
                           type="monotone"
                           dataKey="energy"
-                          stroke={isExothermic ? '#10b981' : '#f97316'}
+                          stroke="#1A1A1A"
                           fill="url(#energyGrad)"
                           strokeWidth={2}
-                          dot={{ r: 3, fill: '#000', strokeWidth: 2 }}
+                          dot={{ r: 3, fill: '#1A1A1A', strokeWidth: 2 }}
                         />
                         <Tooltip content={<CustomTooltip />} />
                       </AreaChart>
@@ -318,17 +317,17 @@ export function WorkspacePage() {
                 key="logs"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="bg-black/40 border border-white/5 rounded-2xl p-4 font-mono flex flex-col h-48"
+                className="bg-[#EAE8E4] border-2 border-[#1A1A1A] rounded-none p-4 font-mono flex flex-col h-48 shadow-[4px_4px_0px_#1A1A1A] mt-4"
               >
-                <div className="flex items-center gap-2 mb-3 text-owda-gray">
+                <div className="flex items-center gap-2 mb-3 text-[#1A1A1A] border-b border-[#1A1A1A] pb-2">
                   <Terminal className="w-4 h-4" />
-                  <span className="text-[10px] uppercase tracking-widest">System_Event_Log</span>
+                  <span className="text-[10px] uppercase font-bold tracking-widest">System_Event_Log</span>
                 </div>
-                <div className="flex-1 overflow-y-auto space-y-1 text-[10px] custom-scrollbar">
+                <div className="flex-1 overflow-y-auto space-y-1 text-[10px] custom-scrollbar text-[#1A1A1A]">
                   {logs.map((log, i) => (
                     <div key={i} className="flex gap-2">
-                      <span className="text-owda-teal opacity-50">[{logs.length - 1 - i}]</span>
-                      <span className={i === 0 ? 'text-owda-snow' : 'text-owda-gray/40'}>
+                      <span className="font-bold opacity-50">[{logs.length - 1 - i}]</span>
+                      <span className={i === 0 ? 'font-bold' : 'opacity-80'}>
                         {log}
                       </span>
                     </div>
@@ -347,13 +346,13 @@ export function WorkspacePage() {
                 exit={{ opacity: 0, y: -8 }}
                 className="flex flex-col gap-3"
               >
-                <div className="flex items-center gap-3 px-1">
-                  <Cpu className="w-4 h-4 text-owda-teal" />
-                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-owda-gray">
+                <div className="flex items-center gap-3 px-1 border-b-2 border-[#1A1A1A] pb-2 bg-white">
+                  <Cpu className="w-4 h-4 text-[#1A1A1A]" />
+                  <span className="text-[11px] font-black uppercase tracking-[0.3em] text-[#1A1A1A]">
                     AI_Analysis_Report
                   </span>
-                  <div className="flex-1 h-px bg-white/5" />
-                  <span className="text-[8px] font-mono text-owda-teal/40 uppercase">
+                  <div className="flex-1 h-[2px] bg-[#1A1A1A] hidden md:block" />
+                  <span className="text-[9px] font-black bg-[#D4FF00] border border-[#1A1A1A] px-1 text-[#1A1A1A] uppercase">
                     Gemini_Engine
                   </span>
                 </div>
@@ -377,10 +376,10 @@ export function WorkspacePage() {
             molecules={currentReaction?.products?.molecules}
             type="output"
           />
-          <div className="bg-orange-500/5 border border-orange-500/10 rounded-2xl p-4 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
-            <div className="text-[10px] text-owda-gray font-mono leading-tight uppercase">
-              <span className="text-orange-200 block mb-1 underline underline-offset-4">
+          <div className="bg-[#FF6B6B] border-2 border-[#1A1A1A] rounded-none p-4 flex items-start gap-3 shadow-[4px_4px_0px_#1A1A1A]">
+            <AlertCircle className="w-6 h-6 text-[#1A1A1A] shrink-0 mt-0.5 fill-white" />
+            <div className="text-[10px] text-[#1A1A1A] font-black leading-tight uppercase font-mono">
+              <span className="text-white block mb-1 underline underline-offset-4 tracking-widest bg-[#1A1A1A] w-fit px-1">
                 Safety_Protocol_A1
               </span>
               Maintain standard STP conditions unless catalyst override is enabled in config.
@@ -406,11 +405,11 @@ function MetricBar({
 }) {
   return (
     <div className="space-y-1.5">
-      <div className="flex justify-between text-[9px] font-mono text-owda-gray/80 uppercase">
+      <div className="flex justify-between text-[9px] font-mono text-[#1A1A1A] font-bold uppercase">
         <span>{label}</span>
         <span>{percent}%</span>
       </div>
-      <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+      <div className="h-2 w-full bg-white border border-[#1A1A1A] rounded-none overflow-hidden">
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${percent}%` }}
@@ -432,16 +431,16 @@ function MoleculeStream({
 }) {
   const isInput = type === 'input';
   return (
-    <div className="bg-black/40 border border-white/5 rounded-2xl p-5 flex flex-col flex-1 min-h-0">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-[10px] font-black text-owda-snow uppercase tracking-widest">
+    <div className="bg-[#EAE8E4] border-2 border-[#1A1A1A] rounded-none p-5 shadow-[4px_4px_0px_#1A1A1A] flex flex-col flex-1 min-h-0">
+      <div className="flex items-center justify-between mb-4 border-b border-[#1A1A1A] pb-2">
+        <h3 className="text-[10px] font-black text-[#1A1A1A] uppercase tracking-widest">
           {title}
         </h3>
         <div
-          className={`px-2 py-0.5 rounded text-[8px] font-mono border ${
+          className={`px-2 py-0.5 rounded-none text-[8px] font-mono font-bold border border-[#1A1A1A] ${
             isInput
-              ? 'border-owda-teal text-owda-teal bg-owda-teal/5'
-              : 'border-owda-blue text-owda-blue bg-owda-blue/5'
+              ? 'bg-[#D4FF00] text-[#1A1A1A]'
+              : 'bg-white text-[#1A1A1A]'
           }`}
         >
           {isInput ? 'CHANNEL_A' : 'CHANNEL_B'}
@@ -455,35 +454,31 @@ function MoleculeStream({
               initial={{ x: 20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: i * 0.05 }}
-              className="group flex items-center justify-between p-3 bg-white/3 border border-white/5 rounded-xl hover:bg-white/6 transition-colors"
+              className="group flex items-center justify-between p-3 bg-white border-2 border-[#1A1A1A] rounded-none shadow-[2px_2px_0px_#1A1A1A] hover:bg-[#D4FF00] hover:translate-x-1 hover:-translate-y-1 hover:shadow-[4px_4px_0px_#1A1A1A] transition-all"
             >
               <div className="flex items-center gap-3">
                 <ChevronRight
-                  className={`w-3 h-3 ${
-                    isInput ? 'text-owda-teal' : 'text-owda-blue'
-                  } opacity-0 group-hover:opacity-100 transition-opacity`}
+                  className={`w-3 h-3 text-[#1A1A1A] opacity-0 group-hover:opacity-100 transition-opacity`}
                 />
                 <div>
-                  <span className="text-lg font-bold text-owda-snow tracking-tight">
+                  <span className="text-lg font-bold text-[#1A1A1A] tracking-tight">
                     {renderFormula(m.molecule.formula)}
                   </span>
-                  <span className="block text-[9px] text-owda-gray font-mono">
+                  <span className="block text-[9px] text-[#1A1A1A]/70 font-mono">
                     {m.molecule.molarMass} g/mol
                   </span>
                 </div>
               </div>
               <span
-                className={`text-xs font-mono font-bold ${
-                  isInput ? 'text-owda-teal' : 'text-owda-blue'
-                }`}
+                className={`text-xs font-mono font-bold text-[#1A1A1A] border px-1 py-0.5 border-[#1A1A1A] bg-white group-hover:bg-[#EAE8E4]`}
               >
                 ×{m.coefficient}
               </span>
             </motion.div>
           ))
         ) : (
-          <div className="h-full flex items-center justify-center border border-dashed border-white/10 rounded-xl min-h-20">
-            <span className="text-[9px] font-mono text-owda-gray/30 uppercase tracking-[0.4em]">
+          <div className="h-full flex items-center justify-center border-2 border-dashed border-[#1A1A1A] bg-white rounded-none min-h-20">
+            <span className="text-[9px] font-mono text-[#1A1A1A] font-bold uppercase tracking-[0.4em]">
               Listening...
             </span>
           </div>
@@ -496,13 +491,13 @@ function MoleculeStream({
 const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-[#0a0a1a] border border-white/20 p-2 rounded-lg shadow-2xl backdrop-blur-md">
-        <p className="text-[9px] font-mono text-owda-gray uppercase">
+      <div className="bg-[#FDFCFB] border-2 border-[#1A1A1A] p-2 shadow-[2px_2px_0px_#1A1A1A] rounded-none backdrop-blur-md">
+        <p className="text-[9px] font-mono text-[#1A1A1A] font-bold uppercase">
           {payload[0].payload.label}
         </p>
-        <p className="text-xs font-bold text-owda-snow">
+        <p className="text-xs font-bold text-[#1A1A1A]">
           {payload[0].value.toFixed(1)}{' '}
-          <span className="text-[10px] font-normal opacity-50">kJ/mol</span>
+          <span className="text-[10px] font-normal opacity-70">kJ/mol</span>
         </p>
       </div>
     );

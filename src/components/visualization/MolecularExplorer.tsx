@@ -56,7 +56,7 @@ export const MolecularExplorer: React.FC<Props> = ({ formula }) => {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(width, height);
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type    = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.type    = THREE.PCFShadowMap;
     container.appendChild(renderer.domElement);
 
     const controls = new OrbitControls(camera, renderer.domElement);
@@ -173,14 +173,14 @@ export const MolecularExplorer: React.FC<Props> = ({ formula }) => {
     scene.add(new THREE.Points(particleGeo, particleMat));
 
     // ── Animation ──────────────────────────────────────────────────────────
-    const clock    = new THREE.Clock();
+    const startTime = performance.now();
     let   rafId    = -1;
     const tmpDir   = new THREE.Vector3();
     const tmpUp    = new THREE.Vector3(0, 1, 0);
 
     const animate = () => {
       rafId = requestAnimationFrame(animate);
-      const t = clock.getElapsedTime();
+      const t = (performance.now() - startTime) / 1000;
 
       // Thermal jitter
       atoms.forEach((atom) => {
@@ -245,18 +245,18 @@ export const MolecularExplorer: React.FC<Props> = ({ formula }) => {
   return (
     <div
       ref={containerRef}
-      className="w-full h-full bg-linear-to-b from-[#050510] to-[#0a0a1f] relative group rounded-2xl overflow-hidden"
+      className="w-full h-full bg-white relative group rounded-none overflow-hidden"
     >
       {/* HUD Overlay */}
       <div className="absolute top-6 left-6 z-10 pointer-events-none select-none">
         <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-owda-teal animate-pulse" />
-            <span className="text-[10px] font-mono text-owda-teal/80 tracking-[.4em] uppercase">
+          <div className="flex items-center gap-2 bg-white px-2 py-1 border-2 border-[#1A1A1A] w-fit shadow-[2px_2px_0px_#1A1A1A]">
+            <div className="w-2 h-2 border border-[#1A1A1A] bg-[#D4FF00] animate-pulse" />
+            <span className="text-[10px] font-black text-[#1A1A1A] tracking-[.4em] uppercase">
               Spectral_View
             </span>
           </div>
-          <h3 className="text-3xl font-black text-white tracking-tighter uppercase italic drop-shadow-2xl">
+          <h3 className="text-3xl font-black text-[#1A1A1A] tracking-tighter uppercase italic mt-1 bg-white border-2 border-[#1A1A1A] px-3 py-1 shadow-[4px_4px_0px_#1A1A1A] w-fit">
             {formula}
           </h3>
         </div>
@@ -264,12 +264,12 @@ export const MolecularExplorer: React.FC<Props> = ({ formula }) => {
 
       {/* Controls hint */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-2 group-hover:translate-y-0">
-        <div className="px-4 py-2 bg-black/40 backdrop-blur-md border border-white/10 rounded-full">
-          <span className="text-[10px] font-mono text-owda-snow/60 uppercase tracking-widest flex items-center gap-4">
+        <div className="px-4 py-2 bg-[#D4FF00] border-2 border-[#1A1A1A] rounded-none shadow-[2px_2px_0px_#1A1A1A]">
+          <span className="text-[10px] font-black text-[#1A1A1A] uppercase tracking-widest flex items-center gap-4">
             <span>Drag to Rotate</span>
-            <span className="w-1 h-1 rounded-full bg-white/20" />
+            <span className="w-1 h-1 bg-[#1A1A1A]" />
             <span>Scroll to Zoom</span>
-            <span className="w-1 h-1 rounded-full bg-white/20" />
+            <span className="w-1 h-1 bg-[#1A1A1A]" />
             <span>Right-drag to Pan</span>
           </span>
         </div>

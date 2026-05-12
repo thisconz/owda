@@ -1,117 +1,69 @@
-import { motion } from 'motion/react'; // FIXED: was 'framer-motion'
+import { useState } from 'react';
+import { ChevronRight, ShieldCheck } from 'lucide-react';
+import { motion } from 'motion/react';
 
-export const Logo = ({ className = 'w-10 h-10' }: { className?: string }) => {
+export const Logo = () => {
+  const [isResonance, setIsResonance] = useState(false);
+
   return (
-    <motion.svg
-      viewBox="0 0 100 100"
-      className={`${className} filter drop-shadow-[0_0_8px_rgba(86,160,153,0.4)]`}
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      whileHover="hover"
-    >
-      <defs>
-        <linearGradient
-          id="hexGradient"
-          x1="15"
-          y1="15"
-          x2="85"
-          y2="85"
-          gradientUnits="userSpaceOnUse"
-        >
-          <stop stopColor="#56a099" />
-          <stop offset="1" stopColor="#313280" />
-        </linearGradient>
-        <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="2" result="blur" />
-          <feComposite in="SourceGraphic" in2="blur" operator="over" />
-        </filter>
-      </defs>
+    <div className="flex items-center gap-5 relative z-10">
+      <motion.div 
+        whileHover={{ scale: 1.05 }}
+        className="flex items-center gap-3 cursor-pointer group"
+        onClick={() => setIsResonance(!isResonance)}
+      >
+        {/* Brutalist Benzene Logo Icon */}
+        <div className="relative w-10 h-10 border-[3px] border-[#1A1A1A] bg-[#D4FF00] shadow-[3px_3px_0px_#1A1A1A] flex items-center justify-center overflow-hidden active:translate-y-0.5 active:shadow-[1px_1px_0px_#1A1A1A] transition-all">
+          <svg className="absolute w-full h-full p-1" viewBox="0 0 100 100">
+            {/* Hexagon */}
+            <polygon 
+              points="50,10 85,30 85,70 50,90 15,70 15,30" 
+              fill="none" 
+              stroke="#1A1A1A" 
+              strokeWidth="6" 
+              strokeLinejoin="round" 
+              className="group-hover:scale-105 transition-transform duration-300 origin-center"
+            />
+            {isResonance ? (
+              /* Resonance circle */
+              <circle 
+                cx="50" cy="50" r="18" 
+                fill="none" 
+                stroke="#1A1A1A" 
+                strokeWidth="6"
+                strokeDasharray="6 4"
+                className="group-hover:rotate-45 transition-transform duration-500 origin-center"
+              />
+            ) : (
+              /* Static double bonds */
+              <g stroke="#1A1A1A" strokeWidth="6" strokeLinecap="round" className="group-hover:scale-105 transition-transform duration-300 origin-center">
+                <line x1="27" y1="39" x2="27" y2="61" />
+                <line x1="52" y1="75" x2="71" y2="64" />
+                <line x1="71" y1="36" x2="52" y2="25" />
+              </g>
+            )}
+          </svg>
+        </div>
 
-      {/* Outer Crystal Lattice */}
-      <motion.path
-        d="M50 15L85 35V65L50 85L15 65V35L50 15Z"
-        stroke="url(#hexGradient)"
-        strokeWidth="1.5"
-        strokeOpacity="0.6"
-        animate={{
-          strokeDasharray: ['10, 200', '150, 200', '10, 200'],
-          opacity: [0.3, 0.6, 0.3],
-        }}
-        transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-      />
-
-      {/* Inner Core Ring */}
-      <motion.circle
-        cx="50"
-        cy="50"
-        r="22"
-        stroke="#56a099"
-        strokeWidth="0.5"
-        strokeDasharray="2 6"
-        className="opacity-20"
-        animate={{ rotate: -360 }}
-        transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-        style={{ originX: '50px', originY: '50px' }}
-      />
-
-      {/* Bonding Vectors */}
-      <motion.g className="opacity-30">
-        <path
-          d="M50 38L50 15M50 62L50 85M60 44L85 35M40 56L15 65M60 56L85 65M40 44L15 35"
-          stroke="#56a099"
-          strokeWidth="1"
-          strokeLinecap="round"
-        />
-      </motion.g>
-
-      {/* Nucleus */}
-      <motion.circle
-        cx="50"
-        cy="50"
-        r="8"
-        fill="url(#hexGradient)"
-        filter="url(#glow)"
-        animate={{
-          scale: [1, 1.15, 1],
-          fillOpacity: [0.8, 1, 0.8],
-        }}
-        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-      />
-
-      {/* Orbital Electrons */}
-      {[
-        { offset: 15, radius: 1.7, color: '#56a099', dur: 3 },
-        { offset: 20, radius: 1.5, color: '#313280', dur: 5 },
-        { offset: 25, radius: 1.3, color: '#56a099', dur: 7 },
-      ].map((e, i) => (
-        <motion.circle
-          key={i}
-          cx="50"
-          cy={50 - e.offset}
-          r={e.radius}
-          fill={e.color}
-          className="filter drop-shadow-[0_0_3px_#56a099]"
-          animate={{ rotate: 360 }}
-          transition={{
-            duration: e.dur,
-            repeat: Infinity,
-            ease: 'linear',
-          }}
-          style={{ originX: '50px', originY: '50px' }}
-        />
-      ))}
-
-      {/* Scanline HUD polish */}
-      <motion.rect
-        x="15"
-        y="15"
-        width="70"
-        height="2"
-        fill="#56a099"
-        fillOpacity="0.1"
-        animate={{ y: [15, 85, 15] }}
-        transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-      />
-    </motion.svg>
+        <div className="flex flex-col leading-none">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl font-black tracking-tighter uppercase text-[#1A1A1A]">
+              OWDA.
+            </span>
+            <div className="flex items-center gap-1 px-1.5 py-0.5 border-2 border-[#1A1A1A] bg-white shadow-[2px_2px_0px_#1A1A1A]">
+              <ShieldCheck className="w-3 h-3 text-[#1A1A1A]" />
+              <span className="text-[9px] font-mono text-[#1A1A1A] uppercase font-bold">ALPHA</span>
+            </div>
+          </div>
+            
+          <nav className="hidden lg:flex items-center gap-1 text-[9px] font-bold text-[#1A1A1A]/70 uppercase tracking-[0.15em] mt-1">
+            <span className="hover:text-[#1A1A1A] hover:bg-[#D4FF00] px-0.5 transition-all">Core</span>
+            <ChevronRight className="w-3 h-3 opacity-80" />
+            <span className="text-[#1A1A1A] bg-[#EAE8E4] border border-[#1A1A1A] px-1">Control_Panel</span>
+            <div className="ml-2 w-1.5 h-1.5 bg-[#ff6b6b] border border-[#1A1A1A] animate-pulse" />
+          </nav>
+        </div>
+      </motion.div>
+    </div>
   );
 };

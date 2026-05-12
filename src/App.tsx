@@ -42,43 +42,43 @@ export default function App() {
   return (
     <div
       className={`
-        min-h-screen text-owda-snow font-sans transition-all duration-1000 relative overflow-hidden select-none
-        ${isProcessing ? 'bg-[#041212]' : 'bg-[#02020a]'}
+        min-h-screen transition-all duration-1000 relative overflow-hidden select-none
+        ${isProcessing ? 'opacity-80' : 'opacity-100'}
       `}
     >
       <SettingsModal isOpen={isSettingsOpen} onClose={toggleSettings} />
 
-      {/* Atmospheric Engine Layer */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] contrast-150" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-size-[4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
-        <motion.div
-          animate={{
-            opacity: isProcessing ? [0.2, 0.4, 0.2] : 0.15,
-            scale: isProcessing ? [1, 1.1, 1] : 1,
-            x: isProcessing ? [0, 20, 0] : 0,
-          }}
-          transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute -top-1/4 -left-1/4 w-[150%] h-[150%] bg-linear-to-tr from-owda-teal/10 via-owda-blue/5 to-transparent blur-[160px] rounded-full"
-        />
-      </div>
-
       {/* Main Interface Frame */}
       <div
-        className={`flex h-screen relative z-10 transition-all duration-700 ${
+        className={`flex flex-col h-screen relative z-10 transition-all duration-700 ${
           error ? 'blur-md grayscale scale-[0.99]' : ''
         }`}
       >
-        <SideBar
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          openSettings={toggleSettings}
-        />
+        <TopBar />
+        <div className="flex-1 flex min-h-0 relative z-10">
+          {/* Global Brutalist Background */}
+          <div className="absolute inset-0 bg-[#FDFCFB] -z-20" />
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(26,26,26,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(26,26,26,0.05)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none -z-10" />
 
-        <main className="flex-1 flex flex-col min-w-0 h-full overflow-hidden bg-black/20">
-          <TopBar />
+          {/* Global Brutalist Frame Accents */}
+          <div className="fixed top-0 left-0 w-full h-2 bg-[#1A1A1A] z-50 mix-blend-multiply" />
+          <div className="fixed bottom-0 left-0 w-full h-2 bg-[#1A1A1A] z-50 mix-blend-multiply" />
+          <div className="fixed top-0 left-0 w-2 h-full bg-[#1A1A1A] z-50 mix-blend-multiply hidden md:block" />
+          <div className="fixed top-0 right-0 w-2 h-full bg-[#1A1A1A] z-50 mix-blend-multiply hidden md:block" />
 
-          <div className="flex-1 relative overflow-hidden">
+          <div className="fixed bottom-4 right-4 z-50 pointer-events-none hidden md:flex flex-col items-end opacity-40">
+            <span className="text-[10px] font-black uppercase text-[#1A1A1A] tracking-widest bg-[#D4FF00] px-1 border border-[#1A1A1A]">OWDA.SYS</span>
+            <span className="text-[8px] font-mono font-bold text-[#1A1A1A]">BUILD_v4.0.0</span>
+          </div>
+
+          <SideBar
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            openSettings={toggleSettings}
+          />
+
+          <main className="flex-1 flex flex-col min-w-0 h-full overflow-hidden bg-transparent z-10">
+            <div className="flex-1 relative overflow-hidden">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
@@ -88,7 +88,7 @@ export default function App() {
                 transition={{ duration: 0.4, ease: [0.19, 1, 0.22, 1] }}
                 className="h-full w-full overflow-y-auto custom-scrollbar scroll-smooth"
               >
-                <div className="max-w-450 mx-auto p-6 md:p-10 lg:p-16">
+                <div className="max-w-7xl mx-auto p-4 pb-24 md:p-10 lg:p-16 md:pb-16">
                   {ActivePage}
                 </div>
               </motion.div>
@@ -97,6 +97,7 @@ export default function App() {
 
           <Footer />
         </main>
+        </div>
       </div>
 
       {/* Critical System Override — Crash Handler */}
@@ -112,7 +113,7 @@ export default function App() {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -20, opacity: 0 }}
-              className="max-w-lg w-[95%] p-10 border border-red-500/30 bg-[#050510] rounded-sm relative overflow-hidden shadow-[0_0_100px_rgba(239,68,68,0.15)]"
+              className="max-w-lg w-[95%] p-10 border-2 border-black bg-[#FDFCFB] rounded-none relative overflow-hidden shadow-[8px_8px_0px_#1A1A1A]"
             >
               <div className="absolute top-0 right-0 p-4 opacity-5">
                 <Terminal className="w-40 h-40 text-red-500" />
@@ -132,32 +133,32 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="bg-black/40 border-l-2 border-red-500 p-5 mb-10 font-mono">
-                <p className="text-[11px] text-owda-snow/80 leading-relaxed tracking-tight">
+              <div className="bg-white border-2 border-[#1A1A1A] p-5 mb-10 font-mono shadow-[4px_4px_0px_#1A1A1A]">
+                <p className="text-[12px] font-black text-[#1A1A1A] leading-relaxed tracking-tight bg-[#ff6b6b] text-white px-2 py-1 mb-2 inline-block border-[1.5px] border-[#1A1A1A]">
                   {error.message}
                 </p>
                 {error.details && (
-                  <p className="mt-3 opacity-40 text-[9px] border-t border-white/5 pt-3 leading-snug">
-                    STACK_TRACE: {error.details.slice(0, 300)}…
-                  </p>
+                  <div className="mt-4 opacity-80 text-[10px] border-t-2 border-dashed border-[#1A1A1A] pt-4 leading-snug break-words">
+                    <span className="bg-[#EAE8E4] px-1 font-black mb-1 inline-block border border-[#1A1A1A]">STACK_TRACE:</span>
+                    <br />
+                    {error.details.slice(0, 300)}…
+                  </div>
                 )}
               </div>
 
               <div className="grid grid-cols-2 gap-4 relative z-10">
                 <button
                   onClick={() => window.location.reload()}
-                  className="flex items-center justify-center gap-2 py-4 bg-white/5 border border-white/10 text-owda-snow/60 hover:bg-white/10 transition-all rounded-xs text-[10px] font-bold uppercase tracking-widest"
+                  className="flex items-center justify-center gap-2 py-4 bg-white border-2 border-black text-black hover:bg-[#1A1A1A] hover:text-white transition-all rounded-none text-[10px] font-black uppercase tracking-widest shadow-[2px_2px_0px_#1A1A1A] active:translate-y-0.5 active:shadow-none"
                 >
-                  <RefreshCcw className="w-3 h-3" />
+                  <RefreshCcw className="w-3.5 h-3.5" />
                   Hard_Reboot
                 </button>
                 <button
                   onClick={clearError}
-                  className="group relative py-4 overflow-hidden rounded-xs bg-red-500 text-black transition-all hover:bg-red-400 active:scale-[0.98]"
+                  className="flex items-center justify-center gap-2 py-4 rounded-none bg-[#D4FF00] border-2 border-[#1A1A1A] text-[#1A1A1A] transition-all hover:bg-[#C2EB00] shadow-[2px_2px_0px_#1A1A1A] active:translate-y-0.5 active:shadow-none font-black text-[10px] tracking-[0.2em] uppercase"
                 >
-                  <span className="relative z-10 font-black text-[10px] tracking-[0.2em] uppercase">
-                    Flush_&amp;_Resume
-                  </span>
+                  Flush_&amp;_Resume
                 </button>
               </div>
             </motion.div>

@@ -1,34 +1,35 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
-  --font-display: "Space Grotesk", sans-serif;
+  --font-serif: "Playfair Display", ui-serif, Georgia, serif;
+  --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
 
-  --color-owda-teal: #56a099;
-  --color-owda-gray: #5e5e5e;
-  --color-owda-snow: #fffafa;
-  --color-owda-navy: #0e0f26;
-  --color-owda-blue: #313280;
+  --color-owda-teal: #1A1A1A;
+  --color-owda-gray: #1A1A1A;
+  --color-owda-snow: #1A1A1A;
+  --color-owda-navy: #FDFCFB;
+  --color-owda-blue: #D4FF00;
 }
 
 @layer base {
   body {
-    @apply bg-owda-navy text-owda-snow antialiased;
+    @apply bg-[#FDFCFB] text-[#1A1A1A] antialiased flex flex-col font-sans overflow-hidden select-none h-full h-screen;
   }
 }
 
 .bg-grid {
   background-size: 40px 40px;
-  background-image: linear-gradient(to right, rgba(86, 160, 153, 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(86, 160, 153, 0.05) 1px, transparent 1px);
+  background-image: linear-gradient(to right, rgba(26, 26, 26, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(26, 26, 26, 0.05) 1px, transparent 1px);
 }
 .bg-scanline {
   background: linear-gradient(
     to bottom,
     transparent 50%,
-    rgba(86, 160, 153, 0.02) 51%
+    rgba(26, 26, 26, 0.02) 51%
   );
   background-size: 100% 4px;
 }
@@ -49,25 +50,25 @@
   background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(94, 94, 94, 0.3);
-  border-radius: 10px;
+  background: rgba(26, 26, 26, 0.2);
+  border-radius: 0;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(86, 160, 153, 0.5);
+  background: rgba(26, 26, 26, 0.5);
 }
 
-/* Prose overrides for better scientific documentation look */
+/* Prose overrides for better neo-brutalist document look */
 .prose-sm {
-  @apply text-owda-snow/80 leading-relaxed;
+  @apply text-[#1A1A1A] leading-relaxed;
 }
 .prose-sm h1, .prose-sm h2, .prose-sm h3 {
-  @apply text-owda-snow font-display tracking-tight mt-6 mb-2;
+  @apply text-[#1A1A1A] font-serif italic tracking-tight mt-6 mb-2 border-b border-[#1A1A1A] pb-2;
 }
 .prose-sm strong {
-  @apply text-owda-teal font-medium;
+  @apply text-[#1A1A1A] font-black;
 }
 .prose-sm code {
-  @apply bg-owda-snow/10 px-1 py-0.5 rounded text-owda-teal font-mono text-[0.9em];
+  @apply bg-[#EAE8E4] px-1 py-0.5 rounded-none text-[#1A1A1A] font-mono text-[0.9em] border border-[#1A1A1A];
 }
 .prose-sm ul {
   @apply space-y-2 list-disc pl-4;
