@@ -9,7 +9,7 @@ export const Logo = () => {
     <div className="flex items-center gap-5 relative z-10">
       <motion.div 
         whileHover={{ scale: 1.05 }}
-        className="flex items-center gap-3 cursor-pointer group"
+        className="flex items-center gap-3 cursor-pointer group transition-transform duration-300"
         onClick={() => setIsResonance(!isResonance)}
       >
         {/* Brutalist Benzene Logo Icon */}
@@ -36,7 +36,7 @@ export const Logo = () => {
               />
             ) : (
               /* Static double bonds */
-              <g stroke="#1A1A1A" strokeWidth="6" strokeLinecap="round" className="group-hover:scale-105 transition-transform duration-300 origin-center">
+              <g stroke="#1A1A1A" strokeWidth="6" strokeLinecap="round" className="group-hover:scale-105 transition-transform duration-500 origin-center">
                 <line x1="27" y1="39" x2="27" y2="61" />
                 <line x1="52" y1="75" x2="71" y2="64" />
                 <line x1="71" y1="36" x2="52" y2="25" />

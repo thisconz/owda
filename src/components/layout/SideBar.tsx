@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'motion/react';
 
-export type TabType = 'workspace' | 'explorer' | 'analytics';
+export type TabType = 'workspace' | 'explorer' | 'analytics' | 'compare';
 
 interface SideBarProps {
   activeTab: TabType;
@@ -20,9 +20,10 @@ interface SideBarProps {
 
 export const SideBar: React.FC<SideBarProps> = ({ activeTab, setActiveTab, openSettings }) => {
   const tabs = [
-    { id: 'workspace', icon: FlaskConical, label: "Laboratory", color: "text-owda-teal", desc: "Reaction Workspace" },
-    { id: 'explorer', icon: Atom, label: "Quantum_Sim", color: "text-owda-blue", desc: "Simulate States" },
-    { id: 'analytics', icon: Activity, label: "Telemetry", color: "text-emerald-500", desc: "Data Analytics" },
+    { id: 'workspace', icon: FlaskConical, label: "Synthesis Lab", color: "text-owda-teal", desc: "Reaction Workspace" },
+    { id: 'explorer', icon: Atom, label: "Horizon Simulator", color: "text-owda-blue", desc: "Simulate States" },
+    { id: 'analytics', icon: Activity, label: "Telemetry Analytics", color: "text-emerald-500", desc: "Data Analytics" },
+    { id: 'compare', icon: Globe, label: "Compare", color: "text-owda-orange", desc: "Side-by-Side" },
   ];
 
   return (
@@ -35,8 +36,7 @@ export const SideBar: React.FC<SideBarProps> = ({ activeTab, setActiveTab, openS
         </div>
         <div className="w-full flex items-center justify-between border-4 border-[#1A1A1A] bg-[#D4FF00] p-3 shadow-[4px_4px_0px_#1A1A1A] z-10">
           <div className="flex flex-col items-start leading-none">
-            <span className="text-[14px] font-black text-[#1A1A1A] uppercase tracking-tighter">OWDA.SYS</span>
-            <span className="text-[9px] font-mono font-black text-[#1A1A1A] uppercase bg-white px-1 border border-[#1A1A1A] mt-1">v4.0.0</span>
+            <span className="text-[9px] font-mono font-black text-[#1A1A1A] uppercase bg-white px-1 border border-[#1A1A1A] mt-1">{import.meta.env.V}</span>
           </div>
         </div>
         {/* Decorative brutalist barcode / grid */}

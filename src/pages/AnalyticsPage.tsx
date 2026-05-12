@@ -92,16 +92,20 @@ export function AnalyticsPage() {
       className="w-full max-w-7xl mx-auto flex flex-col gap-6 font-sans"
     >
       {/* Header */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 border-2 border-[#1A1A1A] shadow-[4px_4px_0px_#1A1A1A]">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-white border-2 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A]">
-            <BarChart3 className="w-8 h-8 text-[#1A1A1A]" />
+      <header className="flex flex-col md:flex-row items-center justify-between px-6 py-4 bg-white border-2 border-[#1A1A1A] rounded-none shrink-0 shadow-[4px_4px_0px_#1A1A1A]">
+        <div className="flex items-center gap-5">
+          <div className="relative border-2 border-[#1A1A1A] p-2 bg-[#EAE8E4]">
+            <BarChart3 className="w-8 h-8 text-[#1A1A1A] relative z-10" />
           </div>
           <div>
-            <h2 className="text-xl font-black tracking-tighter text-[#1A1A1A] uppercase italic">
-              Telemetry_Analytics
+            <h2 className="text-xl font-black tracking-tighter text-[#1A1A1A] uppercase italic flex items-center gap-2">
+              Telemetry <span className="bg-[#D4FF00] px-2 border-2 border-[#1A1A1A] not-italic">Analytics</span>
+              <span className="not-italic text-[10px] bg-white border-2 border-[#1A1A1A] px-2 py-0.5 rounded-none text-[#1A1A1A] font-bold ml-2 shadow-[2px_2px_0px_#1A1A1A]">
+                {import.meta.env.ANALYTIC_VERSION}
+              </span>
             </h2>
-            <span className="text-[10px] font-bold text-[#1A1A1A] bg-[#EAE8E4] px-1 border border-[#1A1A1A] uppercase tracking-widest">
+            <span className="text-[9px] font-bold text-[#1A1A1A] uppercase tracking-widest flex items-center gap-1.5 mt-1 border border-[#1A1A1A] inline-flex px-1 bg-[#EAE8E4]">
+              <span className="w-2 h-2 border border-[#1A1A1A] bg-[#D4FF00] animate-pulse" />
               {stats.total} reactions logged
             </span>
           </div>

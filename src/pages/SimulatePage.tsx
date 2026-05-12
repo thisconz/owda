@@ -218,7 +218,7 @@ export function SimulatePage() {
             <h2 className="text-xl font-black tracking-tighter text-[#1A1A1A] uppercase italic flex items-center gap-2">
               Horizon <span className="bg-[#D4FF00] px-2 border-2 border-[#1A1A1A] not-italic">Simulator</span>
               <span className="not-italic text-[10px] bg-white border-2 border-[#1A1A1A] px-2 py-0.5 rounded-none text-[#1A1A1A] font-bold ml-2 shadow-[2px_2px_0px_#1A1A1A]">
-                V3.0
+                {import.meta.env.SIMULATE_VERSION}
               </span>
             </h2>
             <span className="text-[9px] font-bold text-[#1A1A1A] uppercase tracking-widest flex items-center gap-1.5 mt-1 border border-[#1A1A1A] inline-flex px-1 bg-[#EAE8E4]">
