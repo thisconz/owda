@@ -10,7 +10,8 @@ import { TabType } from './components/layout/SideBar';
 import { SettingsModal } from './components/modals/SettingsModal';
 import { WorkspacePage } from './pages/WorkspacePage';
 import { SimulatePage } from './pages/SimulatePage';
-import { AnalyticsPage } from './pages/AnalyticsPage'; // NEW
+import { AnalyticsPage } from './pages/AnalyticsPage';
+import { ComparePage } from './pages/ComparePage';
 import { SideBar } from './components/layout/SideBar';
 import { TopBar } from './components/layout/TopBar';
 import { Footer } from './components/layout/Footer';
@@ -34,6 +35,8 @@ export default function App() {
         return <SimulatePage />;
       case 'analytics':
         return <AnalyticsPage />;
+      case 'compare':
+        return <ComparePage />;
       default:
         return <WorkspacePage />;
     }

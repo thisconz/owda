@@ -31,13 +31,11 @@ export const SideBar: React.FC<SideBarProps> = ({ activeTab, setActiveTab, openS
       
       {/* 1. ARCHITECTURAL BRANDING */}
       <div className="hidden md:flex flex-col items-center justify-center p-6 w-full border-b-4 border-[#1A1A1A] bg-[#ff6b6b] relative">
-        <div className="absolute top-0 right-0 w-8 h-8 bg-white border-l-4 border-b-4 border-[#1A1A1A] pt-1 pl-1">
-          <div className="w-3 h-3 bg-[#1A1A1A] rounded-full animate-pulse" />
+        <div className="absolute top-1 right-0 w-8 h-8 bg-white border-l-4 border-b-4 border-[#1A1A1A] pt-1 pl-1">
+          <div className="w-4 h-4 bg-[#1A1A1A] rounded-full animate-pulse" />
         </div>
         <div className="w-full flex items-center justify-between border-4 border-[#1A1A1A] bg-[#D4FF00] p-3 shadow-[4px_4px_0px_#1A1A1A] z-10">
-          <div className="flex flex-col items-start leading-none">
-            <span className="text-[9px] font-mono font-black text-[#1A1A1A] uppercase bg-white px-1 border border-[#1A1A1A] mt-1">{import.meta.env.V}</span>
-          </div>
+          <span className="text-[20px] font-mono font-black text-[#1A1A1A] px-1 mt-1">V{import.meta.env.APP_VERSION || "1.0.0"}</span>
         </div>
         {/* Decorative brutalist barcode / grid */}
         <div className="w-full h-5 mt-4 flex items-end gap-1 px-1 opacity-80 mix-blend-multiply">

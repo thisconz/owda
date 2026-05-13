@@ -2,15 +2,6 @@ import { ExplanationStep } from '../types';
 
 /**
  * OWDA AI Service — Layer 3
- *
- * Sends a chemical reaction expression to the Anthropic Claude API and
- * returns structured thermodynamic estimates plus multi-level explanations.
- *
- * Transport: fetch → api.anthropic.com/v1/messages (artifact proxy — no key
- * is embedded in the bundle; the platform injects the credential server-side).
- *
- * The service is intentionally stateless: every call is a fresh HTTP request
- * with no caching. Rate-limiting and quota management are handled upstream.
  */
 
 // ---------------------------------------------------------------------------
@@ -43,7 +34,7 @@ interface ClaudeAnalysisPayload {
   gibbs?:        number;
 }
 
-type AIProvider = 'anthropic' | 'openai' | 'google';
+type AIProvider = 'openrouter';
 
 interface AIModelConfig {
   provider: AIProvider;
@@ -58,25 +49,24 @@ interface AIModelConfig {
 
 const AI_MODELS: Record<string, AIModelConfig> = {
   claude: {
-    provider: 'anthropic',
-    model: 'claude-sonnet-4-20250514',
-    apiUrl: 'https://api.anthropic.com/v1/messages',
-    apiKey: import.meta.env.ANTHROPIC_API_KEY,
+    provider: 'openrouter',
+    model: 'anthropic/claude-3.7-sonnet',
+    apiUrl: 'https://openrouter.ai/api/v1/chat/completions',
+    apiKey: import.meta.env.VITE_OPENROUTER_API_KEY,
   },
 
   gpt4o: {
-    provider: 'openai',
-    model: 'gpt-4o',
-    apiUrl: 'https://api.openai.com/v1/chat/completions',
-    apiKey: import.meta.env.OPENAI_API_KEY,
+    provider: 'openrouter',
+    model: 'openai/gpt-4o',
+    apiUrl: 'https://openrouter.ai/api/v1/chat/completions',
+    apiKey: import.meta.env.VITE_OPENROUTER_API_KEY,
   },
 
   gemini: {
-    provider: 'google',
-    model: 'gemini-2.5-pro',
-    apiUrl:
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent',
-    apiKey: import.meta.env.GEMINI_API_KEY,
+    provider: 'openrouter',
+    model: 'google/gemini-2.5-pro',
+    apiUrl: 'https://openrouter.ai/api/v1/chat/completions',
+    apiKey: import.meta.env.VITE_OPENROUTER_API_KEY,
   },
 };
 
@@ -84,7 +74,7 @@ const AI_MODELS: Record<string, AIModelConfig> = {
 // Config
 // ---------------------------------------------------------------------------
 
-const ACTIVE_MODEL = 'claude';
+const ACTIVE_MODEL: keyof typeof AI_MODELS = 'claude';
 
 const MAX_TOKENS = 1024;
 const TIMEOUT_MS = 12000;
@@ -131,7 +121,7 @@ Do not include comments, units strings, or any extra fields.`;
  * Strips markdown code fences that Claude occasionally wraps JSON in,
  * then parses and validates the payload structure.
  */
-function parseClaudeResponse(raw: string): ClaudeAnalysisPayload {
+function parseAIResponse(raw: string): ClaudeAnalysisPayload {
   // Remove ```json ... ``` or ``` ... ``` wrappers
   const cleaned = raw
     .replace(/^```(?:json)?\s*/i, '')
@@ -266,17 +256,39 @@ async function fetchWithTimeout(
   }
 }
 
-async function callClaudeAPI(expression: string): Promise<ClaudeAnalysisPayload> {
-  const body = JSON.stringify({
-    model:      AI_MODELS[ACTIVE_MODEL].model,
-    max_tokens: MAX_TOKENS,
+async function callAI(expression: string): Promise<ClaudeAnalysisPayload> {
+  const modelConfig = AI_MODELS[ACTIVE_MODEL];
+
+   const body = JSON.stringify({
+    model: modelConfig.model,
+
     messages: [
-      { role: 'user', content: buildPrompt(expression) },
+      {
+        role: 'system',
+        content:
+          'You are a chemistry expert assistant that returns strict JSON only.',
+      },
+      {
+        role: 'user',
+        content: buildPrompt(expression),
+      },
     ],
+
+    temperature: 0.2,
+    max_tokens: MAX_TOKENS,
+
+    response_format: {
+      type: 'json_object',
+    },
   });
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    Authorization: `Bearer ${modelConfig.apiKey}`,
+
+    // Optional but recommended
+    'HTTP-Referer': window.location.origin,
+    'X-Title': 'OWDA',
   };
 
   let lastError: Error = new Error('Unknown error');
@@ -284,60 +296,79 @@ async function callClaudeAPI(expression: string): Promise<ClaudeAnalysisPayload>
   // Single retry loop: attempt 0, then attempt 1 on retryable status codes
   for (let attempt = 0; attempt < 2; attempt++) {
     if (attempt > 0) {
-      await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
+      await new Promise(resolve =>
+        setTimeout(resolve, RETRY_DELAY_MS)
+      );
     }
 
     let response: Response;
+
     try {
-      response = await fetchWithTimeout(AI_MODELS[ACTIVE_MODEL].apiUrl, { method: 'POST', headers, body }, TIMEOUT_MS);
+      response = await fetchWithTimeout(
+        modelConfig.apiUrl,
+        {
+          method: 'POST',
+          headers,
+          body,
+        },
+        TIMEOUT_MS
+      );
     } catch (fetchErr) {
-      // AbortError → timeout; TypeError → network failure
-      const msg = fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
+      const msg =
+        fetchErr instanceof Error
+          ? fetchErr.message
+          : String(fetchErr);
+
       lastError = new Error(
-        fetchErr instanceof DOMException && fetchErr.name === 'AbortError'
+        fetchErr instanceof DOMException &&
+        fetchErr.name === 'AbortError'
           ? `Request timed out after ${TIMEOUT_MS / 1000}s`
           : `Network error: ${msg}`
       );
-      // Network errors are always retryable
+
       continue;
     }
 
     if (!response.ok) {
-      if (RETRYABLE_STATUS_CODES.has(response.status) && attempt === 0) {
-        lastError = new Error(`API returned HTTP ${response.status} — retrying…`);
+      if (
+        RETRYABLE_STATUS_CODES.has(response.status) &&
+        attempt === 0
+      ) {
+        lastError = new Error(
+          `API returned HTTP ${response.status} — retrying…`
+        );
         continue;
       }
-      // Non-retryable or second attempt: read error body for diagnostics
+
       let errorBody = '';
-      try { errorBody = await response.text(); } catch { /* ignore */ }
+
+      try {
+        errorBody = await response.text();
+      } catch {}
+
       throw new Error(
         `API error ${response.status}: ${response.statusText}. ${errorBody.slice(0, 200)}`
       );
     }
 
-    // Parse the Anthropic response envelope
-    let envelope: Record<string, unknown>;
+    let envelope: any;
+
     try {
-      envelope = await response.json() as Record<string, unknown>;
+      envelope = await response.json();
     } catch {
-      throw new Error('Failed to parse API response as JSON.');
+      throw new Error('Failed to parse API response JSON.');
     }
 
-    // Extract the text content block
-    const contentArr = envelope['content'];
-    if (!Array.isArray(contentArr) || contentArr.length === 0) {
-      throw new Error('API response contained no content blocks.');
+    const content =
+      envelope?.choices?.[0]?.message?.content;
+
+    if (!content || typeof content !== 'string') {
+      throw new Error(
+        'OpenRouter response missing message content.'
+      );
     }
 
-    const textBlock = (contentArr as Array<Record<string, unknown>>)
-      .find(block => block['type'] === 'text');
-
-    if (!textBlock || typeof textBlock['text'] !== 'string') {
-      throw new Error('API response had no text content block.');
-    }
-
-    // Parse and validate the structured payload
-    return parseClaudeResponse(textBlock['text'] as string);
+    return parseAIResponse(content);
   }
 
   throw lastError;
@@ -357,7 +388,7 @@ export class AIService {
    */
   public static async explainReaction(expression: string): Promise<AIAnalysisResult> {
     try {
-      const payload = await callClaudeAPI(expression);
+      const payload = await callAI(expression);
 
       return {
         steps: [

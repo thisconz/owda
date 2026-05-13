@@ -168,6 +168,8 @@ export interface ReactionHistoryEntry {
    * @unit kJ/mol
    */
   enthalpy?:     number;
+  entropy?:      number;
+  gibbs?:        number;
   /**
    * `true`  = exothermic (ΔH < 0)
    * `false` = endothermic (ΔH > 0)

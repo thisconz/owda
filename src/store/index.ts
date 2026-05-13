@@ -1,7 +1,4 @@
 import { create } from 'zustand';
-import type {
-  PersistStorage,
-} from 'zustand/middleware';
 import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
 import {
   EngineState,
@@ -12,14 +9,16 @@ import {
 } from '../types';
 import type { AIThermodynamics } from '../services/aiService';
 
+
 // ---------------------------------------------------------------------------
 // AI Models
 // ---------------------------------------------------------------------------
 
 export type AIModelType =
-  | 'claude'
-  | 'gpt4o'
-  | 'gemini';
+  | 'claude-3-5'
+  | 'gpt-4o'
+  | 'o1-mini'
+  | 'gemini-1-5';
 
 export interface AIModelInfo {
   id: AIModelType;
@@ -29,20 +28,23 @@ export interface AIModelInfo {
 
 export const AI_MODELS: readonly AIModelInfo[] = [
   {
-    id: 'claude',
-    label: 'Claude Sonnet 4',
+    id: 'claude-3-5',
+    label: 'Claude 3.5 Sonnet',
     provider: 'Anthropic',
   },
-
   {
-    id: 'gpt4o',
+    id: 'gpt-4o',
     label: 'GPT-4o',
     provider: 'OpenAI',
   },
-
   {
-    id: 'gemini',
-    label: 'Gemini 2.5 Pro',
+    id: 'o1-mini',
+    label: 'o1-mini',
+    provider: 'OpenAI',
+  },
+  {
+    id: 'gemini-1-5',
+    label: 'Gemini 1.5 Pro',
     provider: 'Google',
   },
 ] as const;
@@ -73,7 +75,7 @@ export interface SolverSettings {
 const DEFAULT_SETTINGS: Readonly<SolverSettings> = {
   enableAI:             true,
   enforceStoichiometry: true,
-  AIModel:              'claude',
+  AIModel:              'claude-3-5',
   syncDelay:            0,
   theme:                'dark',
 };

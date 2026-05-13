@@ -43,9 +43,10 @@ const REACTION_CATALOG = [
     category: 'Acid-Base',
     icon: <FlaskConical className="w-4 h-4" />,
     items: [
-      { label: 'Neutralisation',      formula: 'HCl + NaOH -> NaCl + H2O',       difficulty: 'L1' },
-      { label: 'H₂SO₄ + NaOH',       formula: 'H2SO4 + NaOH -> Na2SO4 + H2O',   difficulty: 'L2' },
+      { label: 'Neutralisation',     formula: 'HCl + NaOH -> NaCl + H2O',         difficulty: 'L1' },
+      { label: 'H₂SO₄ + NaOH',       formula: 'H2SO4 + NaOH -> Na2SO4 + H2O',     difficulty: 'L2' },
       { label: 'CaCO₃ + HCl',        formula: 'CaCO3 + HCl -> CaCl2 + H2O + CO2', difficulty: 'L2' },
+      { label: 'NH₃ + H₂SO₄',        formula: 'NH3 + H2SO4 -> (NH4)2SO4',         difficulty: 'L3' },
     ],
   },
 ];
@@ -223,7 +224,7 @@ export const ReactionWorkspace: React.FC = () => {
             ) : (
               <BotOff className="w-3 h-3" />
             )}
-            {settings.enableAI ? 'AI ON' : 'AI OFF'}
+            {settings.enableAI ? 'AI ON' : 'AI OFF'} - {settings.AIModel}
           </div>
           <div
             className={`px-3 py-1 border text-[9px] font-mono font-bold transition-colors ${

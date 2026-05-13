@@ -52,14 +52,14 @@ export const Logo = () => {
             </span>
             <div className="flex items-center gap-1 px-1.5 py-0.5 border-2 border-[#1A1A1A] bg-white shadow-[2px_2px_0px_#1A1A1A]">
               <ShieldCheck className="w-3 h-3 text-[#1A1A1A]" />
-              <span className="text-[9px] font-mono text-[#1A1A1A] uppercase font-bold">ALPHA</span>
+              <span className="text-[9px] font-mono text-[#1A1A1A] uppercase font-bold">V{import.meta.env.APP_VERSION || "1.0.0"}</span>
             </div>
           </div>
             
-          <nav className="hidden lg:flex items-center gap-1 text-[9px] font-bold text-[#1A1A1A]/70 uppercase tracking-[0.15em] mt-1">
+          <nav className="hidden lg:flex items-center gap-1 text-[10px] font-bold text-[#1A1A1A]/70 uppercase tracking-[0.15em] mt-1">
             <span className="hover:text-[#1A1A1A] hover:bg-[#D4FF00] px-0.5 transition-all">Core</span>
             <ChevronRight className="w-3 h-3 opacity-80" />
-            <span className="text-[#1A1A1A] bg-[#EAE8E4] border border-[#1A1A1A] px-1">Control_Panel</span>
+            <span className="text-[#1A1A1A] bg-[#EAE8E4] border border-[#1A1A1A] px-2">Control Panel</span>
             <div className="ml-2 w-1.5 h-1.5 bg-[#ff6b6b] border border-[#1A1A1A] animate-pulse" />
           </nav>
         </div>

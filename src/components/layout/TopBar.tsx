@@ -73,7 +73,7 @@ export const TopBar: React.FC = () => {
              <span className="text-[8px] font-black uppercase text-[#1A1A1A] tracking-wider border-b border-[#1A1A1A]">Mem</span>
              <span className="text-[10px] font-mono text-[#1A1A1A] font-black">OPT</span>
           </div>
-          <Orbit className="w-4 h-4 text-[#1A1A1A] animate-spin-slow" />
+          <Orbit className="w-4 h-4 text-[#1A1A1A] animate-[spin_9s_linear_infinite]" />
         </div>
       </div>
 

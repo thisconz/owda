@@ -15,12 +15,7 @@ import {
   Sliders,
   CheckCircle2,
 } from 'lucide-react';
-import {
-  useOWDAStore,
-  useSolverSettings,
-  AI_MODELS,
-  AIModelType,
-} from '../../store';
+import { useOWDAStore, useSolverSettings, AI_MODELS, AIModelType } from '../../store';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -130,7 +125,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             {/* Header */}
             <div className="p-5 border-b-4 border-[#1A1A1A] flex items-center justify-between bg-[#EAE8E4] relative z-10">
               <div className="flex items-center gap-4">
-                <div className="relative border-2 border-[#1A1A1A] p-2 bg-white shadow-[2px_2px_0px_#1A1A1A]">
+                <div className="relative border-2 border-[#1A1A1A] p-2 bg-white shadow-[2px_2px_0px_#1A1A1A] rotate-3">
                   <Settings className="w-5 h-5 text-[#1A1A1A] relative animate-[spin_20s_linear_infinite]" />
                 </div>
                 <div>
@@ -139,8 +134,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   </h2>
                   <div className="flex items-center gap-2 mt-1.5">
                     <span className="w-2 h-2 border border-[#1A1A1A] bg-[#D4FF00] animate-pulse" />
-                    <code className="text-[10px] text-[#1A1A1A] font-mono font-black tracking-widest bg-white border border-[#1A1A1A] px-1">
-                      VER_4.0.0_ALPHA
+                    <code className="text-[10px] font-mono bg-[#1A1A1A] text-white px-2 py-0.5">
+                      V{import.meta.env.APP_VERSION || "1.0.0"}
                     </code>
                   </div>
                 </div>

@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Activity, Terminal, Cpu, HardDrive, Wifi, Code2, Database, Shield } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { Activity, Terminal, Cpu, Wifi, Code2, Database, Shield } from "lucide-react";
 import { motion, AnimatePresence } from 'motion/react';
 import { useOWDAStore } from '../../store';
 
@@ -23,13 +23,13 @@ export const Footer = () => {
     <footer className="hidden md:flex fixed bottom-0 left-64 right-0 h-10 bg-white border-t-2 border-[#1A1A1A] z-50 px-6 items-center justify-between font-mono text-[9px] tracking-[0.12em] text-[#1A1A1A] select-none overflow-hidden">
       
       {/* Background Decor: CRT Scanline & Grain */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(26,26,26,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(26,26,26,0.05)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none opacity-20" />
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(26,26,26,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(26,26,26,0.05)_1px,transparent_1px)] bg-size-[32px_32px] pointer-events-none opacity-20" />
 
       {/* LEFT: System Kernel & Resources */}
       <div className="flex items-center gap-8 relative z-10">
         <div className="flex items-center gap-3">
           <div className={`relative flex items-center justify-center p-1.5 transition-all duration-500 border-2 border-[#1A1A1A] ${
-            isProcessing ? 'bg-[#D4FF00] text-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A]' : 'bg-white text-[#1A1A1A]'
+            isProcessing ? 'bg-owda-blue text-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A]' : 'bg-white text-[#1A1A1A]'
           }`}>
             <Terminal className={`w-3.5 h-3.5 ${isProcessing ? 'animate-pulse' : ''}`} />
           </div>

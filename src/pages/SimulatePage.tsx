@@ -206,25 +206,22 @@ export function SimulatePage() {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="w-full flex flex-col gap-6 font-sans"
+      className="w-full max-w-7xl mx-auto flex flex-col gap-6 font-sans p-4"
     >
-      {/* HUD Header */}
-      <header className="flex flex-col md:flex-row items-center justify-between px-6 py-4 bg-white border-2 border-[#1A1A1A] rounded-none shrink-0 shadow-[4px_4px_0px_#1A1A1A]">
+      {/* HEADER */}
+      <header className="flex flex-col md:flex-row items-center justify-between px-6 py-6 bg-white border-4 border-[#1A1A1A] shadow-[8px_8px_0px_#1A1A1A]">
         <div className="flex items-center gap-5">
-          <div className="relative border-2 border-[#1A1A1A] p-2 bg-[#EAE8E4]">
-            <Orbit className="w-8 h-8 text-[#1A1A1A] relative z-10 animate-[spin_12s_linear_infinite]" />
+          <div className="bg-[#ff6b6b] p-3 border-2 border-[#1A1A1A] rotate-3">
+            <Orbit className="w-8 h-8 text-white animate-[spin_12s_linear_infinite]" />
           </div>
           <div>
-            <h2 className="text-xl font-black tracking-tighter text-[#1A1A1A] uppercase italic flex items-center gap-2">
+            <h2 className="text-2xl font-black tracking-tighter text-[#1A1A1A] uppercase italic">
               Horizon <span className="bg-[#D4FF00] px-2 border-2 border-[#1A1A1A] not-italic">Simulator</span>
-              <span className="not-italic text-[10px] bg-white border-2 border-[#1A1A1A] px-2 py-0.5 rounded-none text-[#1A1A1A] font-bold ml-2 shadow-[2px_2px_0px_#1A1A1A]">
-                {import.meta.env.SIMULATE_VERSION}
-              </span>
             </h2>
-            <span className="text-[9px] font-bold text-[#1A1A1A] uppercase tracking-widest flex items-center gap-1.5 mt-1 border border-[#1A1A1A] inline-flex px-1 bg-[#EAE8E4]">
-              <span className="w-2 h-2 border border-[#1A1A1A] bg-[#D4FF00] animate-pulse" />
-              Kinetic_Engine_Live — Maxwell–Boltzmann
-            </span>
+            <div className="flex items-center gap-2 mt-1">
+               <span className="text-[10px] font-mono bg-[#1A1A1A] text-white px-2 py-0.5">V{import.meta.env.SIMULATE_VERSION || '1.0.0'}</span>
+               <span className="text-[10px] font-black text-[#1A1A1A] uppercase tracking-widest">Kinetic_Engine_Live — Maxwell–Boltzmann</span>
+            </div>
           </div>
         </div>
 
