@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap");
 @import "tailwindcss";
 
 @theme {
@@ -7,11 +7,11 @@
   --font-serif: "Playfair Display", ui-serif, Georgia, serif;
   --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
 
-  --color-owda-teal: #1A1A1A;
-  --color-owda-gray: #1A1A1A;
-  --color-owda-snow: #1A1A1A;
-  --color-owda-navy: #FDFCFB;
-  --color-owda-blue: #D4FF00;
+  --color-owda-teal: #1a1a1a;
+  --color-owda-gray: #1a1a1a;
+  --color-owda-snow: #1a1a1a;
+  --color-owda-navy: #fdfcfb;
+  --color-owda-blue: #d4ff00;
 }
 
 @layer base {
@@ -22,7 +22,8 @@
 
 .bg-grid {
   background-size: 40px 40px;
-  background-image: linear-gradient(to right, rgba(26, 26, 26, 0.05) 1px, transparent 1px),
+  background-image:
+    linear-gradient(to right, rgba(26, 26, 26, 0.05) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(26, 26, 26, 0.05) 1px, transparent 1px);
 }
 .bg-scanline {
@@ -61,7 +62,9 @@
 .prose-sm {
   @apply text-[#1A1A1A] leading-relaxed;
 }
-.prose-sm h1, .prose-sm h2, .prose-sm h3 {
+.prose-sm h1,
+.prose-sm h2,
+.prose-sm h3 {
   @apply text-[#1A1A1A] font-serif italic tracking-tight mt-6 mb-2 border-b border-[#1A1A1A] pb-2;
 }
 .prose-sm strong {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from "react";
 import {
   Terminal,
   Activity,
@@ -13,40 +13,248 @@ import {
   Table2,
   Bot,
   BotOff,
-} from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
-import { useOWDAActions, useOWDAStore, useSolverSettings } from '../../store';
-import { ReactionSolver } from '../../engine/solver';
-import { AIService } from '../../services/aiService';
-import { ElementPicker } from './ElementPicker';
+  Dna,
+  Brain,
+  Factory,
+  Atom,
+  Zap,
+} from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { useOWDAActions, useOWDAStore, useSolverSettings } from "../../store";
+import { ReactionSolver } from "../../engine/solver";
+import { AIService } from "../../services/aiService";
+import { ElementPicker } from "./ElementPicker";
 
 const REACTION_CATALOG = [
   {
-    category: 'Basic Reactions',
+    category: "Basic Reactions",
     icon: <Filter className="w-4 h-4" />,
     items: [
-      { label: 'Haber (Ammonia)',    formula: 'N2 + H2 -> NH3',                  difficulty: 'L1' },
-      { label: 'Combustion (CH₄)',   formula: 'CH4 + O2 -> CO2 + H2O',            difficulty: 'L2' },
-      { label: 'Water Formation',    formula: 'H2 + O2 -> H2O',                   difficulty: 'L1' },
-      { label: 'Iron Rusting',       formula: 'Fe + O2 -> Fe2O3',                 difficulty: 'L2' },
+      {
+        label: "Haber Process (Ammonia)",
+        formula: "N2 + H2 -> NH3",
+        difficulty: "L1",
+      },
+      {
+        label: "Methane Combustion",
+        formula: "CH4 + O2 -> CO2 + H2O",
+        difficulty: "L2",
+      },
+      { label: "Water Formation", formula: "H2 + O2 -> H2O", difficulty: "L1" },
+      { label: "Iron Rusting", formula: "Fe + O2 -> Fe2O3", difficulty: "L2" },
+      {
+        label: "Photosynthesis",
+        formula: "CO2 + H2O -> C6H12O6 + O2",
+        difficulty: "L2",
+      },
+      {
+        label: "Cellular Respiration",
+        formula: "C6H12O6 + O2 -> CO2 + H2O",
+        difficulty: "L2",
+      },
     ],
   },
   {
-    category: 'Aromatic',
-    icon: <Hexagon className="w-4 h-4" />,
-    items: [
-      { label: 'EAS Nitration',       formula: 'C6H6 + HNO3 -> C6H5NO2 + H2O',   difficulty: 'L3' },
-      { label: 'Combustion (C₆H₆)',  formula: 'C6H6 + O2 -> CO2 + H2O',          difficulty: 'L3' },
-    ],
-  },
-  {
-    category: 'Acid-Base',
+    category: "Acid-Base",
     icon: <FlaskConical className="w-4 h-4" />,
     items: [
-      { label: 'Neutralisation',     formula: 'HCl + NaOH -> NaCl + H2O',         difficulty: 'L1' },
-      { label: 'H₂SO₄ + NaOH',       formula: 'H2SO4 + NaOH -> Na2SO4 + H2O',     difficulty: 'L2' },
-      { label: 'CaCO₃ + HCl',        formula: 'CaCO3 + HCl -> CaCl2 + H2O + CO2', difficulty: 'L2' },
-      { label: 'NH₃ + H₂SO₄',        formula: 'NH3 + H2SO4 -> (NH4)2SO4',         difficulty: 'L3' },
+      {
+        label: "Neutralisation",
+        formula: "HCl + NaOH -> NaCl + H2O",
+        difficulty: "L1",
+      },
+      {
+        label: "Sulfuric Acid Neutralisation",
+        formula: "H2SO4 + NaOH -> Na2SO4 + H2O",
+        difficulty: "L2",
+      },
+      {
+        label: "Carbonate + Acid",
+        formula: "CaCO3 + HCl -> CaCl2 + H2O + CO2",
+        difficulty: "L2",
+      },
+      {
+        label: "Ammonium Sulfate Formation",
+        formula: "NH3 + H2SO4 -> (NH4)2SO4",
+        difficulty: "L3",
+      },
+      {
+        label: "Acetic Acid Neutralisation",
+        formula: "CH3COOH + NaOH -> CH3COONa + H2O",
+        difficulty: "L2",
+      },
+    ],
+  },
+  {
+    category: "Redox Reactions",
+    icon: <Zap className="w-4 h-4" />,
+    items: [
+      {
+        label: "Thermite Reaction",
+        formula: "Fe2O3 + Al -> Fe + Al2O3",
+        difficulty: "L4",
+      },
+      {
+        label: "Copper Oxidation",
+        formula: "Cu + O2 -> CuO",
+        difficulty: "L2",
+      },
+      {
+        label: "Zinc + Copper Sulfate",
+        formula: "Zn + CuSO4 -> ZnSO4 + Cu",
+        difficulty: "L2",
+      },
+      {
+        label: "Potassium Permanganate + HCl",
+        formula: "KMnO4 + HCl -> KCl + MnCl2 + Cl2 + H2O",
+        difficulty: "L5",
+      },
+    ],
+  },
+
+  {
+    category: "Organic Reactions",
+    icon: <Atom className="w-4 h-4" />,
+    items: [
+      {
+        label: "Esterification",
+        formula: "CH3COOH + C2H5OH -> CH3COOC2H5 + H2O",
+        difficulty: "L3",
+      },
+      {
+        label: "Hydrogenation of Ethene",
+        formula: "C2H4 + H2 -> C2H6",
+        difficulty: "L2",
+      },
+      {
+        label: "Fermentation",
+        formula: "C6H12O6 -> C2H5OH + CO2",
+        difficulty: "L2",
+      },
+      {
+        label: "Polymerization of Ethene",
+        formula: "C2H4 -> (C2H4)n",
+        difficulty: "L4",
+      },
+      {
+        label: "Saponification",
+        formula: "C3H5(OOCR)3 + NaOH -> Glycerol + Soap",
+        difficulty: "L5",
+      },
+    ],
+  },
+
+  {
+    category: "Aromatic Chemistry",
+    icon: <Hexagon className="w-4 h-4" />,
+    items: [
+      {
+        label: "EAS Nitration",
+        formula: "C6H6 + HNO3 -> C6H5NO2 + H2O",
+        difficulty: "L3",
+      },
+      {
+        label: "Friedel-Crafts Alkylation",
+        formula: "C6H6 + CH3Cl -> C6H5CH3 + HCl",
+        difficulty: "L4",
+      },
+      {
+        label: "Sulfonation of Benzene",
+        formula: "C6H6 + H2SO4 -> C6H5SO3H + H2O",
+        difficulty: "L4",
+      },
+      {
+        label: "Benzene Combustion",
+        formula: "C6H6 + O2 -> CO2 + H2O",
+        difficulty: "L3",
+      },
+    ],
+  },
+
+  {
+    category: "Industrial Processes",
+    icon: <Factory className="w-4 h-4" />,
+    items: [
+      {
+        label: "Contact Process",
+        formula: "SO2 + O2 -> SO3",
+        difficulty: "L3",
+      },
+      {
+        label: "Ostwald Process",
+        formula: "NH3 + O2 -> NO + H2O",
+        difficulty: "L4",
+      },
+      {
+        label: "Lime Kiln Reaction",
+        formula: "CaCO3 -> CaO + CO2",
+        difficulty: "L2",
+      },
+      {
+        label: "Electrolysis of Water",
+        formula: "H2O -> H2 + O2",
+        difficulty: "L3",
+      },
+    ],
+  },
+
+  {
+    category: "Named Reactions",
+    icon: <Brain className="w-4 h-4" />,
+    items: [
+      {
+        label: "Grignard Reaction",
+        formula: "RMgX + Carbonyl -> Alcohol",
+        difficulty: "L5",
+      },
+      {
+        label: "Aldol Condensation",
+        formula: "Aldehyde + Ketone -> β-Hydroxy Carbonyl",
+        difficulty: "L5",
+      },
+      {
+        label: "Cannizzaro Reaction",
+        formula: "Aldehyde + OH- -> Alcohol + Carboxylate",
+        difficulty: "L5",
+      },
+      {
+        label: "Diels-Alder Reaction",
+        formula: "Diene + Dienophile -> Cyclohexene",
+        difficulty: "L5",
+      },
+      {
+        label: "Wurtz Reaction",
+        formula: "Alkyl Halide + Na -> Alkane",
+        difficulty: "L4",
+      },
+      {
+        label: "Kolbe Electrolysis",
+        formula: "RCOONa -> Alkane + CO2",
+        difficulty: "L5",
+      },
+    ],
+  },
+
+  {
+    category: "Biochemistry",
+    icon: <Dna className="w-4 h-4" />,
+    items: [
+      {
+        label: "ATP Hydrolysis",
+        formula: "ATP + H2O -> ADP + Pi",
+        difficulty: "L3",
+      },
+      {
+        label: "Lactic Acid Fermentation",
+        formula: "C6H12O6 -> C3H6O3",
+        difficulty: "L3",
+      },
+      { label: "Urea Cycle", formula: "NH3 + CO2 -> Urea", difficulty: "L5" },
+      {
+        label: "Protein Hydrolysis",
+        formula: "Protein + H2O -> Amino Acids",
+        difficulty: "L4",
+      },
     ],
   },
 ];
@@ -92,8 +300,12 @@ export const ReactionWorkspace: React.FC = () => {
       const balanced = ReactionSolver.balance(trimmed);
 
       // 2. AI analysis (conditionally based on settings)
-      let thermodynamics: { enthalpy?: number; entropy?: number; gibbs?: number; type: string } =
-        { type: 'Unknown' };
+      let thermodynamics: {
+        enthalpy?: number;
+        entropy?: number;
+        gibbs?: number;
+        type: string;
+      } = { type: "Unknown" };
       let steps: any[] = [];
 
       if (settings.enableAI) {
@@ -103,9 +315,10 @@ export const ReactionWorkspace: React.FC = () => {
       } else {
         steps = [
           {
-            title: 'AI Analysis Disabled',
-            description: 'Enable AI analysis in **Sys_Config** to receive thermodynamic estimates and mechanistic explanations.',
-            mode: 'machine',
+            title: "AI Analysis Disabled",
+            description:
+              "Enable AI analysis in **Sys_Config** to receive thermodynamic estimates and mechanistic explanations.",
+            mode: "machine",
           },
         ];
       }
@@ -138,8 +351,8 @@ export const ReactionWorkspace: React.FC = () => {
       });
     } catch (e: any) {
       setError({
-        message: e.message ?? 'An unknown engine error occurred.',
-        code: e.code ?? 'ENGINE_FAULT',
+        message: e.message ?? "An unknown engine error occurred.",
+        code: e.code ?? "ENGINE_FAULT",
         details: e.stack,
       });
       setReaction(undefined);
@@ -149,8 +362,8 @@ export const ReactionWorkspace: React.FC = () => {
   };
 
   const handleClear = () => {
-    setLocalInput('');
-    setInputExpression('');
+    setLocalInput("");
+    setInputExpression("");
     setReaction(undefined);
     setSteps([]);
     clearError();
@@ -162,7 +375,7 @@ export const ReactionWorkspace: React.FC = () => {
     const el = inputRef.current;
     if (!el) {
       // Backspace signal
-      if (text === '\b') {
+      if (text === "\b") {
         setLocalInput((prev) => prev.slice(0, -1));
         return;
       }
@@ -170,7 +383,7 @@ export const ReactionWorkspace: React.FC = () => {
       return;
     }
 
-    if (text === '\b') {
+    if (text === "\b") {
       const start = el.selectionStart ?? localInput.length;
       if (start > 0) {
         const newVal = localInput.slice(0, start - 1) + localInput.slice(start);
@@ -206,7 +419,9 @@ export const ReactionWorkspace: React.FC = () => {
               Core_Input_Module
             </h2>
             <p className="text-[9px] font-mono text-[#1A1A1A]/60 font-bold uppercase transition-all mt-1">
-              {isProcessing ? 'System Computing...' : 'Awaiting Synthesis String'}
+              {isProcessing
+                ? "System Computing..."
+                : "Awaiting Synthesis String"}
             </p>
           </div>
         </div>
@@ -215,8 +430,8 @@ export const ReactionWorkspace: React.FC = () => {
           <div
             className={`flex items-center gap-1.5 px-2 py-1 border text-[9px] font-mono font-bold ${
               settings.enableAI
-                ? 'border-[#1A1A1A] text-[#1A1A1A] bg-[#D4FF00]'
-                : 'border-[#1A1A1A] text-[#1A1A1A]/50 bg-[#EAE8E4]'
+                ? "border-[#1A1A1A] text-[#1A1A1A] bg-[#D4FF00]"
+                : "border-[#1A1A1A] text-[#1A1A1A]/50 bg-[#EAE8E4]"
             }`}
           >
             {settings.enableAI ? (
@@ -224,16 +439,16 @@ export const ReactionWorkspace: React.FC = () => {
             ) : (
               <BotOff className="w-3 h-3" />
             )}
-            {settings.enableAI ? 'AI ON' : 'AI OFF'} - {settings.AIModel}
+            {settings.enableAI ? "AI ON" : "AI OFF"} - {settings.AIModel}
           </div>
           <div
             className={`px-3 py-1 border text-[9px] font-mono font-bold transition-colors ${
               isProcessing
-                ? 'border-[#1A1A1A] text-white bg-[#1A1A1A] animate-pulse'
-                : 'border-[#1A1A1A] text-[#1A1A1A] bg-white'
+                ? "border-[#1A1A1A] text-white bg-[#1A1A1A] animate-pulse"
+                : "border-[#1A1A1A] text-[#1A1A1A] bg-white"
             }`}
           >
-            {isProcessing ? 'COMPUTING' : 'READY'}
+            {isProcessing ? "COMPUTING" : "READY"}
           </div>
         </div>
       </div>
@@ -254,8 +469,8 @@ export const ReactionWorkspace: React.FC = () => {
             placeholder="e.g.  N2 + H2 -> NH3"
             className="w-full bg-transparent px-4 py-5 text-lg md:text-2xl text-[#1A1A1A] placeholder:text-[#1A1A1A]/30 focus:outline-none font-mono font-bold"
             onKeyDown={(e) => {
-              if (e.key === 'Enter') handleSolve();
-              if (e.key === 'Escape') setShowPicker(false);
+              if (e.key === "Enter") handleSolve();
+              if (e.key === "Escape") setShowPicker(false);
             }}
           />
           <div className="flex items-center gap-1.5 pr-2 shrink-0">
@@ -264,8 +479,8 @@ export const ReactionWorkspace: React.FC = () => {
               title="Element Picker"
               className={`p-2.5 rounded-none border border-[#1A1A1A] transition-all ${
                 showPicker
-                  ? 'bg-[#1A1A1A] text-white shadow-[2px_2px_0px_#1A1A1A]'
-                  : 'bg-white text-[#1A1A1A] hover:bg-[#EAE8E4]'
+                  ? "bg-[#1A1A1A] text-white shadow-[2px_2px_0px_#1A1A1A]"
+                  : "bg-white text-[#1A1A1A] hover:bg-[#EAE8E4]"
               }`}
             >
               <Table2 className="w-4 h-4" />
@@ -289,7 +504,7 @@ export const ReactionWorkspace: React.FC = () => {
               ) : (
                 <Cpu className="w-3 h-3" />
               )}
-              {isProcessing ? 'Solving' : 'Execute'}
+              {isProcessing ? "Solving" : "Execute"}
             </button>
           </div>
         </div>
@@ -303,19 +518,19 @@ export const ReactionWorkspace: React.FC = () => {
       />
 
       {/* Reaction Catalog */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-4 md:grid-cols-2 gap-3">
         {REACTION_CATALOG.map((cat) => (
           <div key={cat.category} className="relative">
             <button
               onClick={() =>
                 setExpandedCategory(
-                  expandedCategory === cat.category ? null : cat.category
+                  expandedCategory === cat.category ? null : cat.category,
                 )
               }
               className={`w-full flex items-center justify-between p-3 rounded-none border-2 border-[#1A1A1A] text-[10px] font-bold uppercase tracking-widest transition-all ${
                 expandedCategory === cat.category
-                  ? 'bg-[#1A1A1A] text-white'
-                  : 'bg-[#EAE8E4] text-[#1A1A1A] hover:bg-white shadow-[2px_2px_0px_#1A1A1A]'
+                  ? "bg-[#1A1A1A] text-white"
+                  : "bg-[#EAE8E4] text-[#1A1A1A] hover:bg-white shadow-[2px_2px_0px_#1A1A1A]"
               }`}
             >
               <div className="flex items-center gap-2">
@@ -324,7 +539,9 @@ export const ReactionWorkspace: React.FC = () => {
               </div>
               <ChevronDown
                 className={`w-3 h-3 transition-transform ${
-                  expandedCategory === cat.category ? 'rotate-180 text-white' : 'text-[#1A1A1A]'
+                  expandedCategory === cat.category
+                    ? "rotate-180 text-white"
+                    : "text-[#1A1A1A]"
                 }`}
               />
             </button>
@@ -355,7 +572,9 @@ export const ReactionWorkspace: React.FC = () => {
                           {item.difficulty}
                         </span>
                       </div>
-                      <span className="text-xs font-mono font-bold text-[#1A1A1A]">{item.formula}</span>
+                      <span className="text-xs font-mono font-bold text-[#1A1A1A]">
+                        {item.formula}
+                      </span>
                     </button>
                   ))}
                 </motion.div>
@@ -381,12 +600,10 @@ export const ReactionWorkspace: React.FC = () => {
               </h3>
               <span
                 className={`text-[9px] font-mono px-2 py-0.5 border-2 border-[#1A1A1A] font-bold text-[#1A1A1A] ${
-                  currentReaction.isBalanced
-                    ? 'bg-[#D4FF00]'
-                    : 'bg-[#ff6b6b]'
+                  currentReaction.isBalanced ? "bg-[#D4FF00]" : "bg-[#ff6b6b]"
                 }`}
               >
-                {currentReaction.isBalanced ? '✓ BALANCED' : '✗ UNBALANCED'}
+                {currentReaction.isBalanced ? "✓ BALANCED" : "✗ UNBALANCED"}
               </span>
             </div>
 
@@ -407,7 +624,9 @@ export const ReactionWorkspace: React.FC = () => {
                         </span>
                       </div>
                       {i < currentReaction.reactants.molecules.length - 1 && (
-                        <span className="text-[#1A1A1A] text-xl font-bold">+</span>
+                        <span className="text-[#1A1A1A] text-xl font-bold">
+                          +
+                        </span>
                       )}
                     </React.Fragment>
                   ))}
@@ -429,7 +648,9 @@ export const ReactionWorkspace: React.FC = () => {
                         </span>
                       </div>
                       {i < currentReaction.products.molecules.length - 1 && (
-                        <span className="text-[#1A1A1A] text-xl font-bold">+</span>
+                        <span className="text-[#1A1A1A] text-xl font-bold">
+                          +
+                        </span>
                       )}
                     </React.Fragment>
                   ))}
@@ -474,7 +695,9 @@ const ThermMetric = ({
   good: boolean;
 }) => (
   <div className="flex flex-col gap-1 p-3 border-2 border-[#1A1A1A] bg-[#EAE8E4]">
-    <span className="text-[8px] font-black text-[#1A1A1A] uppercase tracking-widest">{label}</span>
+    <span className="text-[8px] font-black text-[#1A1A1A] uppercase tracking-widest">
+      {label}
+    </span>
     <span className={`text-xs md:text-sm font-mono font-black text-[#1A1A1A]`}>
       {value}
     </span>

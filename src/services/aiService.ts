@@ -1,4 +1,4 @@
-import { ExplanationStep } from '../types';
+import { ExplanationStep } from "../types";
 
 /**
  * OWDA AI Service — Layer 3
@@ -10,31 +10,31 @@ import { ExplanationStep } from '../types';
 
 export interface AIThermodynamics {
   /** ΔH in kJ/mol. Undefined if the model could not estimate. */
-  enthalpy:      number | undefined;
+  enthalpy: number | undefined;
   /** ΔS in J/mol·K. Undefined if the model could not estimate. */
-  entropy:       number | undefined;
+  entropy: number | undefined;
   /** ΔG in kJ/mol. Undefined if the model could not estimate. */
-  gibbs:         number | undefined;
+  gibbs: number | undefined;
   /** Reaction type classification string. */
-  type:          string;
+  type: string;
 }
 
 export interface AIAnalysisResult {
-  steps:          ExplanationStep[];
+  steps: ExplanationStep[];
   thermodynamics: AIThermodynamics;
 }
 
 /** Raw JSON shape expected from Claude */
 interface ClaudeAnalysisPayload {
-  overview:      string;
-  mechanism:     string;
-  reactionType:  string;
-  enthalpy?:     number;
-  entropy?:      number;
-  gibbs?:        number;
+  overview: string;
+  mechanism: string;
+  reactionType: string;
+  enthalpy?: number;
+  entropy?: number;
+  gibbs?: number;
 }
 
-type AIProvider = 'openrouter';
+type AIProvider = "openrouter";
 
 interface AIModelConfig {
   provider: AIProvider;
@@ -49,23 +49,23 @@ interface AIModelConfig {
 
 const AI_MODELS: Record<string, AIModelConfig> = {
   claude: {
-    provider: 'openrouter',
-    model: 'anthropic/claude-3.7-sonnet',
-    apiUrl: 'https://openrouter.ai/api/v1/chat/completions',
+    provider: "openrouter",
+    model: "anthropic/claude-3.7-sonnet",
+    apiUrl: "https://openrouter.ai/api/v1/chat/completions",
     apiKey: import.meta.env.VITE_OPENROUTER_API_KEY,
   },
 
   gpt4o: {
-    provider: 'openrouter',
-    model: 'openai/gpt-4o',
-    apiUrl: 'https://openrouter.ai/api/v1/chat/completions',
+    provider: "openrouter",
+    model: "openai/gpt-4o",
+    apiUrl: "https://openrouter.ai/api/v1/chat/completions",
     apiKey: import.meta.env.VITE_OPENROUTER_API_KEY,
   },
 
   gemini: {
-    provider: 'openrouter',
-    model: 'google/gemini-2.5-pro',
-    apiUrl: 'https://openrouter.ai/api/v1/chat/completions',
+    provider: "openrouter",
+    model: "google/gemini-2.5-pro",
+    apiUrl: "https://openrouter.ai/api/v1/chat/completions",
     apiKey: import.meta.env.VITE_OPENROUTER_API_KEY,
   },
 };
@@ -74,19 +74,13 @@ const AI_MODELS: Record<string, AIModelConfig> = {
 // Config
 // ---------------------------------------------------------------------------
 
-const ACTIVE_MODEL: keyof typeof AI_MODELS = 'claude';
+const ACTIVE_MODEL: keyof typeof AI_MODELS = "claude";
 
 const MAX_TOKENS = 1024;
 const TIMEOUT_MS = 12000;
 const RETRY_DELAY_MS = 1200;
 
-const RETRYABLE_STATUS_CODES = new Set([
-  429,
-  500,
-  502,
-  503,
-  504,
-]);
+const RETRYABLE_STATUS_CODES = new Set([429, 500, 502, 503, 504]);
 
 // ---------------------------------------------------------------------------
 // Prompt builder
@@ -124,50 +118,61 @@ Do not include comments, units strings, or any extra fields.`;
 function parseAIResponse(raw: string): ClaudeAnalysisPayload {
   // Remove ```json ... ``` or ``` ... ``` wrappers
   const cleaned = raw
-    .replace(/^```(?:json)?\s*/i, '')
-    .replace(/\s*```\s*$/, '')
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```\s*$/, "")
     .trim();
 
   let parsed: unknown;
   try {
     parsed = JSON.parse(cleaned);
   } catch {
-    throw new Error(`Claude returned non-JSON content: ${cleaned.slice(0, 120)}`);
+    throw new Error(
+      `Claude returned non-JSON content: ${cleaned.slice(0, 120)}`,
+    );
   }
 
-  if (typeof parsed !== 'object' || parsed === null) {
-    throw new Error('Claude response was not a JSON object.');
+  if (typeof parsed !== "object" || parsed === null) {
+    throw new Error("Claude response was not a JSON object.");
   }
 
   const obj = parsed as Record<string, unknown>;
 
-  if (typeof obj['overview'] !== 'string' || !obj['overview'].trim()) {
+  if (typeof obj["overview"] !== "string" || !obj["overview"].trim()) {
     throw new Error('Claude response missing required "overview" field.');
   }
-  if (typeof obj['mechanism'] !== 'string' || !obj['mechanism'].trim()) {
+  if (typeof obj["mechanism"] !== "string" || !obj["mechanism"].trim()) {
     throw new Error('Claude response missing required "mechanism" field.');
   }
-  if (typeof obj['reactionType'] !== 'string' || !obj['reactionType'].trim()) {
+  if (typeof obj["reactionType"] !== "string" || !obj["reactionType"].trim()) {
     throw new Error('Claude response missing required "reactionType" field.');
   }
 
   // Thermodynamic fields are optional — validate type only if present
   const assertOptionalNumber = (key: string) => {
-    if (key in obj && typeof obj[key] !== 'number') {
-      throw new Error(`Claude response field "${key}" must be a number, got ${typeof obj[key]}.`);
+    if (key in obj && typeof obj[key] !== "number") {
+      throw new Error(
+        `Claude response field "${key}" must be a number, got ${typeof obj[key]}.`,
+      );
     }
   };
-  assertOptionalNumber('enthalpy');
-  assertOptionalNumber('entropy');
-  assertOptionalNumber('gibbs');
+  assertOptionalNumber("enthalpy");
+  assertOptionalNumber("entropy");
+  assertOptionalNumber("gibbs");
 
   return {
-    overview:     obj['overview']     as string,
-    mechanism:    obj['mechanism']    as string,
-    reactionType: obj['reactionType'] as string,
-    enthalpy:     typeof obj['enthalpy'] === 'number' ? (obj['enthalpy'] as number) : undefined,
-    entropy:      typeof obj['entropy']  === 'number' ? (obj['entropy']  as number) : undefined,
-    gibbs:        typeof obj['gibbs']    === 'number' ? (obj['gibbs']    as number) : undefined,
+    overview: obj["overview"] as string,
+    mechanism: obj["mechanism"] as string,
+    reactionType: obj["reactionType"] as string,
+    enthalpy:
+      typeof obj["enthalpy"] === "number"
+        ? (obj["enthalpy"] as number)
+        : undefined,
+    entropy:
+      typeof obj["entropy"] === "number"
+        ? (obj["entropy"] as number)
+        : undefined,
+    gibbs:
+      typeof obj["gibbs"] === "number" ? (obj["gibbs"] as number) : undefined,
   };
 }
 
@@ -177,62 +182,63 @@ function parseAIResponse(raw: string): ClaudeAnalysisPayload {
 
 function buildOverviewStep(overview: string): ExplanationStep {
   return {
-    title:       'Basic Overview',
+    title: "Basic Overview",
     description: overview,
-    mode:        'human',
+    mode: "human",
   };
 }
 
 function buildMechanismStep(mechanism: string): ExplanationStep {
   return {
-    title:       'Reaction Mechanism',
+    title: "Reaction Mechanism",
     description: mechanism,
-    mode:        'expert',
+    mode: "expert",
   };
 }
 
 function buildThermoStep(payload: ClaudeAnalysisPayload): ExplanationStep {
   const fmtNum = (v: number | undefined, unit: string) =>
-    v !== undefined ? `**${v} ${unit}**` : '_Not estimated_';
+    v !== undefined ? `**${v} ${unit}**` : "_Not estimated_";
 
   const spontaneity = (() => {
-    if (payload.gibbs === undefined) return '_Cannot determine (ΔG unavailable)_';
+    if (payload.gibbs === undefined)
+      return "_Cannot determine (ΔG unavailable)_";
     return payload.gibbs < 0
-      ? '**✓ Spontaneous** (ΔG < 0)'
-      : '**✗ Non-spontaneous** (ΔG > 0)';
+      ? "**✓ Spontaneous** (ΔG < 0)"
+      : "**✗ Non-spontaneous** (ΔG > 0)";
   })();
 
   const description = [
     `**Reaction Type:** ${payload.reactionType}`,
-    '',
+    "",
     `| Property | Value |`,
     `|---|---|`,
-    `| Enthalpy ΔH | ${fmtNum(payload.enthalpy, 'kJ/mol')} |`,
-    `| Entropy ΔS  | ${fmtNum(payload.entropy,  'J/mol·K')} |`,
-    `| Gibbs ΔG    | ${fmtNum(payload.gibbs,    'kJ/mol')} |`,
+    `| Enthalpy ΔH | ${fmtNum(payload.enthalpy, "kJ/mol")} |`,
+    `| Entropy ΔS  | ${fmtNum(payload.entropy, "J/mol·K")} |`,
+    `| Gibbs ΔG    | ${fmtNum(payload.gibbs, "kJ/mol")} |`,
     `| Spontaneity | ${spontaneity} |`,
-  ].join('\n');
+  ].join("\n");
 
   return {
-    title:       'Thermodynamic Analysis',
+    title: "Thermodynamic Analysis",
     description,
-    mode:        'machine',
+    mode: "machine",
   };
 }
 
 function buildErrorStep(expression: string, reason: string): ExplanationStep {
   return {
-    title:       'AI Analysis Unavailable',
+    title: "AI Analysis Unavailable",
     description: [
       `**Reaction:** \`${expression}\``,
-      '',
+      "",
       `**Status:** AI service offline`,
-      '',
+      "",
       `**Reason:** ${reason}`,
-      '',
-      '_Enable AI in settings and retry, or check your network connection._',
-    ].join('\n'),
-    mode: 'machine',
+      "",
+      "_Enable AI in settings and retry, or check your network connection._",
+    ].join("\n"),
+    mode: "machine",
   };
 }
 
@@ -241,15 +247,18 @@ function buildErrorStep(expression: string, reason: string): ExplanationStep {
 // ---------------------------------------------------------------------------
 
 async function fetchWithTimeout(
-  url:     string,
+  url: string,
   options: RequestInit,
-  timeoutMs: number
+  timeoutMs: number,
 ): Promise<Response> {
   const controller = new AbortController();
   const timerId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const response = await fetch(url, { ...options, signal: controller.signal });
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
     return response;
   } finally {
     clearTimeout(timerId);
@@ -259,17 +268,17 @@ async function fetchWithTimeout(
 async function callAI(expression: string): Promise<ClaudeAnalysisPayload> {
   const modelConfig = AI_MODELS[ACTIVE_MODEL];
 
-   const body = JSON.stringify({
+  const body = JSON.stringify({
     model: modelConfig.model,
 
     messages: [
       {
-        role: 'system',
+        role: "system",
         content:
-          'You are a chemistry expert assistant that returns strict JSON only.',
+          "You are a chemistry expert assistant that returns strict JSON only.",
       },
       {
-        role: 'user',
+        role: "user",
         content: buildPrompt(expression),
       },
     ],
@@ -278,27 +287,24 @@ async function callAI(expression: string): Promise<ClaudeAnalysisPayload> {
     max_tokens: MAX_TOKENS,
 
     response_format: {
-      type: 'json_object',
+      type: "json_object",
     },
   });
 
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
     Authorization: `Bearer ${modelConfig.apiKey}`,
 
     // Optional but recommended
-    'HTTP-Referer': window.location.origin,
-    'X-Title': 'OWDA',
+    "X-Title": "OWDA",
   };
 
-  let lastError: Error = new Error('Unknown error');
+  let lastError: Error = new Error("Unknown error");
 
   // Single retry loop: attempt 0, then attempt 1 on retryable status codes
   for (let attempt = 0; attempt < 2; attempt++) {
     if (attempt > 0) {
-      await new Promise(resolve =>
-        setTimeout(resolve, RETRY_DELAY_MS)
-      );
+      await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
     }
 
     let response: Response;
@@ -307,47 +313,41 @@ async function callAI(expression: string): Promise<ClaudeAnalysisPayload> {
       response = await fetchWithTimeout(
         modelConfig.apiUrl,
         {
-          method: 'POST',
+          method: "POST",
           headers,
           body,
         },
-        TIMEOUT_MS
+        TIMEOUT_MS,
       );
     } catch (fetchErr) {
       const msg =
-        fetchErr instanceof Error
-          ? fetchErr.message
-          : String(fetchErr);
+        fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
 
       lastError = new Error(
-        fetchErr instanceof DOMException &&
-        fetchErr.name === 'AbortError'
+        fetchErr instanceof DOMException && fetchErr.name === "AbortError"
           ? `Request timed out after ${TIMEOUT_MS / 1000}s`
-          : `Network error: ${msg}`
+          : `Network error: ${msg}`,
       );
 
       continue;
     }
 
     if (!response.ok) {
-      if (
-        RETRYABLE_STATUS_CODES.has(response.status) &&
-        attempt === 0
-      ) {
+      if (RETRYABLE_STATUS_CODES.has(response.status) && attempt === 0) {
         lastError = new Error(
-          `API returned HTTP ${response.status} — retrying…`
+          `API returned HTTP ${response.status} — retrying…`,
         );
         continue;
       }
 
-      let errorBody = '';
+      let errorBody = "";
 
       try {
         errorBody = await response.text();
       } catch {}
 
       throw new Error(
-        `API error ${response.status}: ${response.statusText}. ${errorBody.slice(0, 200)}`
+        `API error ${response.status}: ${response.statusText}. ${errorBody.slice(0, 200)}`,
       );
     }
 
@@ -356,16 +356,13 @@ async function callAI(expression: string): Promise<ClaudeAnalysisPayload> {
     try {
       envelope = await response.json();
     } catch {
-      throw new Error('Failed to parse API response JSON.');
+      throw new Error("Failed to parse API response JSON.");
     }
 
-    const content =
-      envelope?.choices?.[0]?.message?.content;
+    const content = envelope?.choices?.[0]?.message?.content;
 
-    if (!content || typeof content !== 'string') {
-      throw new Error(
-        'OpenRouter response missing message content.'
-      );
+    if (!content || typeof content !== "string") {
+      throw new Error("OpenRouter response missing message content.");
     }
 
     return parseAIResponse(content);
@@ -386,7 +383,9 @@ export class AIService {
    * Never throws — on any failure returns a graceful fallback result
    * so the workspace remains functional without AI.
    */
-  public static async explainReaction(expression: string): Promise<AIAnalysisResult> {
+  public static async explainReaction(
+    expression: string,
+  ): Promise<AIAnalysisResult> {
     try {
       const payload = await callAI(expression);
 
@@ -398,28 +397,25 @@ export class AIService {
         ],
         thermodynamics: {
           enthalpy: payload.enthalpy,
-          entropy:  payload.entropy,
-          gibbs:    payload.gibbs,
-          type:     payload.reactionType,
+          entropy: payload.entropy,
+          gibbs: payload.gibbs,
+          type: payload.reactionType,
         },
       };
-
     } catch (err) {
       const reason = err instanceof Error ? err.message : String(err);
 
-      if (import.meta.env.DEV) {
-        console.error('[OWDA AIService] Analysis failed:', reason);
+      if (process.env.NODE_ENV) {
+        console.error("[OWDA AIService] Analysis failed:", reason);
       }
 
       return {
-        steps: [
-          buildErrorStep(expression, reason),
-        ],
+        steps: [buildErrorStep(expression, reason)],
         thermodynamics: {
           enthalpy: undefined,
-          entropy:  undefined,
-          gibbs:    undefined,
-          type:     'Unknown',
+          entropy: undefined,
+          gibbs: undefined,
+          type: "Unknown",
         },
       };
     }

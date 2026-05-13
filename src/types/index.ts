@@ -26,12 +26,12 @@ export interface ElementCounts {
  * Full ionic-equation support (Na⁺, OH⁻, etc.) is a planned extension.
  */
 export interface Molecule {
-  readonly formula:   string;
-  readonly counts:    ElementCounts;
+  readonly formula: string;
+  readonly counts: ElementCounts;
   /** @unit g/mol */
   readonly molarMass: number;
   /** Net ionic charge. Currently always 0 (neutral molecules only). */
-  readonly charge:    number;
+  readonly charge: number;
 }
 
 /**
@@ -44,7 +44,7 @@ export interface Molecule {
 export interface ReactionPart {
   readonly molecule: Molecule;
   /** Stoichiometric coefficient (positive integer ≥ 1). */
-  coefficient:       number;
+  coefficient: number;
 }
 
 /** One side (reactants or products) of a chemical equation. */
@@ -59,18 +59,18 @@ export interface ReactionSide {
  * while still providing autocomplete for the known values.
  */
 export type ReactionType =
-  | 'Synthesis'
-  | 'Decomposition'
-  | 'Combustion'
-  | 'Single Replacement'
-  | 'Double Replacement'
-  | 'Acid-Base'
-  | 'Redox'
-  | 'Electrophilic Aromatic Substitution'
-  | 'Nucleophilic Addition'
-  | 'Polymerisation'
-  | 'Photolysis'
-  | 'Unknown'
+  | "Synthesis"
+  | "Decomposition"
+  | "Combustion"
+  | "Single Replacement"
+  | "Double Replacement"
+  | "Acid-Base"
+  | "Redox"
+  | "Electrophilic Aromatic Substitution"
+  | "Nucleophilic Addition"
+  | "Polymerisation"
+  | "Photolysis"
+  | "Unknown"
   | (string & {});
 
 /**
@@ -87,33 +87,33 @@ export type ReactionType =
  */
 export type ChemicalReaction =
   | {
-      readonly isBalanced:       true;
-      readonly reactants:        ReactionSide;
-      readonly products:         ReactionSide;
+      readonly isBalanced: true;
+      readonly reactants: ReactionSide;
+      readonly products: ReactionSide;
       /** Whether Σ(reactant molar masses) ≈ Σ(product molar masses). */
       readonly massConservation: boolean;
-      readonly timestamp:        number;
-      readonly type?:            ReactionType;
+      readonly timestamp: number;
+      readonly type?: ReactionType;
       /**
        * Standard enthalpy of reaction at 298 K.
        * `undefined` = not yet estimated (AI pending or disabled).
        * Negative = exothermic; Positive = endothermic.
        * @unit kJ/mol
        */
-      enthalpy:        number | undefined;
+      enthalpy: number | undefined;
       /**
        * Standard entropy change at 298 K.
        * `undefined` = not yet estimated.
        * @unit J/mol·K
        */
-      entropy:         number | undefined;
+      entropy: number | undefined;
       /**
        * Standard Gibbs free energy change at 298 K.
        * `undefined` = not yet estimated.
        * Negative = spontaneous under standard conditions.
        * @unit kJ/mol
        */
-      gibbs:           number | undefined;
+      gibbs: number | undefined;
       /**
        * Activation energy (Arrhenius Ea).
        * `undefined` when not modelled.
@@ -122,10 +122,10 @@ export type ChemicalReaction =
       activationEnergy?: number;
     }
   | {
-      readonly isBalanced:    false;
-      readonly reactants:     ReactionSide;
-      readonly products:      ReactionSide;
-      readonly timestamp:     number;
+      readonly isBalanced: false;
+      readonly reactants: ReactionSide;
+      readonly products: ReactionSide;
+      readonly timestamp: number;
       readonly errorDetails?: string;
     };
 
@@ -142,10 +142,10 @@ export type ChemicalReaction =
  * - `'machine'` — thermodynamic data / code (black header)
  */
 export interface ExplanationStep {
-  title:       string;
+  title: string;
   /** Markdown-formatted content rendered via ReactMarkdown. */
   description: string;
-  mode:        'human' | 'expert' | 'machine';
+  mode: "human" | "expert" | "machine";
 }
 
 // ---------------------------------------------------------------------------
@@ -157,19 +157,19 @@ export interface ExplanationStep {
  * Does not include full molecule data to keep the persisted payload small.
  */
 export interface ReactionHistoryEntry {
-  expression:    string;
+  expression: string;
   /** Unix timestamp (ms) when the reaction was solved. */
-  timestamp:     number;
-  isBalanced:    boolean;
+  timestamp: number;
+  isBalanced: boolean;
   reactionType?: string;
   /**
    * Estimated enthalpy.
    * `undefined` if AI was disabled or failed.
    * @unit kJ/mol
    */
-  enthalpy?:     number;
-  entropy?:      number;
-  gibbs?:        number;
+  enthalpy?: number;
+  entropy?: number;
+  gibbs?: number;
   /**
    * `true`  = exothermic (ΔH < 0)
    * `false` = endothermic (ΔH > 0)
@@ -188,7 +188,7 @@ export interface ReactionHistoryEntry {
  */
 export interface CompareSlot {
   expression: string;
-  reaction:   ChemicalReaction;
+  reaction: ChemicalReaction;
 }
 
 // ---------------------------------------------------------------------------
@@ -201,21 +201,21 @@ export interface CompareSlot {
  * without breaking the error boundary while still providing autocomplete.
  */
 export type ErrorCode =
-  | 'PARSE_ERROR'
-  | 'MALFORMED_EXPRESSION'
-  | 'ENGINE_FAULT'
-  | 'SINGULAR_MATRIX'
-  | 'NEGATIVE_SOLUTION'
-  | 'MIXED_SIGN_SOLUTION'
-  | 'AI_UNAVAILABLE'
-  | 'NETWORK_ERROR'
-  | 'TIMEOUT'
+  | "PARSE_ERROR"
+  | "MALFORMED_EXPRESSION"
+  | "ENGINE_FAULT"
+  | "SINGULAR_MATRIX"
+  | "NEGATIVE_SOLUTION"
+  | "MIXED_SIGN_SOLUTION"
+  | "AI_UNAVAILABLE"
+  | "NETWORK_ERROR"
+  | "TIMEOUT"
   | (string & {});
 
 /** Structured error stored in engine state and shown by the crash handler. */
 export interface ReactionError {
   readonly message: string;
-  readonly code?:   ErrorCode;
+  readonly code?: ErrorCode;
   /** Stack trace or extended diagnostic. Never shown in production UI. */
   readonly details?: string;
 }
@@ -235,16 +235,16 @@ export interface ReactionError {
  *   activationEnergy, isProcessing, error
  */
 export interface EngineState {
-  inputExpression:  string;
-  currentReaction:  ChemicalReaction | undefined;
-  currentSteps:     ExplanationStep[];
+  inputExpression: string;
+  currentReaction: ChemicalReaction | undefined;
+  currentSteps: ExplanationStep[];
   /** @unit kJ/mol */
   activationEnergy: number | undefined;
-  history:          ReadonlyArray<string>;
-  reactionLog:      ReadonlyArray<ReactionHistoryEntry>;
-  isProcessing:     boolean;
-  viewMode:         '2d' | '3d';
-  error:            ReactionError | undefined;
+  history: ReadonlyArray<string>;
+  reactionLog: ReadonlyArray<ReactionHistoryEntry>;
+  isProcessing: boolean;
+  viewMode: "2d" | "3d";
+  error: ReactionError | undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -259,9 +259,9 @@ export interface ThermoDisplayValues {
   /** @unit kJ/mol */
   enthalpy: number | undefined;
   /** @unit J/mol·K */
-  entropy:  number | undefined;
+  entropy: number | undefined;
   /** @unit kJ/mol */
-  gibbs:    number | undefined;
+  gibbs: number | undefined;
 }
 
 /** Convenience type for a non-empty readonly string array. */

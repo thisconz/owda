@@ -1,4 +1,4 @@
-import { Molecule, ElementCounts, ReactionPart } from '../types';
+import { Molecule, ElementCounts, ReactionPart } from "../types";
 
 /**
  * OWDA Chemical Language Engine — Layer 1
@@ -16,49 +16,143 @@ import { Molecule, ElementCounts, ReactionPart } from '../types';
 // Covers all elements used by the OWDA ElementPicker (Z = 1–96)
 // ---------------------------------------------------------------------------
 export const ATOMIC_WEIGHTS: Readonly<Record<string, number>> = {
-  H:   1.0080,  He:  4.0026,  Li:  6.9410,  Be:  9.0122,  B:  10.811,
-  C:  12.011,   N:  14.007,   O:  15.999,   F:  18.998,   Ne: 20.180,
-  Na: 22.990,   Mg: 24.305,   Al: 26.982,   Si: 28.085,   P:  30.974,
-  S:  32.060,   Cl: 35.450,   Ar: 39.948,   K:  39.098,   Ca: 40.078,
-  Sc: 44.956,   Ti: 47.867,   V:  50.942,   Cr: 51.996,   Mn: 54.938,
-  Fe: 55.845,   Co: 58.933,   Ni: 58.693,   Cu: 63.546,   Zn: 65.380,
-  Ga: 69.723,   Ge: 72.630,   As: 74.922,   Se: 78.971,   Br: 79.904,
-  Kr: 83.798,   Rb: 85.468,   Sr: 87.620,   Y:  88.906,   Zr: 91.224,
-  Nb: 92.906,   Mo: 95.950,   Tc: 97.000,   Ru:101.070,   Rh:102.906,
-  Pd:106.420,   Ag:107.868,   Cd:112.411,   In:114.818,   Sn:118.710,
-  Sb:121.760,   Te:127.600,   I: 126.904,   Xe:131.293,   Cs:132.905,
-  Ba:137.327,   La:138.905,   Ce:140.116,   Pr:140.908,   Nd:144.242,
-  Pm:145.000,   Sm:150.360,   Eu:151.964,   Gd:157.250,   Tb:158.925,
-  Dy:162.500,   Ho:164.930,   Er:167.259,   Tm:168.934,   Yb:173.045,
-  Lu:174.967,   Hf:178.490,   Ta:180.948,   W: 183.840,   Re:186.207,
-  Os:190.230,   Ir:192.217,   Pt:195.084,   Au:196.967,   Hg:200.592,
-  Tl:204.380,   Pb:207.200,   Bi:208.980,   Po:209.000,   At:210.000,
-  Rn:222.000,   Fr:223.000,   Ra:226.000,   Ac:227.000,   Th:232.038,
-  Pa:231.036,   U: 238.029,   Np:237.000,   Pu:244.000,   Am:243.000,
-  Cm:247.000,
+  H: 1.008,
+  He: 4.0026,
+  Li: 6.941,
+  Be: 9.0122,
+  B: 10.811,
+  C: 12.011,
+  N: 14.007,
+  O: 15.999,
+  F: 18.998,
+  Ne: 20.18,
+  Na: 22.99,
+  Mg: 24.305,
+  Al: 26.982,
+  Si: 28.085,
+  P: 30.974,
+  S: 32.06,
+  Cl: 35.45,
+  Ar: 39.948,
+  K: 39.098,
+  Ca: 40.078,
+  Sc: 44.956,
+  Ti: 47.867,
+  V: 50.942,
+  Cr: 51.996,
+  Mn: 54.938,
+  Fe: 55.845,
+  Co: 58.933,
+  Ni: 58.693,
+  Cu: 63.546,
+  Zn: 65.38,
+  Ga: 69.723,
+  Ge: 72.63,
+  As: 74.922,
+  Se: 78.971,
+  Br: 79.904,
+  Kr: 83.798,
+  Rb: 85.468,
+  Sr: 87.62,
+  Y: 88.906,
+  Zr: 91.224,
+  Nb: 92.906,
+  Mo: 95.95,
+  Tc: 97.0,
+  Ru: 101.07,
+  Rh: 102.906,
+  Pd: 106.42,
+  Ag: 107.868,
+  Cd: 112.411,
+  In: 114.818,
+  Sn: 118.71,
+  Sb: 121.76,
+  Te: 127.6,
+  I: 126.904,
+  Xe: 131.293,
+  Cs: 132.905,
+  Ba: 137.327,
+  La: 138.905,
+  Ce: 140.116,
+  Pr: 140.908,
+  Nd: 144.242,
+  Pm: 145.0,
+  Sm: 150.36,
+  Eu: 151.964,
+  Gd: 157.25,
+  Tb: 158.925,
+  Dy: 162.5,
+  Ho: 164.93,
+  Er: 167.259,
+  Tm: 168.934,
+  Yb: 173.045,
+  Lu: 174.967,
+  Hf: 178.49,
+  Ta: 180.948,
+  W: 183.84,
+  Re: 186.207,
+  Os: 190.23,
+  Ir: 192.217,
+  Pt: 195.084,
+  Au: 196.967,
+  Hg: 200.592,
+  Tl: 204.38,
+  Pb: 207.2,
+  Bi: 208.98,
+  Po: 209.0,
+  At: 210.0,
+  Rn: 222.0,
+  Fr: 223.0,
+  Ra: 226.0,
+  Ac: 227.0,
+  Th: 232.038,
+  Pa: 231.036,
+  U: 238.029,
+  Np: 237.0,
+  Pu: 244.0,
+  Am: 243.0,
+  Cm: 247.0,
 };
 
 // ---------------------------------------------------------------------------
 // CPK / Corey-Pauling-Koltun color scheme for molecular visualization
 // ---------------------------------------------------------------------------
 const ELEMENT_COLORS: Readonly<Record<string, string>> = {
-  H:  '#FFFFFF', C:  '#404040', O:  '#FF3333', N:  '#3366FF',
-  S:  '#FFCC00', P:  '#FF9900', F:  '#99FF33', Cl: '#1FEE1F',
-  Br: '#A52929', I:  '#940094', Fe: '#DA7E5C', Cu: '#C88033',
-  Zn: '#7D80B0', Na: '#AB5CF2', K:  '#8F40D4', Ca: '#3DFF00',
-  Mg: '#8AFF00', Al: '#BFA6A6', Si: '#F0C8A0', Ag: '#C0C0C0',
-  Au: '#FFD700', Hg: '#B8B8D0', Pb: '#575961', Ba: '#00C900',
+  H: "#FFFFFF",
+  C: "#404040",
+  O: "#FF3333",
+  N: "#3366FF",
+  S: "#FFCC00",
+  P: "#FF9900",
+  F: "#99FF33",
+  Cl: "#1FEE1F",
+  Br: "#A52929",
+  I: "#940094",
+  Fe: "#DA7E5C",
+  Cu: "#C88033",
+  Zn: "#7D80B0",
+  Na: "#AB5CF2",
+  K: "#8F40D4",
+  Ca: "#3DFF00",
+  Mg: "#8AFF00",
+  Al: "#BFA6A6",
+  Si: "#F0C8A0",
+  Ag: "#C0C0C0",
+  Au: "#FFD700",
+  Hg: "#B8B8D0",
+  Pb: "#575961",
+  Ba: "#00C900",
 };
-const DEFAULT_ELEMENT_COLOR = '#FF00FF';
+const DEFAULT_ELEMENT_COLOR = "#FF00FF";
 
 // ---------------------------------------------------------------------------
 // Internal error class for typed catch blocks
 // ---------------------------------------------------------------------------
 export class ParseError extends Error {
   public readonly code: string;
-  constructor(message: string, code = 'PARSE_ERROR') {
+  constructor(message: string, code = "PARSE_ERROR") {
     super(message);
-    this.name = 'ParseError';
+    this.name = "ParseError";
     this.code = code;
   }
 }
@@ -87,9 +181,9 @@ export class ChemicalParser {
    * @throws {ParseError} on malformed input (unmatched parens, unknown tokens, etc.)
    */
   public static parseFormula(formula: string): Molecule {
-    if (typeof formula !== 'string' || !formula.trim()) {
+    if (typeof formula !== "string" || !formula.trim()) {
       throw new ParseError(
-        `Invalid formula: ${JSON.stringify(formula)}. Expected a non-empty string.`
+        `Invalid formula: ${JSON.stringify(formula)}. Expected a non-empty string.`,
       );
     }
 
@@ -101,7 +195,7 @@ export class ChemicalParser {
     let molarMass = 0;
 
     // Fresh RegExp instance per call — no shared lastIndex
-    const regex = new RegExp(ChemicalParser.FORMULA_REGEX_SOURCE, 'g');
+    const regex = new RegExp(ChemicalParser.FORMULA_REGEX_SOURCE, "g");
     let match: RegExpExecArray | null;
     let lastMatchEnd = 0;
 
@@ -111,7 +205,7 @@ export class ChemicalParser {
         const gap = trimmed.slice(lastMatchEnd, match.index);
         if (gap.trim()) {
           throw new ParseError(
-            `Unrecognised token "${gap}" in formula "${trimmed}"`
+            `Unrecognised token "${gap}" in formula "${trimmed}"`,
           );
         }
       }
@@ -124,7 +218,7 @@ export class ChemicalParser {
         const count = countStr ? parseInt(countStr, 10) : 1;
         if (count <= 0) {
           throw new ParseError(
-            `Invalid atom count "${countStr}" for element "${symbol}" in formula "${trimmed}"`
+            `Invalid atom count "${countStr}" for element "${symbol}" in formula "${trimmed}"`,
           );
         }
 
@@ -134,30 +228,28 @@ export class ChemicalParser {
           // partially balanced. Molar mass contribution is 0.
           console.warn(
             `[OWDA Parser] Unknown element "${symbol}" in "${trimmed}". ` +
-            'Molar mass contribution set to 0. Add it to ATOMIC_WEIGHTS to fix.'
+              "Molar mass contribution set to 0. Add it to ATOMIC_WEIGHTS to fix.",
           );
         }
 
         const top = stack[stack.length - 1];
         top[symbol] = (top[symbol] ?? 0) + count;
         molarMass += (weight ?? 0) * count;
-
       } else if (openParen) {
         // ── Open group ────────────────────────────────────────────────────────
         stack.push({});
-
       } else if (closeParen) {
         // ── Close group ───────────────────────────────────────────────────────
         if (stack.length < 2) {
           throw new ParseError(
-            `Unmatched closing parenthesis in formula "${trimmed}"`
+            `Unmatched closing parenthesis in formula "${trimmed}"`,
           );
         }
 
         const multiplier = closeCountStr ? parseInt(closeCountStr, 10) : 1;
         if (multiplier <= 0) {
           throw new ParseError(
-            `Invalid group multiplier "${closeCountStr}" in formula "${trimmed}"`
+            `Invalid group multiplier "${closeCountStr}" in formula "${trimmed}"`,
           );
         }
 
@@ -178,7 +270,7 @@ export class ChemicalParser {
       const tail = trimmed.slice(lastMatchEnd);
       if (tail.trim()) {
         throw new ParseError(
-          `Unrecognised trailing characters "${tail}" in formula "${trimmed}"`
+          `Unrecognised trailing characters "${tail}" in formula "${trimmed}"`,
         );
       }
     }
@@ -186,7 +278,7 @@ export class ChemicalParser {
     // Unmatched open parenthesis
     if (stack.length !== 1) {
       throw new ParseError(
-        `Unmatched opening parenthesis in formula "${trimmed}"`
+        `Unmatched opening parenthesis in formula "${trimmed}"`,
       );
     }
 
@@ -194,7 +286,7 @@ export class ChemicalParser {
 
     if (Object.keys(counts).length === 0) {
       throw new ParseError(
-        `No valid element symbols found in formula "${trimmed}"`
+        `No valid element symbols found in formula "${trimmed}"`,
       );
     }
 
@@ -226,43 +318,43 @@ export class ChemicalParser {
     products: ReactionPart[];
     timestamp: number;
   } {
-    if (typeof expression !== 'string' || !expression.trim()) {
-      throw new ParseError('Reaction expression must be a non-empty string.');
+    if (typeof expression !== "string" || !expression.trim()) {
+      throw new ParseError("Reaction expression must be a non-empty string.");
     }
 
-    const arrowIndex = expression.indexOf('->');
+    const arrowIndex = expression.indexOf("->");
     if (arrowIndex === -1) {
       throw new ParseError(
         'Malformed expression: missing "->". Expected "Reactants -> Products".',
-        'MALFORMED_EXPRESSION'
+        "MALFORMED_EXPRESSION",
       );
     }
-    if (expression.indexOf('->', arrowIndex + 1) !== -1) {
+    if (expression.indexOf("->", arrowIndex + 1) !== -1) {
       throw new ParseError(
         'Malformed expression: multiple "->" found. Expected exactly one arrow.',
-        'MALFORMED_EXPRESSION'
+        "MALFORMED_EXPRESSION",
       );
     }
 
     const reactantStr = expression.slice(0, arrowIndex);
-    const productStr  = expression.slice(arrowIndex + 2);
+    const productStr = expression.slice(arrowIndex + 2);
 
     if (!reactantStr.trim()) {
       throw new ParseError(
-        'Malformed expression: reactant side is empty.',
-        'MALFORMED_EXPRESSION'
+        "Malformed expression: reactant side is empty.",
+        "MALFORMED_EXPRESSION",
       );
     }
     if (!productStr.trim()) {
       throw new ParseError(
-        'Malformed expression: product side is empty.',
-        'MALFORMED_EXPRESSION'
+        "Malformed expression: product side is empty.",
+        "MALFORMED_EXPRESSION",
       );
     }
 
     return {
-      reactants: ChemicalParser._parseSide(reactantStr, 'reactant'),
-      products:  ChemicalParser._parseSide(productStr,  'product'),
+      reactants: ChemicalParser._parseSide(reactantStr, "reactant"),
+      products: ChemicalParser._parseSide(productStr, "product"),
       timestamp: Date.now(),
     };
   }
@@ -273,20 +365,23 @@ export class ChemicalParser {
    * Parses one side of a reaction (reactants OR products) into an array
    * of `ReactionPart` objects.
    */
-  private static _parseSide(sideStr: string, side: 'reactant' | 'product'): ReactionPart[] {
+  private static _parseSide(
+    sideStr: string,
+    side: "reactant" | "product",
+  ): ReactionPart[] {
     const tokens = sideStr
-      .split('+')
-      .map(t => t.trim())
+      .split("+")
+      .map((t) => t.trim())
       .filter(Boolean);
 
     if (tokens.length === 0) {
       throw new ParseError(
         `Malformed expression: ${side} side has no molecules.`,
-        'MALFORMED_EXPRESSION'
+        "MALFORMED_EXPRESSION",
       );
     }
 
-    return tokens.map(token => {
+    return tokens.map((token) => {
       // Match optional integer coefficient followed by a formula starting
       // with an uppercase letter. Coefficient and formula may be separated
       // by optional whitespace.
@@ -294,18 +389,18 @@ export class ChemicalParser {
       if (!match) {
         throw new ParseError(
           `Cannot parse ${side} "${token}". ` +
-          'Expected optional integer coefficient followed by a formula (e.g. "2H2O" or "Fe2O3").',
-          'MALFORMED_EXPRESSION'
+            'Expected optional integer coefficient followed by a formula (e.g. "2H2O" or "Fe2O3").',
+          "MALFORMED_EXPRESSION",
         );
       }
 
       const coefficient = match[1] ? parseInt(match[1], 10) : 1;
-      const formulaStr  = match[2];
+      const formulaStr = match[2];
 
       if (coefficient <= 0) {
         throw new ParseError(
           `Invalid coefficient ${coefficient} for ${side} "${token}". Coefficients must be positive integers.`,
-          'MALFORMED_EXPRESSION'
+          "MALFORMED_EXPRESSION",
         );
       }
 

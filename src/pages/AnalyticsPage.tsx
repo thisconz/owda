@@ -1,37 +1,24 @@
-import { useMemo, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useMemo, useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import {
   BarChart3,
-  Activity,
   Flame,
   Snowflake,
-  Clock,
-  Database,
   TrendingUp,
-  Hash,
   Trash2,
   ChevronRight,
-} from 'lucide-react';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-} from 'recharts';
-import { useOWDAStore, useOWDAActions } from '../store';
+  Zap,
+  Globe,
+} from "lucide-react";
+import { Tooltip, ResponsiveContainer, AreaChart, Area, YAxis } from "recharts";
+import { useOWDAStore, useOWDAActions } from "../store";
 
 // --- Utility: Time Formatting ---
 function timeAgo(ts: number): string {
   const diff = Math.floor((Date.now() - ts) / 1000);
   if (diff < 60) return `${diff}s ago`;
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 84600) return `${Math.floor(diff / 3600)}h ago`;
-  return `${Math.floor(diff / 86400)}d ago`;
+  return `${Math.floor(diff / 3600)}h ago`;
 }
 
 export function AnalyticsPage() {
@@ -39,129 +26,125 @@ export function AnalyticsPage() {
   const { resetWorkspace } = useOWDAActions();
   const [confirmReset, setConfirmReset] = useState(false);
 
-  // --- Derived Statistics ---
   const stats = useMemo(() => {
     const total = reactionLog.length;
     const balanced = reactionLog.filter((r) => r.isBalanced).length;
     const exothermic = reactionLog.filter((r) => r.isExothermic === true).length;
-    const endothermic = reactionLog.filter((r) => r.isExothermic === false).length;
+    const integrity = Math.round((balanced / (total || 1)) * 100);
 
     const typeCounts: Record<string, number> = {};
     reactionLog.forEach((r) => {
-      const t = r.reactionType ?? 'Unknown';
+      const t = r.reactionType ?? "Unknown";
       typeCounts[t] = (typeCounts[t] ?? 0) + 1;
     });
 
     const typeData = Object.entries(typeCounts)
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 6)
+      .slice(0, 5)
       .map(([name, value]) => ({ name, value }));
 
     const enthalpyData = reactionLog
       .filter((r) => r.enthalpy !== undefined)
-      .slice(-10) // Get last 10
+      .slice(-15)
       .map((r, i) => ({ i: i + 1, dH: r.enthalpy ?? 0 }));
 
     const validEnthalpies = reactionLog.filter((r) => r.enthalpy !== undefined);
     const avgEnthalpy = validEnthalpies.length > 0
-      ? (validEnthalpies.reduce((sum, r) => sum + (r.enthalpy ?? 0), 0) / validEnthalpies.length).toFixed(1)
-      : '0.0';
+        ? (validEnthalpies.reduce((sum, r) => sum + (r.enthalpy ?? 0), 0) / validEnthalpies.length).toFixed(1)
+        : "0.0";
 
-    return { total, balanced, exothermic, endothermic, typeData, enthalpyData, avgEnthalpy };
+    return { total, integrity, exothermic, typeData, enthalpyData, avgEnthalpy };
   }, [reactionLog]);
-
-  const pieData = [
-    { name: 'Exothermic', value: stats.exothermic, color: '#10b981' },
-    { name: 'Endothermic', value: stats.endothermic, color: '#f97316' },
-  ].filter((d) => d.value > 0);
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="w-full max-w-7xl mx-auto flex flex-col gap-6 font-sans p-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="w-full max-w-7xl mx-auto flex flex-col gap-6 p-4 select-none font-sans"
     >
-      {/* HEADER */}
-      <header className="flex flex-col md:flex-row items-center justify-between px-6 py-6 bg-white border-4 border-[#1A1A1A] shadow-[8px_8px_0px_#1A1A1A]">
-        <div className="flex items-center gap-5">
-          <div className="bg-[#ff6b6b] p-3 border-2 border-[#1A1A1A] rotate-3">
-            <BarChart3 className="w-8 h-8 text-white" />
+      {/* ─── HUD HEADER ─── */}
+      <header className="grid grid-cols-1 md:grid-cols-12 border-4 border-[#1A1A1A] bg-white shadow-[8px_8px_0px_#1A1A1A] overflow-hidden">
+        <div className="md:col-span-4 p-5 flex items-center gap-4 bg-[#D4FF00] border-r-4 border-[#1A1A1A]">
+          <div className="bg-[#1A1A1A] p-3 rotate-3 shadow-[4px_4px_0px_#FF6B6B]">
+            <BarChart3 className="w-8 h-8 text-[#D4FF00]" />
           </div>
           <div>
-            <h2 className="text-2xl font-black tracking-tighter text-[#1A1A1A] uppercase italic">
-              Telemetry <span className="bg-[#D4FF00] px-2 border-2 border-[#1A1A1A] not-italic">Analytics</span>
-            </h2>
-            <div className="flex items-center gap-2 mt-1">
-               <span className="text-[10px] font-mono bg-[#1A1A1A] text-white px-2 py-0.5">V{import.meta.env.ANALYTIC_VERSION || '1.0.0'}</span>
-               <span className="text-[10px] font-black text-[#1A1A1A] uppercase tracking-widest">{stats.total} total logs</span>
-            </div>
+            <h1 className="text-2xl font-black uppercase italic leading-none tracking-tighter">
+              Analytics -<span className="bg-white px-1 border-2 border-[#1A1A1A] not-italic">OS</span>
+            </h1>
+            <p className="text-[10px] font-mono font-black mt-1 uppercase opacity-70">OWDA_analytics_V{process.env.ANALYTIC_VERSION}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 mt-4 md:mt-0">
-          {confirmReset ? (
-            <div className="flex gap-2">
-              <button onClick={() => setConfirmReset(false)} className="px-4 py-2 text-[10px] font-black border-2 border-[#1A1A1A] bg-white hover:bg-[#EAE8E4] uppercase">Cancel</button>
-              <button onClick={() => { resetWorkspace(); setConfirmReset(false); }} className="px-4 py-2 text-[10px] font-black bg-[#ff6b6b] text-white border-2 border-[#1A1A1A] shadow-[4px_4px_0px_#1A1A1A] uppercase">Confirm Purge</button>
-            </div>
-          ) : (
-            <button onClick={() => setConfirmReset(true)} className="px-4 py-2 text-[10px] font-black bg-white border-2 border-[#1A1A1A] shadow-[4px_4px_0px_#1A1A1A] flex items-center gap-2 hover:bg-[#ff6b6b] hover:text-white transition-all uppercase">
-              <Trash2 className="w-3 h-3" /> Purge_System_Logs
-            </button>
-          )}
+        <div className="md:col-span-5 p-6 flex flex-col justify-center gap-2">
+          <div className="flex justify-between items-center">
+            <span className="text-[9px] font-black tracking-widest uppercase">Sync_Integrity_Index</span>
+            <span className="font-mono text-xs font-bold">{stats.integrity}%</span>
+          </div>
+          <div className="h-4 w-full bg-[#EAE8E4] border-2 border-[#1A1A1A] p-0.5">
+            <motion.div 
+              animate={{ width: `${stats.integrity}%` }}
+              className="h-full bg-[#1A1A1A]" 
+            />
+          </div>
+        </div>
+
+        <div className="md:col-span-3 p-6 bg-[#1A1A1A] text-white flex flex-col justify-center items-center gap-1">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-[#D4FF00] animate-pulse" />
+            <span className="text-[10px] font-black tracking-[0.4em]">LIVE_STREAM_ON</span>
+          </div>
+          <span className="text-[9px] opacity-40 font-mono italic">TOTAL_VECTORS: {stats.total}</span>
         </div>
       </header>
 
-      {/* 2. STATS GRID */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard icon={<Hash />} label="Total Reactions" value={stats.total.toString()} accent="bg-white" />
-        <StatCard icon={<Activity />} label="Balanced" value={stats.balanced.toString()} sub={`${Math.round((stats.balanced / (stats.total || 1)) * 100)}%`} accent="bg-[#D4FF00]" />
-        <StatCard icon={<Flame />} label="Exothermic" value={stats.exothermic.toString()} accent="bg-[#EAE8E4]" />
-        <StatCard icon={<Snowflake />} label="Avg Enthalpy" value={`${stats.avgEnthalpy} kJ`} accent="bg-white" />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* 3. LEFT COLUMN: CHARTS */}
-        <div className="lg:col-span-7 flex flex-col gap-6">
-          {/* Sparkline Chart */}
-          <div className="bg-white border-4 border-[#1A1A1A] p-6 shadow-[4px_4px_0px_#1A1A1A]">
-            <div className="flex items-center justify-between mb-6">
-               <h3 className="text-[11px] font-black uppercase tracking-widest flex items-center gap-2">
-                 <TrendingUp className="w-4 h-4" /> Enthalpy Trend <span className="text-[#1A1A1A]/40 font-mono text-[9px]">(Last 10)</span>
-               </h3>
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
+        {/* PRIMARY ANALYTICS AREA */}
+        <div className="xl:col-span-8 flex flex-col gap-6">
+          
+          {/* MAIN CHART BLOCK */}
+          <section className="bg-white border-4 border-[#1A1A1A] p-8 shadow-[8px_8px_0px_#1A1A1A] relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-8 opacity-5">
+              <Globe size={120} />
             </div>
-            <div className="h-48 w-full">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] mb-10 flex items-center gap-3">
+              <TrendingUp size={14} className="text-[#D4FF00]" /> Enthalpy_Phase_Shift
+            </h3>
+            <div className="h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={stats.enthalpyData} barSize={32}>
-                  <XAxis dataKey="i" hide />
-                  <YAxis stroke="#1A1A1A" tick={{ fontSize: 10, fontWeight: 900 }} axisLine={false} tickLine={false} />
-                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(26, 26, 26, 0.05)' }} />
-                  <Bar dataKey="dH" stroke="#1A1A1A" strokeWidth={2}>
-                    {stats.enthalpyData.map((entry, i) => (
-                      <Cell key={i} fill={entry.dH < 0 ? '#10b981' : '#f97316'} />
-                    ))}
-                  </Bar>
-                </BarChart>
+                <AreaChart data={stats.enthalpyData}>
+                  <YAxis hide domain={['dataMin - 20', 'dataMax + 20']} />
+                  <Tooltip content={<CustomTooltip />} cursor={false} />
+                  <Area 
+                    type="monotone" 
+                    dataKey="dH" 
+                    stroke="#1A1A1A" 
+                    strokeWidth={4} 
+                    fill="#D4FF00" 
+                    fillOpacity={0.2} 
+                  />
+                </AreaChart>
               </ResponsiveContainer>
             </div>
-          </div>
+          </section>
 
+          {/* STAT MODULE GRID */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Reaction Types Bar Chart */}
-            <div className="bg-white border-4 border-[#1A1A1A] p-6">
-              <h3 className="text-[10px] font-black uppercase tracking-widest border-b-2 border-[#1A1A1A] pb-2 mb-4">Distribution_Type</h3>
-              <div className="space-y-4">
+            <div className="bg-[#1A1A1A] text-white p-8 border-4 border-[#1A1A1A] shadow-[4px_4px_0px_#D4FF00]">
+              <h3 className="text-[10px] font-black uppercase tracking-widest opacity-40 mb-8">Classification_Model</h3>
+              <div className="space-y-6">
                 {stats.typeData.map((t, i) => (
-                  <div key={i}>
-                    <div className="flex justify-between text-[10px] font-black uppercase mb-1">
+                  <div key={i} className="space-y-2">
+                    <div className="flex justify-between text-[10px] font-bold uppercase tracking-tighter">
                       <span>{t.name}</span>
-                      <span>{t.value}</span>
+                      <span className="text-[#D4FF00]">{t.value}</span>
                     </div>
-                    <div className="h-2 w-full bg-[#EAE8E4] border border-[#1A1A1A]">
+                    <div className="h-[2px] w-full bg-white/10 overflow-hidden">
                       <motion.div 
-                        initial={{ width: 0 }} 
-                        animate={{ width: `${(t.value / stats.total) * 100}%` }} 
-                        className="h-full bg-[#1A1A1A]" 
+                        initial={{ x: "-100%" }}
+                        animate={{ x: `${(t.value / stats.total) * 100 - 100}%` }}
+                        transition={{ duration: 1, ease: "circOut" }}
+                        className="h-full bg-[#D4FF00]"
                       />
                     </div>
                   </div>
@@ -169,100 +152,94 @@ export function AnalyticsPage() {
               </div>
             </div>
 
-            {/* Split Pie Chart */}
-            <div className="bg-[#EAE8E4] border-4 border-[#1A1A1A] p-6 flex flex-col items-center">
-              <h3 className="text-[10px] font-black uppercase tracking-widest border-b-2 border-[#1A1A1A] pb-2 mb-4 self-stretch">Thermicity_Split</h3>
-              <div className="h-32 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={35} outerRadius={50} dataKey="value">
-                      {pieData.map((entry, i) => <Cell key={i} fill={entry.color} stroke="#1A1A1A" strokeWidth={2} />)}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="flex flex-wrap justify-center gap-3 mt-4">
-                {pieData.map((d, i) => <LegendItem key={i} color={d.color} label={d.name} />)}
-              </div>
+            <div className="grid grid-cols-1 gap-6">
+              <StatModule icon={<Flame size={18}/>} label="Thermicity" value={stats.exothermic} sub="Exo" />
+              <StatModule icon={<Snowflake size={18}/>} label="Avg Enthalpy" value={stats.avgEnthalpy} sub="kJ/mol" />
             </div>
           </div>
         </div>
 
-        {/* 4. RIGHT COLUMN: HISTORY LOG */}
-        <div className="lg:col-span-5">
-          <div className="bg-[#D4FF00] border-4 border-[#1A1A1A] shadow-[8px_8px_0px_#1A1A1A] h-full flex flex-col max-h-[650px]">
-            <div className="p-4 border-b-4 border-[#1A1A1A] flex justify-between items-center bg-white">
-              <h3 className="text-[11px] font-black uppercase tracking-widest flex items-center gap-2">
-                <Clock className="w-4 h-4" /> Live_Sequence_Log
-              </h3>
-              <span className="text-[10px] font-mono font-bold bg-[#1A1A1A] text-white px-2">{reactionLog.length}</span>
-            </div>
+        {/* SIDEBAR TELEMETRY */}
+        <aside className="xl:col-span-4 flex flex-col gap-6">
+          <div className="bg-white border-4 border-[#1A1A1A] p-5 shadow-[4px_4px_0px_#1A1A1A] flex-1 flex flex-col min-h-[400px]">
+            <h3 className="text-[10px] font-black uppercase tracking-widest mb-4 border-b-2 border-[#1A1A1A] pb-2 flex justify-between">
+              Sequence_Log <span className="opacity-30 italic">L_STREAM</span>
+            </h3>
             
-            <div className="p-4 overflow-y-auto space-y-3 flex-1 scrollbar-hide">
-              <AnimatePresence>
-                {reactionLog.slice().reverse().map((entry, i) => (
+            <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+              <AnimatePresence mode="popLayout">
+                {reactionLog.slice().reverse().map((entry) => (
                   <motion.div
                     key={entry.timestamp}
+                    layout
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="bg-white border-2 border-[#1A1A1A] p-4 shadow-[4px_4px_0px_#1A1A1A] hover:translate-x-1 hover:-translate-y-1 transition-all group"
+                    className="p-4 border-4 border-[#1A1A1A] hover:bg-[#D4FF00] transition-colors group cursor-crosshair"
                   >
                     <div className="flex justify-between items-start mb-2">
-                      <div className="flex gap-2">
-                        <div className={`w-3 h-3 border-2 border-[#1A1A1A] ${entry.isExothermic ? 'bg-[#10b981]' : 'bg-[#f97316]'}`} />
-                        <span className="text-[10px] font-black uppercase tracking-tighter">{entry.reactionType || 'General'}</span>
-                      </div>
-                      <span className="text-[9px] font-mono text-[#1A1A1A]/50">{timeAgo(entry.timestamp)}</span>
+                      <span className="text-[9px] font-black uppercase bg-[#1A1A1A] text-white px-1">
+                        {entry.reactionType || 'SYNTH'}
+                      </span>
+                      <span className="text-[8px] font-mono opacity-40">{timeAgo(entry.timestamp)}</span>
                     </div>
-                    <p className="font-mono text-xs font-black truncate mb-2">{entry.expression}</p>
-                    <div className="flex gap-2">
-                      {entry.enthalpy !== undefined && (
-                        <span className="text-[8px] font-bold border border-[#1A1A1A] px-1 bg-[#EAE8E4]">ΔH: {entry.enthalpy}kJ</span>
-                      )}
-                      <ChevronRight className="w-3 h-3 ml-auto group-hover:translate-x-1 transition-transform" />
+                    <p className="text-[11px] font-black font-mono truncate mb-2">{entry.expression}</p>
+                    <div className="flex justify-between items-center text-[9px] font-bold opacity-60">
+                      <span>dH: {entry.enthalpy ?? '0'}</span>
+                      <ChevronRight size={12} />
                     </div>
                   </motion.div>
                 ))}
               </AnimatePresence>
+              {reactionLog.length === 0 && (
+                <div className="text-[9px] font-mono opacity-20 py-10 text-center uppercase tracking-widest">Idle_State</div>
+              )}
             </div>
           </div>
-        </div>
+
+          {/* PURGE ACTION */}
+          <button
+            onClick={() => confirmReset ? (resetWorkspace(), setConfirmReset(false)) : setConfirmReset(true)}
+            onMouseLeave={() => setConfirmReset(false)}
+            className={`w-full py-6 flex items-center justify-center gap-3 font-black text-xs uppercase tracking-[0.2em] transition-all border-4 border-[#1A1A1A] shadow-[4px_4px_0px_#1A1A1A] ${
+              confirmReset ? 'bg-red-500 text-white animate-pulse' : 'bg-[#1A1A1A] text-[#D4FF00] hover:bg-white hover:text-[#1A1A1A]'
+            }`}
+          >
+            {confirmReset ? <Zap /> : <Trash2 size={16} />}
+            {confirmReset ? "CONFIRM_PURGE" : "PURGE_SYNC_NODE"}
+          </button>
+        </aside>
       </div>
     </motion.div>
   );
 }
 
-// --- Internal Helper Components ---
+// --- Sub-components ---
 
-function StatCard({ icon, label, value, sub, accent }: any) {
+function StatModule({ icon, label, value, sub }: any) {
   return (
-    <div className={`border-4 border-[#1A1A1A] ${accent} p-6 shadow-[4px_4px_0px_#1A1A1A] transition-transform hover:translate-y-[-2px]`}>
-      <div className="text-[#1A1A1A] mb-4">{icon}</div>
-      <div className="flex items-baseline gap-2">
-        <span className="text-2xl font-black font-mono">{value}</span>
-        {sub && <span className="text-[10px] font-black bg-white border border-[#1A1A1A] px-1">{sub}</span>}
+    <div className="bg-white p-6 border-4 border-[#1A1A1A] group hover:bg-[#1A1A1A] transition-all shadow-[4px_4px_0px_#1A1A1A] flex flex-col justify-center">
+      <div className="text-[#1A1A1A] group-hover:text-[#D4FF00] transition-colors mb-2">{icon}</div>
+      <div className="flex items-end justify-between">
+        <div className="space-y-1">
+          <h4 className="text-3xl font-black font-mono tracking-tighter group-hover:text-white transition-colors">
+            {value}
+          </h4>
+          <p className="text-[9px] font-black uppercase tracking-[0.2em] opacity-40 group-hover:text-white/40">{label}</p>
+        </div>
+        {sub && <span className="text-[8px] font-bold bg-[#D4FF00] px-1 group-hover:bg-white group-hover:text-[#1A1A1A] mb-1">{sub}</span>}
       </div>
-      <p className="text-[9px] font-black uppercase tracking-widest mt-2 opacity-60 border-t border-[#1A1A1A] pt-2">{label}</p>
     </div>
   );
 }
 
 const CustomTooltip = ({ active, payload }: any) => {
-  if (active && payload && payload.length) {
+  if (active && payload?.[0]) {
     return (
-      <div className="bg-white border-2 border-[#1A1A1A] p-2 shadow-[4px_4px_0px_#1A1A1A] font-mono">
-        <p className="text-[10px] font-black">ΔH: {payload[0].value} kJ/mol</p>
+      <div className="bg-[#1A1A1A] text-white p-3 border-2 border-[#D4FF00] font-mono shadow-[4px_4px_0px_#1A1A1A]">
+        <p className="text-[9px] uppercase font-black text-[#D4FF00] mb-1">Enthalpy_Flux</p>
+        <p className="text-xl font-black italic">{payload[0].value} <span className="text-[10px] not-italic opacity-50">kJ</span></p>
       </div>
     );
   }
   return null;
 };
-
-function LegendItem({ color, label }: any) {
-  return (
-    <div className="flex items-center gap-1.5">
-      <div className="w-2.5 h-2.5 border-2 border-[#1A1A1A]" style={{ backgroundColor: color }} />
-      <span className="text-[9px] font-black uppercase tracking-tighter">{label}</span>
-    </div>
-  );
-}

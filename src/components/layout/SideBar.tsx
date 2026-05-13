@@ -1,152 +1,169 @@
-import React from 'react';
-import { 
-  Atom, 
-  Activity, 
-  Settings, 
-  Globe, 
-  Zap, 
-  Terminal, 
-  FlaskConical 
-} from 'lucide-react';
-import { motion } from 'motion/react';
+import React from "react";
+import {
+  Atom,
+  Activity,
+  Settings,
+  Globe,
+  Zap,
+  Terminal,
+  FlaskConical,
+  Cpu,
+  Layers,
+} from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 
-export type TabType = 'workspace' | 'explorer' | 'analytics' | 'compare';
+export type TabType = "workspace" | "simulation" | "analytics" | "compare";
 
 interface SideBarProps {
   activeTab: TabType;
   setActiveTab: (tab: TabType) => void;
   openSettings: () => void;
+  openNetwork: () => void;
+  isCompact?: boolean;
 }
 
-export const SideBar: React.FC<SideBarProps> = ({ activeTab, setActiveTab, openSettings }) => {
+const SECTION_HEADER_STYLE = "text-[9px] font-black text-[#1A1A1A]/40 uppercase tracking-[0.2em] mb-3 px-2 flex items-center gap-2 overflow-hidden whitespace-nowrap";
+
+export const SideBar: React.FC<SideBarProps> = ({
+  activeTab,
+  setActiveTab,
+  openSettings,
+  openNetwork,
+  isCompact = false,
+}) => {
   const tabs = [
-    { id: 'workspace', icon: FlaskConical, label: "Synthesis Lab", color: "text-owda-teal", desc: "Reaction Workspace" },
-    { id: 'explorer', icon: Atom, label: "Horizon Simulator", color: "text-owda-blue", desc: "Simulate States" },
-    { id: 'analytics', icon: Activity, label: "Telemetry Analytics", color: "text-emerald-500", desc: "Data Analytics" },
-    { id: 'compare', icon: Globe, label: "Compare", color: "text-owda-orange", desc: "Side-by-Side" },
+    { id: "workspace", icon: FlaskConical, label: "Synthesis Lab", desc: "CORE_PROCESSOR" },
+    { id: "simulation", icon: Atom, label: "Simulation", desc: "STATE_ENGINE" },
+    { id: "analytics", icon: Activity, label: "Analytics", desc: "DATA_UPLINK" },
+    { id: "compare", icon: Layers, label: "Comparison", desc: "DIFF_BUFFER" },
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 h-20 md:relative md:h-full md:w-64 md:border-t-0 md:border-r-4 border-t-4 border-[#1A1A1A] flex flex-row md:flex-col items-center z-50 bg-[#FDFCFB]">
+    <nav className={`h-full flex flex-col items-stretch z-50 bg-[#FDFCFB] transition-all duration-500 ease-[cubic-bezier(0.2,1,0.2,1)]`}>
       
-      {/* 1. ARCHITECTURAL BRANDING */}
-      <div className="hidden md:flex flex-col items-center justify-center p-6 w-full border-b-4 border-[#1A1A1A] bg-[#ff6b6b] relative">
-        <div className="absolute top-1 right-0 w-8 h-8 bg-white border-l-4 border-b-4 border-[#1A1A1A] pt-1 pl-1">
-          <div className="w-4 h-4 bg-[#1A1A1A] rounded-full animate-pulse" />
-        </div>
-        <div className="w-full flex items-center justify-between border-4 border-[#1A1A1A] bg-[#D4FF00] p-3 shadow-[4px_4px_0px_#1A1A1A] z-10">
-          <span className="text-[20px] font-mono font-black text-[#1A1A1A] px-1 mt-1">V{import.meta.env.APP_VERSION || "1.0.0"}</span>
-        </div>
-        {/* Decorative brutalist barcode / grid */}
-        <div className="w-full h-5 mt-4 flex items-end gap-1 px-1 opacity-80 mix-blend-multiply">
-          {[...Array(8)].map((_, i) => (
-            <div key={i} className={`bg-[#1A1A1A] flex-1 ${i % 2 === 0 ? 'h-full' : 'h-3'}`} />
-          ))}
+      {/* 1. BRANDING & VERSIONING */}
+      <div className={`flex flex-col p-6 border-b-4 border-[#1A1A1A] bg-[#FF6B6B] relative overflow-hidden transition-all duration-500 ${isCompact ? 'items-center px-2' : ''}`}>
+        <div className="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(#1A1A1A_1px,transparent_1px)] bg-[size:10px_10px]" />
+        
+        <div className="relative z-10 flex flex-col gap-4">
+          {!isCompact && (
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-white border border-[#1A1A1A] rounded-full animate-pulse" />
+              <span className="text-[8px] font-black text-[#1A1A1A] uppercase bg-white px-1.5 shadow-[2px_2px_0px_#1A1A1A]">
+                OS_ACTIVE
+              </span>
+            </div>
+          )}
+          
+          <div className="bg-[#D4FF00] border-4 border-[#1A1A1A] p-3 shadow-[4px_4px_0px_#1A1A1A] flex items-center justify-center">
+            <h1 className="text-xl font-black italic tracking-tighter text-[#1A1A1A] leading-none">
+              {isCompact ? "O" : "OWDA"}<span className="text-[#FF6B6B]">.</span>OS
+            </h1>
+          </div>
         </div>
       </div>
 
-      {/* 2. PRIMARY NAV MODULES */}
-      <div className="flex flex-row md:flex-col w-full px-2 md:px-4 gap-1.5 md:gap-2 justify-center md:justify-start items-center my-4">
+      {/* 2. NAVIGATION MODULES */}
+      <div className={`flex-1 flex flex-col px-3 md:px-4 gap-3 md:py-8 overflow-y-auto no-scrollbar transition-all ${isCompact ? 'px-2' : ''}`}>
+        {!isCompact && (
+          <p className={SECTION_HEADER_STYLE}>
+            <Terminal size={10}/> <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }}>Main_Modules</motion.span>
+          </p>
+        )}
+        
         {tabs.map((item) => {
           const isActive = activeTab === item.id;
           return (
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id as TabType)}
-              className={`relative group flex flex-col md:flex-row items-center gap-4 w-full p-3 md:py-3.5 md:px-4 transition-all overflow-hidden border-2 ${
-                isActive 
-                ? 'bg-[#1A1A1A] text-white border-[#1A1A1A] shadow-[4px_4px_0px_#D4FF00]' 
-                : 'bg-white text-[#1A1A1A] border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A] hover:bg-[#EAE8E4] hover:translate-x-1'
+              title={isCompact ? item.label : ""}
+              className={`relative group flex items-center transition-all border-4 border-[#1A1A1A] ${
+                isCompact ? 'justify-center p-3' : 'gap-4 p-3.5'
+              } ${
+                isActive
+                  ? "bg-[#1A1A1A] text-white shadow-[4px_4px_0px_#D4FF00]"
+                  : "bg-white text-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A] hover:bg-[#F5F5F5] hover:shadow-[4px_4px_0px_#D4FF00] hover:-translate-y-0.5"
               }`}
             >
-              {/* Selection Laser */}
+              <item.icon className={`shrink-0 transition-transform duration-300 ${isCompact ? 'w-6 h-6' : 'w-5 h-5'} ${isActive ? "scale-110" : "group-hover:rotate-12"}`} />
+
+              <AnimatePresence>
+                {!isCompact && (
+                  <motion.div 
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    className="flex flex-col items-start overflow-hidden whitespace-nowrap"
+                  >
+                    <span className="text-[10px] font-black uppercase tracking-tight">
+                      {item.label}
+                    </span>
+                    <span className={`text-[7px] font-mono font-bold uppercase opacity-60 ${isActive ? "text-[#D4FF00]" : ""}`}>
+                      {isActive ? "ACTIVE_SESSION" : item.desc}
+                    </span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               {isActive && (
                 <motion.div 
-                  layoutId="sidebar-active-highlight"
-                  className="absolute inset-0 bg-[#1A1A1A]"
-                  transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
+                  layoutId="active-pill"
+                  className="absolute left-[-4px] top-2 bottom-2 w-1 bg-[#D4FF00]"
                 />
               )}
-
-              <div className="relative">
-                <item.icon className={`w-5 h-5 md:w-5 md:h-5 z-10 transition-all ${
-                  isActive ? 'text-white' : 'text-[#1A1A1A]'
-                }`} />
-                {isActive && (
-                  <span className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-[#D4FF00] rounded-full animate-pulse shadow-[0_0_5px_#D4FF00]" />
-                )}
-              </div>
-              
-              <div className="flex flex-col items-start z-10 text-left">
-                <span className={`text-[9px] md:text-[10px] font-bold uppercase tracking-[0.1em] ${
-                  isActive ? 'text-white' : 'text-[#1A1A1A]'
-                }`}>
-                  {item.label}
-                </span>
-                <span className={`hidden md:block text-[7px] font-mono transition-opacity ${
-                  isActive ? 'text-[#D4FF00]' : 'text-[#1A1A1A]/80 flex'
-                }`}>
-                  {isActive ? 'STATUS: ACTIVE' : item.desc}
-                </span>
-              </div>
             </button>
           );
         })}
       </div>
 
       {/* 3. UTILITY & DIAGNOSTICS */}
-      <div className="hidden md:flex mt-auto flex-col w-full p-4 gap-2 border-t-4 border-[#1A1A1A] bg-[#EAE8E4]">
-        <div className="px-2 flex items-center justify-between mb-2">
-          <span className="text-[10px] font-black text-[#1A1A1A] bg-white border-2 border-[#1A1A1A] px-1 uppercase tracking-[0.2em] font-mono shadow-[2px_2px_0px_#1A1A1A]">Diag</span>
-          <Terminal className="w-3 h-3 text-[#1A1A1A]" />
+      <div className={`flex mt-auto flex-col p-4 gap-3 border-t-4 border-[#1A1A1A] bg-[#EAE8E4] transition-all ${isCompact ? 'p-2' : ''}`}>
+        {!isCompact && <p className={SECTION_HEADER_STYLE}>System_Tools</p>}
+        
+        <div className={`grid gap-2 ${isCompact ? 'grid-cols-1' : 'grid-cols-2'}`}>
+          <UtilityIconButton icon={<Settings size={16}/>} onClick={openSettings} compact={isCompact} />
+          <UtilityIconButton icon={<Globe size={16}/>} onClick={openNetwork} compact={isCompact} />
         </div>
-        
-        <UtilityButton 
-          icon={<Settings className="w-4 h-4" />} 
-          label="Sys_Config" 
-          onClick={openSettings}
-          accent="text-[#1A1A1A]"
-        />
-        
-        <UtilityButton 
-          icon={<Globe className="w-4 h-4" />} 
-          label="Network_Mesh" 
-          accent="text-[#1A1A1A]"
-        />
 
         {/* Real-time Health Widget */}
-        <div className="mt-2 p-3 bg-white text-[#1A1A1A] border-4 border-[#1A1A1A] shadow-[4px_4px_0px_#1A1A1A] group cursor-help relative overflow-hidden">
-           <div className="absolute top-0 right-0 w-4 h-4 bg-[#D4FF00] border-l-2 border-b-2 border-[#1A1A1A] flex items-center justify-center">
-             <div className="w-1.5 h-1.5 bg-[#1A1A1A] animate-ping" />
-           </div>
-           <div className="flex flex-col gap-1.5 mb-2 relative z-10">
-              <div className="flex items-center gap-1.5">
-                <Zap className="w-3 h-3 text-[#1A1A1A] animate-pulse" />
-                <span className="text-[9px] font-mono uppercase font-black tracking-widest text-[#1A1A1A] bg-[#D4FF00] px-1 border border-[#1A1A1A]">Status</span>
+        <div className={`bg-white border-4 border-[#1A1A1A] shadow-[4px_4px_0px_#1A1A1A] relative overflow-hidden transition-all ${isCompact ? 'p-2 flex justify-center' : 'p-3'}`}>
+          {!isCompact ? (
+            <>
+              <div className="flex justify-between items-center mb-2">
+                <div className="flex items-center gap-1.5">
+                  <Zap className="w-3 h-3 text-[#1A1A1A] animate-pulse" />
+                  <span className="text-[8px] font-black uppercase font-mono">Load_V_Core</span>
+                </div>
+                <span className="text-[8px] font-mono font-black bg-[#1A1A1A] text-white px-1">98%</span>
               </div>
-              <span className="text-[9px] font-mono font-black italic bg-black text-white w-fit px-1">100% NOMINAL</span>
-           </div>
-           <div className="h-[4px] w-full bg-[#EAE8E4] border border-[#1A1A1A] relative overflow-hidden">
-              <motion.div 
-                animate={{ x: ["-100%", "200%"] }}
-                transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                className="h-full w-1/2 bg-[#ff6b6b]" 
-              />
-           </div>
+              <div className="h-1.5 w-full bg-[#F5F5F5] border-2 border-[#1A1A1A] relative overflow-hidden">
+                <motion.div
+                  animate={{ width: ["30%", "95%", "60%", "90%"] }}
+                  transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                  className="h-full bg-[#D4FF00]"
+                />
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col items-center gap-1">
+              <Cpu size={14} className="text-[#1A1A1A] animate-pulse" />
+              <div className="w-1 h-4 bg-[#D4FF00] border border-[#1A1A1A]" />
+            </div>
+          )}
         </div>
       </div>
     </nav>
   );
 };
 
-const UtilityButton = ({ icon, label, onClick, accent }: any) => (
-  <button 
+const UtilityIconButton = ({ icon, onClick, compact }: { icon: React.ReactNode, onClick: () => void, compact: boolean }) => (
+  <button
     onClick={onClick}
-    className={`flex items-center gap-3 py-2 px-3 text-[#1A1A1A] text-[9px] font-black uppercase tracking-wider transition-all group hover:bg-[#D4FF00] hover:text-[#1A1A1A] border-2 border-transparent hover:border-[#1A1A1A] hover:shadow-[2px_2px_0px_#1A1A1A]`}
+    className={`flex items-center justify-center bg-white border-2 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A] hover:bg-[#D4FF00] transition-all active:translate-y-0.5 group ${compact ? 'p-2' : 'p-3'}`}
   >
-    <span className={`transition-all duration-300`}>
+    <span className="group-hover:rotate-90 transition-transform duration-300 text-[#1A1A1A]">
       {icon}
     </span>
-    <span className="group-hover:translate-x-0.5 transition-transform">{label}</span>
   </button>
 );

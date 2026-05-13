@@ -1,5 +1,5 @@
-import { ChemicalReaction, ReactionPart } from '../types';
-import { ChemicalParser, ParseError } from './parser';
+import { ChemicalReaction, ReactionPart } from "../types";
+import { ChemicalParser, ParseError } from "./parser";
 
 /**
  * OWDA Reaction Solver Engine — Layer 2
@@ -17,7 +17,6 @@ import { ChemicalParser, ParseError } from './parser';
  * with all xᵢ > 0 (stoichiometric coefficients are always positive).
  */
 export class ReactionSolver {
-
   // ─── Public API ────────────────────────────────────────────────────────────
 
   /**
@@ -30,19 +29,19 @@ export class ReactionSolver {
   public static balance(expression: string): ChemicalReaction {
     // ── 1. Parse ─────────────────────────────────────────────────────────────
     let reactants: ReactionPart[];
-    let products:  ReactionPart[];
+    let products: ReactionPart[];
 
     try {
       const parsed = ChemicalParser.parseReaction(expression);
       reactants = parsed.reactants;
-      products  = parsed.products;
+      products = parsed.products;
     } catch (err) {
       const msg = err instanceof ParseError ? err.message : String(err);
       return {
         isBalanced: false,
-        reactants:  { molecules: [] },
-        products:   { molecules: [] },
-        timestamp:  Date.now(),
+        reactants: { molecules: [] },
+        products: { molecules: [] },
+        timestamp: Date.now(),
         errorDetails: `PARSE_ERROR: ${msg}`,
       };
     }
@@ -50,8 +49,9 @@ export class ReactionSolver {
     // ── 2. Validate parsed sides ──────────────────────────────────────────────
     if (reactants.length === 0 || products.length === 0) {
       return ReactionSolver._unbalanced(
-        reactants, products,
-        'MALFORMED_EXPRESSION: one or both sides have no molecules.'
+        reactants,
+        products,
+        "MALFORMED_EXPRESSION: one or both sides have no molecules.",
       );
     }
 
@@ -68,8 +68,9 @@ export class ReactionSolver {
 
     if (elements.length === 0) {
       return ReactionSolver._unbalanced(
-        reactants, products,
-        'MALFORMED_EXPRESSION: no chemical elements found in expression.'
+        reactants,
+        products,
+        "MALFORMED_EXPRESSION: no chemical elements found in expression.",
       );
     }
 
@@ -78,11 +79,11 @@ export class ReactionSolver {
     // ── 3. Build stoichiometry matrix (deep copy — original untouched) ────────
     //  matrix[elementIdx][moleculeIdx]
     //  Reactants: positive; Products: negative
-    const matrix: number[][] = elements.map(el =>
+    const matrix: number[][] = elements.map((el) =>
       allMolecules.map((part, molIdx) => {
         const count = part.molecule.counts[el] ?? 0;
         return molIdx < reactants.length ? count : -count;
-      })
+      }),
     );
 
     // ── 4. Solve for null-space vector ────────────────────────────────────────
@@ -90,21 +91,24 @@ export class ReactionSolver {
 
     if (!solution) {
       return ReactionSolver._unbalanced(
-        reactants, products, 'SINGULAR_MATRIX: system has no unique solution.'
+        reactants,
+        products,
+        "SINGULAR_MATRIX: system has no unique solution.",
       );
     }
 
     // All-negative → negate (physically equivalent)
-    const allNeg = solution.every(v => v < -1e-10);
+    const allNeg = solution.every((v) => v < -1e-10);
     if (allNeg) {
       for (let i = 0; i < solution.length; i++) solution[i] = -solution[i];
     }
 
-    const allPos = solution.every(v => v > 1e-10);
+    const allPos = solution.every((v) => v > 1e-10);
     if (!allPos) {
       return ReactionSolver._unbalanced(
-        reactants, products,
-        'MIXED_SIGN_SOLUTION: equation cannot be balanced with positive integer coefficients.'
+        reactants,
+        products,
+        "MIXED_SIGN_SOLUTION: equation cannot be balanced with positive integer coefficients.",
       );
     }
 
@@ -112,28 +116,33 @@ export class ReactionSolver {
     const coefficients = ReactionSolver._integerize(solution);
 
     // Sanity check — coefficients must all be ≥ 1
-    if (coefficients.some(c => c < 1)) {
+    if (coefficients.some((c) => c < 1)) {
       return ReactionSolver._unbalanced(
-        reactants, products,
-        'NEGATIVE_SOLUTION: integerisation produced zero or negative coefficients.'
+        reactants,
+        products,
+        "NEGATIVE_SOLUTION: integerisation produced zero or negative coefficients.",
       );
     }
 
     // ── 6. Assign coefficients ────────────────────────────────────────────────
-    reactants.forEach((part, i) => { part.coefficient = coefficients[i]; });
-    products.forEach((part, i)  => { part.coefficient = coefficients[reactants.length + i]; });
+    reactants.forEach((part, i) => {
+      part.coefficient = coefficients[i];
+    });
+    products.forEach((part, i) => {
+      part.coefficient = coefficients[reactants.length + i];
+    });
 
     // ── 7. Return balanced result ─────────────────────────────────────────────
     return {
-      isBalanced:      true,
-      reactants:       { molecules: reactants },
-      products:        { molecules: products },
+      isBalanced: true,
+      reactants: { molecules: reactants },
+      products: { molecules: products },
       massConservation: ReactionSolver._validateMass(reactants, products),
-      timestamp:       Date.now(),
+      timestamp: Date.now(),
       // Thermodynamic fields default to 0; filled in by WorkspacePage after AI analysis
-      enthalpy:        0,
-      entropy:         0,
-      gibbs:           0,
+      enthalpy: 0,
+      entropy: 0,
+      gibbs: 0,
     };
   }
 
@@ -156,13 +165,13 @@ export class ReactionSolver {
    */
   private static _nullSpaceVector(
     rawMatrix: number[][],
-    cols: number
+    cols: number,
   ): number[] | null {
     const rows = rawMatrix.length;
     if (rows === 0 || cols === 0) return null;
 
     // Deep copy so callers are never affected
-    const m = rawMatrix.map(row => [...row]);
+    const m = rawMatrix.map((row) => [...row]);
 
     const pivotCol: number[] = []; // pivotCol[pivotRow] = column index
     let pivotRow = 0;
@@ -237,7 +246,7 @@ export class ReactionSolver {
     }
 
     // Validate: all values must be finite and non-NaN
-    if (!solution.every(v => Number.isFinite(v))) return null;
+    if (!solution.every((v) => Number.isFinite(v))) return null;
 
     return solution;
   }
@@ -263,23 +272,28 @@ export class ReactionSolver {
     const MAX_DENOM = 1000; // maximum denominator to consider
 
     // Step 1: Rational approximation for each coefficient
-    const rationals = coeffs.map(c => ReactionSolver._toRational(c, MAX_DENOM));
+    const rationals = coeffs.map((c) =>
+      ReactionSolver._toRational(c, MAX_DENOM),
+    );
 
     // Step 2: LCM of denominators
     const lcmDenom = rationals.reduce(
       (acc, [, q]) => ReactionSolver._lcm(acc, q),
-      1
+      1,
     );
 
     // Step 3: Scale and round
     const scaled = rationals.map(([p, q]) => Math.round((p * lcmDenom) / q));
 
     // Step 4: Divide by GCD to reduce
-    const g = scaled.reduce((acc, v) => ReactionSolver._gcd(acc, Math.abs(v)), 0);
-    const reduced = g > 1 ? scaled.map(v => Math.round(v / g)) : scaled;
+    const g = scaled.reduce(
+      (acc, v) => ReactionSolver._gcd(acc, Math.abs(v)),
+      0,
+    );
+    const reduced = g > 1 ? scaled.map((v) => Math.round(v / g)) : scaled;
 
     // Safety: if anything is ≤ 0, fall back to legacy multiplier scan
-    if (reduced.some(v => v <= 0)) {
+    if (reduced.some((v) => v <= 0)) {
       return ReactionSolver._integerizeFallback(coeffs);
     }
 
@@ -345,13 +359,13 @@ export class ReactionSolver {
   private static _integerizeFallback(coeffs: number[]): number[] {
     const TOL = 1e-4;
     for (let mult = 1; mult <= 1000; mult++) {
-      const trial = coeffs.map(c => c * mult);
-      if (trial.every(t => Math.abs(t - Math.round(t)) < TOL)) {
-        return trial.map(t => Math.round(t));
+      const trial = coeffs.map((c) => c * mult);
+      if (trial.every((t) => Math.abs(t - Math.round(t)) < TOL)) {
+        return trial.map((t) => Math.round(t));
       }
     }
     // Last resort: round directly (may produce 0 for very small coefficients)
-    return coeffs.map(c => Math.max(1, Math.round(c)));
+    return coeffs.map((c) => Math.max(1, Math.round(c)));
   }
 
   // ─── Private: Mass conservation check ─────────────────────────────────────
@@ -364,11 +378,14 @@ export class ReactionSolver {
    */
   private static _validateMass(
     reactants: ReactionPart[],
-    products:  ReactionPart[]
+    products: ReactionPart[],
   ): boolean {
     const sumMass = (parts: ReactionPart[]): number =>
       parts.reduce((acc, part) => {
-        if (!Number.isFinite(part.molecule.molarMass) || part.molecule.molarMass < 0) {
+        if (
+          !Number.isFinite(part.molecule.molarMass) ||
+          part.molecule.molarMass < 0
+        ) {
           // Unknown element contributed 0 mass — skip rather than throw
           return acc;
         }
@@ -383,14 +400,14 @@ export class ReactionSolver {
 
   private static _unbalanced(
     reactants: ReactionPart[],
-    products:  ReactionPart[],
-    errorDetails: string
+    products: ReactionPart[],
+    errorDetails: string,
   ): ChemicalReaction {
     return {
-      isBalanced:   false,
-      reactants:    { molecules: reactants },
-      products:     { molecules: products },
-      timestamp:    Date.now(),
+      isBalanced: false,
+      reactants: { molecules: reactants },
+      products: { molecules: products },
+      timestamp: Date.now(),
       errorDetails,
     };
   }

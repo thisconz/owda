@@ -1,41 +1,24 @@
-import React, { useRef, useEffect } from 'react';
-import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { ChemicalParser } from '../../engine/parser';
+import React, { useRef, useEffect } from "react";
+import * as THREE from "three";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { ChemicalParser } from "../../engine/parser";
 
 interface Props {
   formula: string;
 }
 
-const ELEMENT_THEME: Record<string, { color: number; emissive: number; radius: number }> = {
-  H:  { color: 0xeeeeee, emissive: 0x222222, radius: 0.31 },
-  C:  { color: 0x333333, emissive: 0x000000, radius: 0.77 },
-  O:  { color: 0xdd2222, emissive: 0x330000, radius: 0.73 },
-  N:  { color: 0x2244ee, emissive: 0x000022, radius: 0.75 },
-  S:  { color: 0xddcc00, emissive: 0x333200, radius: 1.02 },
-  P:  { color: 0xff9900, emissive: 0x442200, radius: 1.06 },
-  Cl: { color: 0x22cc44, emissive: 0x002200, radius: 0.99 },
-  Na: { color: 0xaa88ff, emissive: 0x110022, radius: 1.86 },
-  K:  { color: 0xcc88ff, emissive: 0x110033, radius: 2.27 },
-  Ca: { color: 0xbbbbaa, emissive: 0x111100, radius: 1.97 },
-  Fe: { color: 0xcc6633, emissive: 0x221100, radius: 1.26 },
-  default: { color: 0x56a099, emissive: 0x112222, radius: 0.80 },
+// Data-driven theme based on CPK coloring and realistic atomic radii (in Ångströms)
+const ELEMENT_THEME: Record<string, { color: number; radius: number; metalness: number }> = {
+  H:  { color: 0xffffff, radius: 0.37, metalness: 0.1 },
+  C:  { color: 0x333333, radius: 0.77, metalness: 0.2 },
+  O:  { color: 0xff3333, radius: 0.73, metalness: 0.1 },
+  N:  { color: 0x3366ff, radius: 0.75, metalness: 0.1 },
+  S:  { color: 0xffff33, radius: 1.02, metalness: 0.3 },
+  P:  { color: 0xff9900, radius: 1.06, metalness: 0.4 },
+  Cl: { color: 0x33ff33, radius: 0.99, metalness: 0.2 },
+  Fe: { color: 0xdd7733, radius: 1.26, metalness: 0.8 },
+  default: { color: 0x56a099, radius: 0.70, metalness: 0.2 },
 };
-
-/**
- * Position atoms using a Fibonacci sphere layout (evenly distributed).
- * Scales radius with atom count so the molecule stays comfortably in view.
- */
-function fibonacciSphere(n: number, index: number, radius: number): THREE.Vector3 {
-  if (n === 1) return new THREE.Vector3(0, 0, 0);
-  const phi   = Math.acos(1 - (2 * index) / (n - 1));
-  const theta = Math.sqrt(n * Math.PI) * phi;
-  return new THREE.Vector3(
-    radius * Math.sin(phi) * Math.cos(theta),
-    radius * Math.sin(phi) * Math.sin(theta),
-    radius * Math.cos(phi)
-  );
-}
 
 export const MolecularExplorer: React.FC<Props> = ({ formula }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -44,235 +27,174 @@ export const MolecularExplorer: React.FC<Props> = ({ formula }) => {
     const container = containerRef.current;
     if (!container) return;
 
-    // ── Setup ──────────────────────────────────────────────────────────────
-    const width  = container.clientWidth;
-    const height = container.clientHeight;
+    // --- Scene Setup ---
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.1, 1000);
+    camera.position.set(12, 8, 12);
 
-    const scene    = new THREE.Scene();
-    const camera   = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    camera.position.set(8, 4, 8);
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(width, height);
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type    = THREE.PCFShadowMap;
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(container.clientWidth, container.clientHeight);
     container.appendChild(renderer.domElement);
 
     const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping    = true;
-    controls.dampingFactor    = 0.05;
-    controls.autoRotate       = true;
-    controls.autoRotateSpeed  = 0.2;
-    controls.minDistance      = 3;
-    controls.maxDistance      = 30;
+    controls.enableDamping = true;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 0.5;
 
-    // ── Lighting ───────────────────────────────────────────────────────────
-    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+    // --- Lighting (Laboratory Setup) ---
+    const ambient = new THREE.AmbientLight(0xffffff, 0.8);
+    scene.add(ambient);
 
-    const sun = new THREE.SpotLight(0xffffff, 120);
-    sun.position.set(10, 15, 10);
-    sun.castShadow = true;
-    sun.shadow.mapSize.set(2048, 2048);
-    scene.add(sun);
+    const keyLight = new THREE.DirectionalLight(0xffffff, 2);
+    keyLight.position.set(5, 10, 7);
+    scene.add(keyLight);
 
-    const rim = new THREE.PointLight(0x56a099, 60);
-    rim.position.set(-10, -5, -10);
-    scene.add(rim);
+    const rimLight = new THREE.PointLight(0xD4FF00, 50); // OWDA Signature Green Rim
+    rimLight.position.set(-10, -5, -10);
+    scene.add(rimLight);
 
-    const fill = new THREE.PointLight(0x313280, 30);
-    fill.position.set(5, -10, 5);
-    scene.add(fill);
-
-    // ── Build Molecule ─────────────────────────────────────────────────────
-    const group        = new THREE.Group();
+    // --- Molecule Construction ---
     const moleculeData = ChemicalParser.parseFormula(formula);
-
-    // Flatten element counts into an ordered array
-    const elementsArray: string[] = Object.entries(moleculeData.counts).flatMap(
-      ([el, count]) => Array(count).fill(el)
-    );
-
+    const elementsArray = Object.entries(moleculeData.counts).flatMap(([el, count]) => Array(count).fill(el));
     const atomCount = elementsArray.length;
-    const layoutRadius = Math.max(1.5, atomCount * 0.45);
+    const layoutRadius = Math.max(2, Math.sqrt(atomCount) * 1.2);
 
-    const sphereGeo   = new THREE.SphereGeometry(1, 48, 48);
-    const cylinderGeo = new THREE.CylinderGeometry(0.08, 0.08, 1, 12);
+    const atomGroup = new THREE.Group();
+    const atoms: { mesh: THREE.Mesh; basePos: THREE.Vector3; element: string }[] = [];
 
-    // ── Atoms ──────────────────────────────────────────────────────────────
-    const atoms: { mesh: THREE.Mesh; basePos: THREE.Vector3; phase: number }[] = [];
+    const sphereGeo = new THREE.SphereGeometry(1, 32, 32);
 
-    elementsArray.forEach((element, i) => {
-      const theme = ELEMENT_THEME[element] ?? ELEMENT_THEME.default;
-
-      const material = new THREE.MeshPhysicalMaterial({
-        color:              theme.color,
-        emissive:           theme.emissive,
-        emissiveIntensity:  0.15,
-        roughness:          0.2,
-        metalness:          0.35,
-        clearcoat:          1.0,
-        clearcoatRoughness: 0.1,
-        reflectivity:       1.0,
+    elementsArray.forEach((el, i) => {
+      const theme = ELEMENT_THEME[el] ?? ELEMENT_THEME.default;
+      const mat = new THREE.MeshPhysicalMaterial({
+        color: theme.color,
+        metalness: theme.metalness,
+        roughness: 0.1,
+        clearcoat: 1,
+        emissive: theme.color,
+        emissiveIntensity: 0.05,
       });
 
-      const mesh = new THREE.Mesh(sphereGeo, material);
-      mesh.scale.setScalar(theme.radius * 0.5);
-      mesh.castShadow    = true;
-      mesh.receiveShadow = true;
+      const mesh = new THREE.Mesh(sphereGeo, mat);
+      mesh.scale.setScalar(theme.radius);
+      
+      // Fibonacci positioning
+      const phi = Math.acos(1 - (2 * i) / (atomCount));
+      const theta = Math.sqrt(atomCount * Math.PI) * phi;
+      const pos = new THREE.Vector3(
+        layoutRadius * Math.sin(phi) * Math.cos(theta),
+        layoutRadius * Math.sin(phi) * Math.sin(theta),
+        layoutRadius * Math.cos(phi)
+      );
 
-      const pos = fibonacciSphere(atomCount, i, layoutRadius);
       mesh.position.copy(pos);
-      group.add(mesh);
-      atoms.push({ mesh, basePos: pos.clone(), phase: Math.random() * Math.PI * 2 });
+      atomGroup.add(mesh);
+      atoms.push({ mesh, basePos: pos.clone(), element: el });
     });
 
-    // ── Bonds ──────────────────────────────────────────────────────────────
-    const bondMat = new THREE.MeshPhysicalMaterial({
-      color:       0x555566,
-      metalness:   0.9,
-      roughness:   0.1,
-      transparent: true,
-      opacity:     0.75,
-    });
+    // --- Procedural Bonding ---
+    const bondMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.3, metalness: 0.8 });
+    const bondGeo = new THREE.CylinderGeometry(0.12, 0.12, 1, 8);
+    const bondMeshes: { mesh: THREE.Mesh; a: number; b: number }[] = [];
 
-    const BOND_THRESHOLD = layoutRadius < 3 ? 3.0 : layoutRadius * 0.9;
-
-    const bonds: { mesh: THREE.Mesh; a: number; b: number }[] = [];
+    // Simple distance-based heuristics for bonds
     for (let i = 0; i < atoms.length; i++) {
       for (let j = i + 1; j < atoms.length; j++) {
         const dist = atoms[i].basePos.distanceTo(atoms[j].basePos);
-        if (dist < BOND_THRESHOLD) {
-          const bond = new THREE.Mesh(cylinderGeo, bondMat);
-          group.add(bond);
-          bonds.push({ mesh: bond, a: i, b: j });
+        if (dist < layoutRadius * 1.1) { // Threshold for "connected" atoms
+          const mesh = new THREE.Mesh(bondGeo, bondMat);
+          atomGroup.add(mesh);
+          bondMeshes.push({ mesh, a: i, b: j });
         }
       }
     }
 
-    // Center group
-    const box    = new THREE.Box3().setFromObject(group);
-    const center = box.getCenter(new THREE.Vector3());
-    group.position.sub(center);
-    scene.add(group);
+    scene.add(atomGroup);
 
-    // ── Glow Particle Halo ─────────────────────────────────────────────────
-    const particleCount = 80;
-    const positions = new Float32Array(particleCount * 3);
-    for (let i = 0; i < particleCount; i++) {
-      const r     = layoutRadius * 1.8 + Math.random() * 1.5;
-      const theta = Math.random() * Math.PI * 2;
-      const phi   = Math.acos(2 * Math.random() - 1);
-      positions[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
-      positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
-      positions[i * 3 + 2] = r * Math.cos(phi);
-    }
-    const particleGeo = new THREE.BufferGeometry();
-    particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    const particleMat = new THREE.PointsMaterial({ color: 0x56a099, size: 0.06, transparent: true, opacity: 0.4 });
-    scene.add(new THREE.Points(particleGeo, particleMat));
+    // --- Background Field (Star-like particles) ---
+    const pointsGeo = new THREE.BufferGeometry();
+    const coords = new Float32Array(300 * 3);
+    for(let i=0; i<900; i++) coords[i] = (Math.random() - 0.5) * 50;
+    pointsGeo.setAttribute('position', new THREE.BufferAttribute(coords, 3));
+    const pointsMat = new THREE.PointsMaterial({ color: 0x1A1A1A, size: 0.05, opacity: 0.2, transparent: true });
+    scene.add(new THREE.Points(pointsGeo, pointsMat));
 
-    // ── Animation ──────────────────────────────────────────────────────────
-    const startTime = performance.now();
-    let   rafId    = -1;
-    const tmpDir   = new THREE.Vector3();
-    const tmpUp    = new THREE.Vector3(0, 1, 0);
+    // --- Render Loop ---
+    let raf: number;
+    const clock = new THREE.Clock();
 
     const animate = () => {
-      rafId = requestAnimationFrame(animate);
-      const t = (performance.now() - startTime) / 1000;
-
-      // Thermal jitter
-      atoms.forEach((atom) => {
-        atom.mesh.position.y = atom.basePos.y + Math.sin(t * 3 + atom.phase) * 0.025;
+      const t = clock.getElapsedTime();
+      
+      // Gentle breathing/vibration effect
+      atoms.forEach((a, i) => {
+        a.mesh.position.y = a.basePos.y + Math.sin(t * 2 + i) * 0.05;
       });
 
-      // Update bonds to track atom positions
-      bonds.forEach((bond) => {
-        const p1 = atoms[bond.a].mesh.position;
-        const p2 = atoms[bond.b].mesh.position;
-        tmpDir.subVectors(p2, p1);
-        const len = tmpDir.length();
-        bond.mesh.scale.set(1, len, 1);
-        bond.mesh.position.addVectors(p1, tmpDir.multiplyScalar(0.5));
-        bond.mesh.quaternion.setFromUnitVectors(tmpUp, tmpDir.normalize());
+      // Update Bonds
+      bondMeshes.forEach(b => {
+        const p1 = atoms[b.a].mesh.position;
+        const p2 = atoms[b.b].mesh.position;
+        const dir = new THREE.Vector3().subVectors(p2, p1);
+        const len = dir.length();
+        b.mesh.scale.set(1, len, 1);
+        b.mesh.position.copy(p1).add(dir.multiplyScalar(0.5));
+        b.mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
       });
 
       controls.update();
       renderer.render(scene, camera);
+      raf = requestAnimationFrame(animate);
     };
 
     animate();
 
-    // ── Resize ────────────────────────────────────────────────────────────
-    const onResize = () => {
-      if (!container) return;
-      const w = container.clientWidth;
-      const h = container.clientHeight;
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      renderer.setSize(w, h);
-    };
-    window.addEventListener('resize', onResize);
-
-    // ── CLEANUP (memory leak fix) ─────────────────────────────────────────
+    // --- Cleanup ---
     return () => {
-      // Cancel animation frame FIRST to stop rendering
-      cancelAnimationFrame(rafId);
-
-      window.removeEventListener('resize', onResize);
-      controls.dispose();
-
-      // Dispose all geometries & materials
-      sphereGeo.dispose();
-      cylinderGeo.dispose();
-      bondMat.dispose();
-      particleGeo.dispose();
-      particleMat.dispose();
-      atoms.forEach((a) => (a.mesh.material as THREE.Material).dispose());
-
+      cancelAnimationFrame(raf);
       renderer.dispose();
-
-      // Remove canvas from DOM
-      if (container.contains(renderer.domElement)) {
-        container.removeChild(renderer.domElement);
-      }
-
       scene.clear();
+      if (container.contains(renderer.domElement)) container.removeChild(renderer.domElement);
     };
   }, [formula]);
 
   return (
-    <div
-      ref={containerRef}
-      className="w-full h-full bg-white relative group rounded-none overflow-hidden"
-    >
-      {/* HUD Overlay */}
-      <div className="absolute top-6 left-6 z-10 pointer-events-none select-none">
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2 bg-white px-2 py-1 border-2 border-[#1A1A1A] w-fit shadow-[2px_2px_0px_#1A1A1A]">
-            <div className="w-2 h-2 border border-[#1A1A1A] bg-[#D4FF00] animate-pulse" />
-            <span className="text-[10px] font-black text-[#1A1A1A] tracking-[.4em] uppercase">
-              Spectral_View
-            </span>
-          </div>
-          <h3 className="text-3xl font-black text-[#1A1A1A] tracking-tighter uppercase italic mt-1 bg-white border-2 border-[#1A1A1A] px-3 py-1 shadow-[4px_4px_0px_#1A1A1A] w-fit">
+    <div ref={containerRef} className="w-full h-full bg-[#FDFCFB] relative overflow-hidden border-4 border-[#1A1A1A]">
+      {/* Grid Overlay for "Digital Lab" feel */}
+      <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-size-[40px_40px] bg-[linear-gradient(to_right,black_1px,transparent_1px),linear-gradient(to_bottom,black_1px,transparent_1px)]" />
+
+      {/* Top HUD */}
+      <div className="absolute top-8 left-8 z-20 flex flex-col gap-2">
+        <div className="flex items-center gap-3 bg-[#1A1A1A] text-white px-3 py-1 w-fit shadow-[4px_4px_0px_#D4FF00]">
+          <span className="text-[10px] font-black tracking-widest uppercase">OWDA_Core // Molecule_Visualizer</span>
+        </div>
+        <div className="bg-white border-2 border-[#1A1A1A] p-4 shadow-[6px_6px_0px_#1A1A1A]">
+          <h2 className="text-5xl font-black italic tracking-tighter text-[#1A1A1A] leading-none">
             {formula}
-          </h3>
+          </h2>
+          <div className="flex gap-4 mt-3">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-[#ff4d4d]" />
+              <span className="text-[10px] font-bold uppercase tracking-tighter">Stability: Stable</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-[#D4FF00] animate-pulse" />
+              <span className="text-[10px] font-bold uppercase tracking-tighter">Energy: Low</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Controls hint */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-2 group-hover:translate-y-0">
-        <div className="px-4 py-2 bg-[#D4FF00] border-2 border-[#1A1A1A] rounded-none shadow-[2px_2px_0px_#1A1A1A]">
-          <span className="text-[10px] font-black text-[#1A1A1A] uppercase tracking-widest flex items-center gap-4">
-            <span>Drag to Rotate</span>
-            <span className="w-1 h-1 bg-[#1A1A1A]" />
-            <span>Scroll to Zoom</span>
-            <span className="w-1 h-1 bg-[#1A1A1A]" />
-            <span>Right-drag to Pan</span>
-          </span>
-        </div>
+      {/* Interactive Legend */}
+      <div className="absolute bottom-8 right-8 z-20 hidden md:flex flex-col gap-2 bg-white border-2 border-[#1A1A1A] p-4 shadow-[4px_4px_0px_#1A1A1A]">
+        <span className="text-[9px] font-black uppercase mb-2 border-b border-[#1A1A1A]">Element_Key</span>
+        {Object.entries(ELEMENT_THEME).filter(([k]) => k !== 'default').map(([el, theme]) => (
+          <div key={el} className="flex items-center gap-3">
+            <div className="w-3 h-3 border border-[#1A1A1A]" style={{ backgroundColor: `#${theme.color.toString(16)}` }} />
+            <span className="text-[10px] font-bold">{el} — {theme.radius}Å</span>
+          </div>
+        ))}
       </div>
     </div>
   );
