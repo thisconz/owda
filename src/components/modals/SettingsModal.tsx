@@ -142,11 +142,11 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   <Settings className="w-6 h-6 text-owda-gray animate-[spin_20s_linear_infinite]" />
                 </div>
                 <div>
-                  <h1 className="font-serif italic text-3xl font-bold tracking-tight text-owda-gray leading-none">
+                  <h1 className="font-mono text-3xl font-bold tracking-tight text-owda-gray leading-none">
                     Hardware Specs
                   </h1>
                   <p className="font-mono text-[9px] mt-2 font-bold text-owda-gray/50 uppercase tracking-widest">
-                    STOICH_ENGINE_V{process.env.APP_VERSION} // KINETIC_RUNTIME
+                    V{process.env.APP_VERSION} // KINETIC_RUNTIME
                   </p>
                 </div>
               </div>

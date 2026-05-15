@@ -104,11 +104,11 @@ export function NetworkModal({ isOpen, onClose }: NetworkModalProps) {
                   <Database className="w-6 h-6 text-owda-gray" />
                 </div>
                 <div>
-                  <h1 className="font-serif italic text-3xl font-bold tracking-tight text-owda-gray leading-none">
+                  <h1 className="font-mono text-3xl font-bold tracking-tight text-owda-gray leading-none">
                     Core Protocol
                   </h1>
                   <p className="font-mono text-[9px] mt-2 font-bold text-owda-gray/50 uppercase tracking-widest">
-                    STOICH_ENGINE_V{process.env.APP_VERSION} // {network.online ? 'UPLINK_LIVE' : 'LOCAL_ONLY'}
+                    V{process.env.APP_VERSION} // {network.online ? 'UPLINK_LIVE' : 'LOCAL_ONLY'}
                   </p>
                 </div>
               </div>
