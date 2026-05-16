@@ -63,7 +63,13 @@ export const MolecularExplorer: React.FC<Props> = ({ formula }) => {
     const atomGroup = new THREE.Group();
     const atoms: { mesh: THREE.Mesh; basePos: THREE.Vector3; element: string }[] = [];
 
+    const disposables: {
+      geometries: THREE.BufferGeometry[];
+      materials: THREE.Material[];
+    } = { geometries: [], materials: [] };
+
     const sphereGeo = new THREE.SphereGeometry(1, 32, 32);
+    disposables.geometries.push(sphereGeo);
 
     elementsArray.forEach((el, i) => {
       const theme = ELEMENT_THEME[el] ?? ELEMENT_THEME.default;
@@ -75,6 +81,7 @@ export const MolecularExplorer: React.FC<Props> = ({ formula }) => {
         emissive: theme.color,
         emissiveIntensity: 0.05,
       });
+      disposables.materials.push(mat);
 
       const mesh = new THREE.Mesh(sphereGeo, mat);
       mesh.scale.setScalar(theme.radius);
@@ -95,7 +102,9 @@ export const MolecularExplorer: React.FC<Props> = ({ formula }) => {
 
     // --- Procedural Bonding ---
     const bondMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.3, metalness: 0.8 });
+    disposables.materials.push(bondMat);
     const bondGeo = new THREE.CylinderGeometry(0.12, 0.12, 1, 8);
+    disposables.geometries.push(bondGeo);
     const bondMeshes: { mesh: THREE.Mesh; a: number; b: number }[] = [];
 
     // Simple distance-based heuristics for bonds
@@ -114,10 +123,12 @@ export const MolecularExplorer: React.FC<Props> = ({ formula }) => {
 
     // --- Background Field (Star-like particles) ---
     const pointsGeo = new THREE.BufferGeometry();
+    disposables.geometries.push(pointsGeo);
+    const pointsMat = new THREE.PointsMaterial({ color: 0x1A1A1A, size: 0.05, opacity: 0.2, transparent: true });
+    disposables.materials.push(pointsMat);
     const coords = new Float32Array(300 * 3);
     for(let i=0; i<900; i++) coords[i] = (Math.random() - 0.5) * 50;
     pointsGeo.setAttribute('position', new THREE.BufferAttribute(coords, 3));
-    const pointsMat = new THREE.PointsMaterial({ color: 0x1A1A1A, size: 0.05, opacity: 0.2, transparent: true });
     scene.add(new THREE.Points(pointsGeo, pointsMat));
 
     // --- Render Loop ---
@@ -153,9 +164,16 @@ export const MolecularExplorer: React.FC<Props> = ({ formula }) => {
     // --- Cleanup ---
     return () => {
       cancelAnimationFrame(raf);
+      controls.dispose();
+
+      disposables.geometries.forEach((g) => g.dispose());
+      disposables.materials.forEach((m) => m.dispose());
+      
       renderer.dispose();
-      scene.clear();
-      if (container.contains(renderer.domElement)) container.removeChild(renderer.domElement);
+
+      if (container.contains(renderer.domElement)) {
+        container.removeChild(renderer.domElement);
+      }
     };
   }, [formula]);
 

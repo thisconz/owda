@@ -22,8 +22,9 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { useOWDAActions, useOWDAStore, useSolverSettings } from "../../store";
 import { ReactionSolver } from "../../engine/solver";
-import { AIService } from "../../services/aiService";
+import { AIService, AIThermodynamics } from "../../services/aiService";
 import { ElementPicker } from "./ElementPicker";
+import { ChemicalReaction, ExplanationStep, ReactionType } from "@/src/types";
 
 const REACTION_CATALOG = [
   {
@@ -281,14 +282,20 @@ export const ReactionWorkspace: React.FC = () => {
   const [isFocused, setIsFocused] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     setLocalInput(inputExpression);
+    return () => {abortRef.current?.abort()};
   }, [inputExpression]);
 
   const handleSolve = async () => {
     const trimmed = localInput.trim();
     if (!trimmed || isProcessing) return;
+
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
 
     setProcessing(true);
     clearError();
@@ -300,16 +307,16 @@ export const ReactionWorkspace: React.FC = () => {
       const balanced = ReactionSolver.balance(trimmed);
 
       // 2. AI analysis (conditionally based on settings)
-      let thermodynamics: {
-        enthalpy?: number;
-        entropy?: number;
-        gibbs?: number;
-        type: string;
-      } = { type: "Unknown" };
-      let steps: any[] = [];
+      let thermodynamics: AIThermodynamics = {
+        type: "Unknown",
+        enthalpy: undefined,
+        entropy: undefined,
+        gibbs: undefined,
+      };
+      let steps: ExplanationStep[] = [];
 
       if (settings.enableAI) {
-        const aiResult = await AIService.explainReaction(trimmed);
+        const aiResult = await AIService.explainReaction(trimmed, controller.signal);
         thermodynamics = aiResult.thermodynamics;
         steps = aiResult.steps;
       } else {
@@ -323,17 +330,16 @@ export const ReactionWorkspace: React.FC = () => {
         ];
       }
 
-      const finalReaction = {
-        ...balanced,
-        ...(balanced.isBalanced
-          ? {
-              enthalpy: thermodynamics.enthalpy ?? 0,
-              entropy: thermodynamics.entropy ?? 0,
-              gibbs: thermodynamics.gibbs ?? 0,
-              type: thermodynamics.type as any,
-            }
-          : {}),
-      } as any;
+      const finalReaction: ChemicalReaction = balanced.isBalanced
+        ? {
+            ...balanced,
+            isBalanced: true,
+            enthalpy: thermodynamics.enthalpy,   // ← keep undefined if AI failed
+            entropy:  thermodynamics.entropy,
+            gibbs:    thermodynamics.gibbs,
+            type:     thermodynamics.type as ReactionType,
+          }
+        : balanced;
 
       setReaction(finalReaction);
       setSteps(steps);
@@ -349,15 +355,14 @@ export const ReactionWorkspace: React.FC = () => {
             ? thermodynamics.enthalpy < 0
             : undefined,
       });
-    } catch (e: any) {
-      setError({
-        message: e.message ?? "An unknown engine error occurred.",
-        code: e.code ?? "ENGINE_FAULT",
-        details: e.stack,
-      });
-      setReaction(undefined);
+    } catch (e: unknown) {
+      if (controller.signal.aborted) return; // ignore abort errors
+      const msg = e instanceof Error ? e.message : "Unknown error";
+      setError({ message: msg, code: "ENGINE_FAULT" });
     } finally {
-      setProcessing(false);
+      if (!controller.signal.aborted) {
+        setProcessing(false);
+      }
     }
   };
 
@@ -659,7 +664,7 @@ export const ReactionWorkspace: React.FC = () => {
 
               {/* Thermodynamics row */}
               {currentReaction.isBalanced && (
-                <div className="w-full grid grid-cols-3 gap-4 border-t border-[#1A1A1A] pt-6 flex flex-wrap">
+                <div className="w-full grid grid-cols-3 gap-4 border-t border-[#1A1A1A] pt-6 flex-wrap">
                   <ThermMetric
                     label="Enthalpy ΔH"
                     value={`${currentReaction.enthalpy} kJ/mol`}

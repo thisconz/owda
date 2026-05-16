@@ -14,7 +14,7 @@ import {
   Zap
 } from "lucide-react";
 import { ReactionWorkspace } from "../components/ui/ReactionWorkspace";
-import { useOWDAStore, useCurrentSteps } from "../store";
+import { useCurrentReaction, useCurrentSteps } from "../store";
 import { AreaChart, Area, Tooltip, ResponsiveContainer, ReferenceLine, YAxis, CartesianGrid } from "recharts";
 import { renderFormula } from "../utils/renderFormula";
 import ReactMarkdown from "react-markdown";
@@ -74,8 +74,8 @@ const StepCard = memo(({ step, index }: { step: ExplanationStep; index: number }
 });
 
 export function WorkspacePage() {
-  const { currentReaction } = useOWDAStore();
-  const currentSteps = useCurrentSteps();
+  const currentReaction = useCurrentReaction();
+  const currentSteps    = useCurrentSteps();
   const [logs, setLogs] = useState<string[]>(["CORE_READY", "AWAITING_REACTION_DATA"]);
 
   // Type-safe derived state

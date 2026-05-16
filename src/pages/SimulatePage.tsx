@@ -26,7 +26,7 @@ import {
   AreaChart,
 } from "recharts";
 import { MolecularExplorer } from "../components/visualization/MolecularExplorer";
-import { useOWDAStore } from "../store";
+import { useCurrentReaction } from "../store";
 import { renderFormula } from "../utils/renderFormula";
 
 // ─── Maxwell–Boltzmann Distribution ──────────────────────────────────────────
@@ -121,6 +121,11 @@ const PHASE_CONFIG: Record<
   },
 };
 
+function seededRandom(seed: number): number {
+  const x = Math.sin(seed + 1) * 10000;
+  return x - Math.floor(x);
+}
+
 // ─── Spectral Peaks (simplified IR estimate) ──────────────────────────────────
 
 function buildIRSpectrum(
@@ -154,23 +159,24 @@ function buildIRSpectrum(
     peaks.push({ wn: 2220, intensity: 75, label: "C≡N str." });
 
   // Always add a fingerprint region noise floor
+  let seed = 0;
   for (let wn = 600; wn <= 1400; wn += 100) {
     if (!peaks.find((p) => Math.abs(p.wn - wn) < 80)) {
       peaks.push({
         wn,
-        intensity: Math.random() * 20 + 5,
+        // Deterministic: same formula always produces same fingerprint
+        intensity: seededRandom(seed++ + formula.charCodeAt(0)) * 20 + 5,
         label: "fingerprint",
       });
     }
   }
-
   return peaks.sort((a, b) => a.wn - b.wn);
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function SimulatePage() {
-  const { currentReaction } = useOWDAStore();
+  const currentReaction = useCurrentReaction();
 
   const targetMolecule = useMemo(() => {
     return (

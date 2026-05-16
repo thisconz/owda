@@ -11,7 +11,7 @@ import {
   Globe,
 } from "lucide-react";
 import { Tooltip, ResponsiveContainer, AreaChart, Area, YAxis } from "recharts";
-import { useOWDAStore, useOWDAActions } from "../store";
+import { useOWDAActions, useReactionLog } from "../store";
 
 // --- Utility: Time Formatting ---
 function timeAgo(ts: number): string {
@@ -22,7 +22,7 @@ function timeAgo(ts: number): string {
 }
 
 export function AnalyticsPage() {
-  const { reactionLog } = useOWDAStore();
+  const reactionLog = useReactionLog();
   const { resetWorkspace } = useOWDAActions();
   const [confirmReset, setConfirmReset] = useState(false);
 

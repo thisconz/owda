@@ -265,7 +265,7 @@ async function fetchWithTimeout(
   }
 }
 
-async function callAI(expression: string): Promise<ClaudeAnalysisPayload> {
+async function callAI(expression: string, signal?: AbortSignal): Promise<ClaudeAnalysisPayload> {
   const modelConfig = AI_MODELS[ACTIVE_MODEL];
 
   const body = JSON.stringify({
@@ -316,6 +316,7 @@ async function callAI(expression: string): Promise<ClaudeAnalysisPayload> {
           method: "POST",
           headers,
           body,
+          signal,
         },
         TIMEOUT_MS,
       );
@@ -384,10 +385,10 @@ export class AIService {
    * so the workspace remains functional without AI.
    */
   public static async explainReaction(
-    expression: string,
+    expression: string, signal?: AbortSignal,
   ): Promise<AIAnalysisResult> {
     try {
-      const payload = await callAI(expression);
+      const payload = await callAI(expression, signal);
 
       return {
         steps: [
@@ -421,3 +422,4 @@ export class AIService {
     }
   }
 }
+

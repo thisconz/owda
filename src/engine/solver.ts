@@ -28,8 +28,7 @@ export class ReactionSolver {
    */
   public static balance(expression: string): ChemicalReaction {
     // ── 1. Parse ─────────────────────────────────────────────────────────────
-    let reactants: ReactionPart[];
-    let products: ReactionPart[];
+    let reactants: ReactionPart[], products: ReactionPart[];
 
     try {
       const parsed = ChemicalParser.parseReaction(expression);
@@ -56,6 +55,14 @@ export class ReactionSolver {
     }
 
     const allMolecules = [...reactants, ...products];
+
+    const allSingleElement = allMolecules.every(
+      (p) => Object.keys(p.molecule.counts).length === 1,
+    );
+    if (allSingleElement) {
+      // Use simple ratio balancing — O(n) not O(n³)
+      return ReactionSolver._balanceByRatio(reactants, products);
+    }
 
     // Collect ordered list of unique element symbols
     const elementSet = new Set<string>();
@@ -163,6 +170,43 @@ export class ReactionSolver {
    * @param cols       Number of columns (= total molecule count).
    * @returns          Coefficient vector, or `null` if no solution exists.
    */
+
+  private static _balanceByRatio(
+    reactants: ReactionPart[],
+    products: ReactionPart[],
+  ): ChemicalReaction {
+    // Collect total atoms per element on each side with coefficient 1
+    const reactantAtoms: Record<string, number> = {};
+    const productAtoms:  Record<string, number> = {};
+
+    reactants.forEach((p) => {
+      for (const [el, cnt] of Object.entries(p.molecule.counts)) {
+        reactantAtoms[el] = (reactantAtoms[el] ?? 0) + cnt * p.coefficient;
+      }
+    });
+    products.forEach((p) => {
+      for (const [el, cnt] of Object.entries(p.molecule.counts)) {
+        productAtoms[el] = (productAtoms[el] ?? 0) + cnt * p.coefficient;
+      }
+    });
+
+    const balanced = Object.keys(reactantAtoms).every(
+      (el) => reactantAtoms[el] === productAtoms[el],
+    );
+
+    return {
+      isBalanced:       balanced,
+      reactants:        { molecules: reactants },
+      products:         { molecules: products },
+      massConservation: balanced,
+      timestamp:        Date.now(),
+      enthalpy:         undefined,
+      entropy:          undefined,
+      gibbs:            undefined,
+      ...(balanced ? {} : { errorDetails: "Single-element ratio mismatch" }),
+    } as ChemicalReaction;
+  }
+
   private static _nullSpaceVector(
     rawMatrix: number[][],
     cols: number,

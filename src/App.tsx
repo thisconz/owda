@@ -44,15 +44,14 @@ export default function App() {
     setMousePos({ x: e.clientX, y: e.clientY });
   };
 
-  const ActivePage = useMemo(() => {
-    const registry: Record<TabType, React.ReactNode> = {
-      workspace: <WorkspacePage />,
-      simulation: <SimulatePage />,
-      analytics: <AnalyticsPage />,
-      compare: <ComparePage />,
-    };
-    return registry[activeTab] || registry.workspace;
-  }, [activeTab]);
+  const PAGE_COMPONENTS: Record<TabType, React.ComponentType> = {
+    workspace:  WorkspacePage,
+    simulation: SimulatePage,
+    analytics:  AnalyticsPage,
+    compare:    ComparePage,
+  };
+
+  const ActivePage = PAGE_COMPONENTS[activeTab] ?? WorkspacePage;
 
   return (
     <div 
@@ -137,7 +136,7 @@ export default function App() {
                     </div>
                     
                     <div className="w-full">
-                      {ActivePage}
+                      <ActivePage />
                     </div>
                   </motion.div>
                 </AnimatePresence>

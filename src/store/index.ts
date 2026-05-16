@@ -6,6 +6,7 @@ import {
   ReactionError,
   ExplanationStep,
   ReactionHistoryEntry,
+  ReactionType,
 } from "../types";
 import type { AIThermodynamics } from "../services/aiService";
 
@@ -48,11 +49,11 @@ export const AI_MODELS: readonly AIModelInfo[] = [
 // Constants
 // ---------------------------------------------------------------------------
 
-const MAX_HISTORY = 50;
-
-const MAX_LOG_ENTRIES = 100;
-
-const LOG_DEBOUNCE_MS = 2000;
+const LIMITS = {
+  history:    50,   // expression input history (MRU)
+  reactionLog: 100, // analytics log entries
+  logMapSize:  200, // dedup-tracking map size
+} as const;
 
 // ---------------------------------------------------------------------------
 // Network
@@ -98,6 +99,14 @@ const DEFAULT_SETTINGS: Readonly<SolverSettings> = {
 };
 
 const VALID_THEMES = new Set<SolverSettings["theme"]>(["dark", "terminal"]);
+
+// ---------------------------------------------------------------------------
+// Persisted state
+// ---------------------------------------------------------------------------
+type PersistedOWDAState = Pick<
+  OWDAStore,
+  "history" | "viewMode" | "reactionLog" | "settings" | "network"
+>;
 
 // ---------------------------------------------------------------------------
 // Store interface
@@ -276,7 +285,7 @@ function isDuplicateLogEntry(entry: ReactionHistoryEntry): boolean {
   if (_lastLogTime.size > 200) {
     const oldest = Array.from(_lastLogTime.entries())
       .sort((a, b) => a[1] - b[1])
-      .slice(0, MAX_LOG_ENTRIES)
+      .slice(0, LIMITS.logMapSize)
       .map(([k]) => k);
     oldest.forEach((k) => _lastLogTime.delete(k));
   }
@@ -302,16 +311,16 @@ export const useOWDAStore = create<OWDAStore>()(
         });
 
       const applyThermodynamics = (thermo: AIThermodynamics) =>
-        set((state) => {
-          const reaction = state.currentReaction;
-          if (!reaction || !reaction.isBalanced) return state;
+      set((state) => {
+        const reaction = state.currentReaction;
+        if (!reaction?.isBalanced) return state;
 
           const updated: ChemicalReaction = {
             ...reaction,
-            enthalpy: thermo.enthalpy ?? reaction.enthalpy,
-            entropy: thermo.entropy ?? reaction.entropy,
-            gibbs: thermo.gibbs ?? reaction.gibbs,
-            type: (thermo.type as ChemicalReaction["type"]) ?? reaction.type,
+            enthalpy: thermo.enthalpy !== undefined ? thermo.enthalpy : reaction.enthalpy,
+            entropy:  thermo.entropy  !== undefined ? thermo.entropy  : reaction.entropy,
+            gibbs:    thermo.gibbs    !== undefined ? thermo.gibbs    : reaction.gibbs,
+            type:     thermo.type !== "Unknown"     ? thermo.type as ReactionType : reaction.type,
           };
           return { currentReaction: updated };
         });
@@ -330,7 +339,7 @@ export const useOWDAStore = create<OWDAStore>()(
         set((state) => {
           if (!expr.trim()) return state;
           const filtered = state.history.filter((h) => h !== expr);
-          return { history: [expr, ...filtered].slice(0, 50) as string[] };
+          return { history: [expr, ...filtered].slice(0, LIMITS.history)};
         });
 
       const setSteps = (currentSteps: ExplanationStep[]) =>
@@ -339,7 +348,7 @@ export const useOWDAStore = create<OWDAStore>()(
       const appendReactionLog = (entry: ReactionHistoryEntry) => {
         if (isDuplicateLogEntry(entry)) return;
         set((state) => ({
-          reactionLog: [entry, ...state.reactionLog].slice(0, MAX_LOG_ENTRIES),
+          reactionLog: [entry, ...state.reactionLog].slice(0, LIMITS.reactionLog),
         }));
       };
 
@@ -401,12 +410,12 @@ export const useOWDAStore = create<OWDAStore>()(
        * Excludes: currentReaction, currentSteps, isProcessing, error,
        *           activationEnergy, inputExpression (transient UI state).
        */
-      partialize: (state) => ({
-        history: state.history.slice(0, MAX_HISTORY),
-        viewMode: state.viewMode,
-        reactionLog: state.reactionLog.slice(0, MAX_HISTORY),
-        settings: state.settings,
-        newtork: state.network,
+      partialize: (state): PersistedOWDAState => ({
+        history:     state.history.slice(0, LIMITS.history),
+        viewMode:    state.viewMode,
+        reactionLog: state.reactionLog.slice(0, LIMITS.reactionLog),
+        settings:    state.settings,
+        network:     state.network,
       }),
 
       /**
@@ -443,20 +452,21 @@ export const useOWDAStore = create<OWDAStore>()(
 // Selectors (stable references — use these instead of inline lambdas)
 // ---------------------------------------------------------------------------
 
-/** All store actions. Reference-stable between renders. */
-export const useOWDAActions = () => useOWDAStore((state) => state.actions);
+/** Workspace state */
+export const useCurrentReaction  = () => useOWDAStore((s) => s.currentReaction);
+export const useIsProcessing     = () => useOWDAStore((s) => s.isProcessing);
+export const useInputExpression  = () => useOWDAStore((s) => s.inputExpression);
+export const useReactionLog      = () => useOWDAStore((s) => s.reactionLog);
+export const useViewMode         = () => useOWDAStore((s) => s.viewMode);
+export const useError            = () => useOWDAStore((s) => s.error);
+export const useCurrentSteps     = () => useOWDAStore((s) => s.currentSteps);
+export const useActivationEnergy = () => useOWDAStore((s) => s.activationEnergy);
 
-/** The current balanced or unbalanced reaction, or `undefined`. */
-export const useCurrentReaction = () =>
-  useOWDAStore((state) => state.currentReaction);
-
-/** The current AI explanation steps. */
-export const useCurrentSteps = () =>
-  useOWDAStore((state) => state.currentSteps);
+/** Solver/UI settings */
+export const useSettings = () => useOWDAStore((s) => s.settings);
 
 /** Solver and UI settings. */
 export const useSolverSettings = () => useOWDAStore((state) => state.settings);
-
 export const useSolverNetwork = () => useOWDAStore((state) => state.network);
 
 /**

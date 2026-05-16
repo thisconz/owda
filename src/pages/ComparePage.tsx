@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion"; // Note: adjusted import to standard framer-motion
-import { useOWDAStore } from "../store";
+import { useReactionLog } from "../store";
 import { ReactionSolver } from "../engine/solver";
 import { renderFormulaHTML } from "../utils/renderFormula";
 import {
@@ -26,7 +26,7 @@ interface ReactionData {
 }
 
 export function ComparePage() {
-  const { reactionLog } = useOWDAStore();
+  const reactionLog = useReactionLog();
   const [reac1, setReac1] = useState("");
   const [reac2, setReac2] = useState("");
 
