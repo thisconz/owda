@@ -41,7 +41,7 @@ export class GlobalErrorBoundary extends React.Component<Props, State> {
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("OWDA_CORE_PANIC:", error, errorInfo);
     this.props.onReport?.(error, errorInfo);
     this.setState({ errorInfo });
@@ -62,6 +62,7 @@ export class GlobalErrorBoundary extends React.Component<Props, State> {
     const telemetry = `Browser: ${navigator.userAgent}\nOS: ${navigator.platform}\nMemory: ${((performance as any).memory?.usedJSHeapSize / 1048576).toFixed(2)}MB used`;
     const text = [
       `[OWDA_FATAL_ERROR] ${this.state.timestamp}`,
+      `VERSION: ${this.props.version ?? "unknown"}`,
       `ID: ${this.state.error?.name}`,
       `MSG: ${this.state.error?.message}`,
       `TRACE:\n${this.state.error?.stack}`,
@@ -78,7 +79,7 @@ export class GlobalErrorBoundary extends React.Component<Props, State> {
     }
   };
 
-  render() {
+  override render() {
     if (!this.state.hasError) return this.props.children;
 
     return (
@@ -106,6 +107,7 @@ export class GlobalErrorBoundary extends React.Component<Props, State> {
                 <div className="flex gap-2 mt-2">
                   <span className="text-[9px] font-black bg-[#1A1A1A] text-white px-2 py-0.5">CORE: HALTED</span>
                   <span className="text-[9px] font-black bg-[#D4FF00] border border-[#1A1A1A] px-2 py-0.5">TIME: {this.state.timestamp}</span>
+                  <span className="text-[9px] font-black bg-[#D4FF00] border border-[#1A1A1A] px-2 py-0.5">v{this.props.version ?? "?"}</span>
                 </div>
               </div>
             </div>

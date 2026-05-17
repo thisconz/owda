@@ -162,20 +162,45 @@ export const MolecularExplorer: React.FC<Props> = ({ formula }) => {
     animate();
 
     // --- Cleanup ---
+    // Replace the cleanup section and add resize observer
+    const resizeObserver = new ResizeObserver(() => {
+      if (!container) return;
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+    });
+    resizeObserver.observe(container);
+
+    const objects: THREE.Object3D[] = [];
+
+    // Track Points object
+    const particlePoints = new THREE.Points(pointsGeo, pointsMat);
+    scene.add(particlePoints);
+    objects.push(particlePoints);
+
+    animate();
+
     return () => {
       cancelAnimationFrame(raf);
+      resizeObserver.disconnect();
       controls.dispose();
 
+      // Dispose all tracked geometries and materials
       disposables.geometries.forEach((g) => g.dispose());
       disposables.materials.forEach((m) => m.dispose());
-      
+
+      // Clear scene graph
+      scene.clear();
+
+      // Force WebGL context loss to free GPU memory immediately
+      renderer.forceContextLoss();
       renderer.dispose();
 
       if (container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
       }
     };
-  }, [formula]);
+  }, [formula, containerRef]);
 
   return (
     <div ref={containerRef} className="w-full h-full bg-[#FDFCFB] relative overflow-hidden border-4 border-[#1A1A1A]">

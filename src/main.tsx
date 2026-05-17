@@ -22,7 +22,7 @@ const root = createRoot(container);
 
 root.render(
   <StrictMode>
-    <GlobalErrorBoundary>
+    <GlobalErrorBoundary version={process.env.APP_VERSION}>
       <App />
     </GlobalErrorBoundary>
   </StrictMode>,

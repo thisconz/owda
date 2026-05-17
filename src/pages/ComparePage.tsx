@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion"; // Note: adjusted import to standard framer-motion
+import { motion, AnimatePresence } from "motion/react"; // Note: adjusted import to standard framer-motion
 import { useReactionLog } from "../store";
 import { ReactionSolver } from "../engine/solver";
 import { renderFormulaHTML } from "../utils/renderFormula";
@@ -11,7 +11,7 @@ import {
   Trophy,
   RefreshCw,
   ChevronRight,
-  ChevronLeft
+  ChevronLeft,
 } from "lucide-react";
 
 // --- Types ---
@@ -43,7 +43,7 @@ export function ComparePage() {
     if (!balanced?.isBalanced) return undefined;
 
     const thermo = reactionLog.find((log) => log.expression === expr);
-    
+
     // Applying Anti-Null Policy: using undefined for optionality
     return {
       ...balanced,
@@ -76,20 +76,31 @@ export function ComparePage() {
           </div>
           <div>
             <h1 className="text-2xl font-black uppercase italic leading-none tracking-tighter text-[#1A1A1A]">
-              Compare -<span className="bg-white px-1 border-2 border-[#1A1A1A] not-italic text-[#1A1A1A]">OS</span>
+              Compare -
+              <span className="bg-white px-1 border-2 border-[#1A1A1A] not-italic text-[#1A1A1A]">
+                OS
+              </span>
             </h1>
-            <p className="text-[10px] font-mono font-black mt-1 uppercase opacity-70 text-[#1A1A1A]">OWDA_COMPARE_V{process.env.COMPARE_VERSION}</p>
+            <p className="text-[10px] font-mono font-black mt-1 uppercase opacity-70 text-[#1A1A1A]">
+              OWDA_COMPARE_V{process.env.COMPARE_VERSION}
+            </p>
           </div>
         </div>
 
         <div className="md:col-span-5 p-6 flex flex-col justify-center gap-2">
           <div className="flex justify-between items-center">
-            <span className="text-[9px] font-black tracking-widest uppercase">Comparison_Load_Status</span>
-            <span className="font-mono text-xs font-bold">{data1 && data2 ? "READY" : "WAITING"}</span>
+            <span className="text-[9px] font-black tracking-widest uppercase">
+              Comparison_Load_Status
+            </span>
+            <span className="font-mono text-xs font-bold">
+              {data1 && data2 ? "READY" : "WAITING"}
+            </span>
           </div>
           <div className="h-4 w-full bg-[#EAE8E4] border-2 border-[#1A1A1A] p-0.5">
-            <motion.div 
-              animate={{ width: data1 && data2 ? "100%" : (data1 || data2 ? "50%" : "0%") }}
+            <motion.div
+              animate={{
+                width: data1 && data2 ? "100%" : data1 || data2 ? "50%" : "0%",
+              }}
               className={`h-full ${data1 && data2 ? "bg-[#1A1A1A]" : "bg-[#FF6B6B]"}`}
             />
           </div>
@@ -101,7 +112,11 @@ export function ComparePage() {
             onClick={handleSwap}
             className="flex items-center gap-3 bg-[#D4FF00] text-[#1A1A1A] px-6 py-3 font-black text-[10px] uppercase tracking-widest shadow-[4px_4px_0px_#FF6B6B] active:translate-y-1 active:shadow-none transition-all disabled:opacity-20 grayscale disabled:cursor-not-allowed"
           >
-            <RefreshCw size={14} className={data1 && data2 ? "animate-spin" : ""} /> Swap_Vectors
+            <RefreshCw
+              size={14}
+              className={data1 && data2 ? "animate-spin" : ""}
+            />{" "}
+            Swap_Vectors
           </button>
         </div>
       </header>
@@ -146,9 +161,13 @@ function InputSlot({ label, val, setVal, data, history, accent, dir }: any) {
           <label className="text-[10px] font-black uppercase tracking-[0.3em] text-[#1A1A1A]">
             Matrix_Slot <span className="opacity-30">[{label}]</span>
           </label>
-          {dir === "left" ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+          {dir === "left" ? (
+            <ChevronLeft size={16} />
+          ) : (
+            <ChevronRight size={16} />
+          )}
         </div>
-        
+
         <input
           type="text"
           value={val}
@@ -169,22 +188,25 @@ function InputSlot({ label, val, setVal, data, history, accent, dir }: any) {
           ))}
         </div>
       </div>
-      
+
       <ReactionDisplay data={data} slotLabel={label} accent={accent} />
     </div>
   );
 }
 
 function ReactionDisplay({ data, slotLabel, accent }: any) {
-  if (!data) return (
-    <div className="h-115 flex flex-col items-center justify-center border-4 border-dashed border-[#1A1A1A]/20 bg-[#F9F9F9] grayscale">
-      <Database className="w-12 h-12 text-[#1A1A1A]/10 mb-4" />
-      <p className="text-[9px] font-black uppercase tracking-[0.5em] text-[#1A1A1A]/20">Awaiting_Input_{slotLabel}</p>
-    </div>
-  );
+  if (!data)
+    return (
+      <div className="h-115 flex flex-col items-center justify-center border-4 border-dashed border-[#1A1A1A]/20 bg-[#F9F9F9] grayscale">
+        <Database className="w-12 h-12 text-[#1A1A1A]/10 mb-4" />
+        <p className="text-[9px] font-black uppercase tracking-[0.5em] text-[#1A1A1A]/20">
+          Awaiting_Input_{slotLabel}
+        </p>
+      </div>
+    );
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ y: 20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       className="bg-white border-4 border-[#1A1A1A] shadow-[8px_8px_0px_#1A1A1A] overflow-hidden flex flex-col"
@@ -194,21 +216,36 @@ function ReactionDisplay({ data, slotLabel, accent }: any) {
           <div className="w-6 h-6 flex items-center justify-center text-[10px] font-black bg-[#D4FF00] text-[#1A1A1A]">
             {slotLabel[0]}
           </div>
-          <span className="text-[9px] font-black uppercase tracking-[0.2em] opacity-60 italic">{data.reactionType}</span>
+          <span className="text-[9px] font-black uppercase tracking-[0.2em] opacity-60 italic">
+            {data.reactionType}
+          </span>
         </div>
         <div className="h-1 w-12 bg-[#D4FF00]/30 rounded-full" />
       </div>
 
       <div className="p-8 space-y-8 flex-1">
-        <div className="text-2xl font-mono font-black border-l-12 px-6 py-6 bg-[#F9F9F9]" style={{ borderLeftColor: accent }}>
-           <FormulaRenderer molecules={data.reactants.molecules} />
-           <span className="mx-3 opacity-20">→</span>
-           <FormulaRenderer molecules={data.products.molecules} isProduct />
+        <div
+          className="text-2xl font-mono font-black border-l-12 px-6 py-6 bg-[#F9F9F9]"
+          style={{ borderLeftColor: accent }}
+        >
+          <FormulaRenderer molecules={data.reactants.molecules} />
+          <span className="mx-3 opacity-20">→</span>
+          <FormulaRenderer molecules={data.products.molecules} isProduct />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          <MetricBlock label="Enthalpy" value={data.enthalpy} unit="kJ/mol" icon={Flame} />
-          <MetricBlock label="Entropy" value={data.entropy} unit="J/mol·K" icon={Activity} />
+          <MetricBlock
+            label="Enthalpy"
+            value={data.enthalpy}
+            unit="kJ/mol"
+            icon={Flame}
+          />
+          <MetricBlock
+            label="Entropy"
+            value={data.entropy}
+            unit="J/mol·K"
+            icon={Activity}
+          />
           <div className="col-span-2">
             <StabilityBlock value={data.gibbs} />
           </div>
@@ -228,8 +265,14 @@ function FormulaRenderer({ molecules, isProduct }: any) {
               {m.coefficient}
             </span>
           )}
-          <span dangerouslySetInnerHTML={{ __html: renderFormulaHTML(m.molecule.formula) }} />
-          {i < molecules.length - 1 && <span className="opacity-20 mx-1">+</span>}
+          <span
+            dangerouslySetInnerHTML={{
+              __html: renderFormulaHTML(m.molecule.formula),
+            }}
+          />
+          {i < molecules.length - 1 && (
+            <span className="opacity-20 mx-1">+</span>
+          )}
         </span>
       ))}
     </>
@@ -241,10 +284,16 @@ function MetricBlock({ label, value, unit, icon: Icon }: any) {
     <div className="p-4 bg-white border-2 border-[#1A1A1A] group hover:bg-[#1A1A1A] hover:text-white transition-all">
       <div className="flex items-center gap-2 mb-2 opacity-40 group-hover:opacity-100">
         <Icon size={12} className="group-hover:text-[#D4FF00]" />
-        <span className="text-[9px] font-black uppercase tracking-widest">{label}</span>
+        <span className="text-[9px] font-black uppercase tracking-widest">
+          {label}
+        </span>
       </div>
       <div className="text-xl font-mono font-black">
-        {value?.toFixed(1) ?? "—"} <span className="text-[9px] font-sans opacity-40 group-hover:text-[#D4FF00]"> {unit}</span>
+        {value?.toFixed(1) ?? "—"}{" "}
+        <span className="text-[9px] font-sans opacity-40 group-hover:text-[#D4FF00]">
+          {" "}
+          {unit}
+        </span>
       </div>
     </div>
   );
@@ -252,24 +301,32 @@ function MetricBlock({ label, value, unit, icon: Icon }: any) {
 
 function StabilityBlock({ value }: { value?: number }) {
   const isStable = value !== undefined && value < 0;
-  const percent = value !== undefined ? Math.max(0, Math.min(100, ((value + 250) / 500) * 100)) : 50;
+  const percent =
+    value !== undefined
+      ? Math.max(0, Math.min(100, ((value + 250) / 500) * 100))
+      : 50;
 
   return (
     <div className="p-6 border-2 border-[#1A1A1A] bg-[#1A1A1A] text-white shadow-[inset_0px_0px_20px_rgba(0,0,0,0.5)]">
       <div className="flex justify-between items-center mb-4">
-        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#D4FF00]">STABILITY_VECTOR (ΔG)</span>
-        <span className={`text-[8px] px-2 py-0.5 font-black uppercase border-2 ${isStable ? "border-[#D4FF00] text-[#D4FF00]" : "border-red-500 text-red-500"}`}>
+        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#D4FF00]">
+          STABILITY_VECTOR (ΔG)
+        </span>
+        <span
+          className={`text-[8px] px-2 py-0.5 font-black uppercase border-2 ${isStable ? "border-[#D4FF00] text-[#D4FF00]" : "border-red-500 text-red-500"}`}
+        >
           {isStable ? "SPONTANEOUS" : "NON_SPONTANEOUS"}
         </span>
       </div>
       <div className="text-4xl font-mono font-black mb-6 italic tracking-tighter">
-        {value?.toFixed(2) ?? "0.00"} <span className="text-[10px] opacity-40 not-italic">kJ/mol</span>
+        {value?.toFixed(2) ?? "0.00"}{" "}
+        <span className="text-[10px] opacity-40 not-italic">kJ/mol</span>
       </div>
       <div className="h-3 w-full bg-white/5 border border-white/10 relative">
-        <motion.div 
+        <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${percent}%` }}
-          className={`h-full ${isStable ? "bg-[#D4FF00]" : "bg-red-500"}`} 
+          className={`h-full ${isStable ? "bg-[#D4FF00]" : "bg-red-500"}`}
         />
         <div className="absolute top-1/2 left-1/2 h-6 w-0.5 bg-white -translate-y-1/2 shadow-[0_0_10px_white]" />
       </div>
@@ -302,29 +359,40 @@ function ComparisonDelta({ d1, d2 }: { d1: ReactionData; d2: ReactionData }) {
         <div className="md:col-span-5">
           <div className="flex items-center gap-3 mb-2">
             <Trophy size={18} className="text-[#1A1A1A]" />
-            <h3 className="text-xs font-black uppercase tracking-[0.3em]">Dominant_Pathway</h3>
+            <h3 className="text-xs font-black uppercase tracking-[0.3em]">
+              Dominant_Pathway
+            </h3>
           </div>
           <p className="text-6xl font-black italic tracking-tighter uppercase leading-none">
-            {aWins ? "Alpha" : "Beta"} <span className="text-2xl not-italic opacity-30">#01</span>
+            {aWins ? "Alpha" : "Beta"}{" "}
+            <span className="text-2xl not-italic opacity-30">#01</span>
           </p>
           <p className="mt-4 text-[10px] font-black uppercase leading-tight max-w-xs opacity-70">
-            Vector {aWins ? "Alpha" : "Beta"} displays higher thermodynamic favorability. Estimated kinetic advantage: {Math.abs((gDiff / (g1 || 1)) * 100).toFixed(1)}%.
+            Vector {aWins ? "Alpha" : "Beta"} displays higher thermodynamic
+            favorability. Estimated kinetic advantage:{" "}
+            {Math.abs((gDiff / (g1 || 1)) * 100).toFixed(1)}%.
           </p>
         </div>
 
         <div className="md:col-span-4 border-l-4 border-[#1A1A1A] pl-8 flex flex-col justify-center">
-            <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Delta_Variance (ΔG)</span>
-            <div className="text-5xl font-mono font-black tracking-tighter">
-                {Math.abs(gDiff).toFixed(2)}
-                <span className="text-xs ml-2 opacity-50 uppercase font-sans">kJ/mol</span>
-            </div>
+          <span className="text-[10px] font-black uppercase tracking-widest opacity-40">
+            Delta_Variance (ΔG)
+          </span>
+          <div className="text-5xl font-mono font-black tracking-tighter">
+            {Math.abs(gDiff).toFixed(2)}
+            <span className="text-xs ml-2 opacity-50 uppercase font-sans">
+              kJ/mol
+            </span>
+          </div>
         </div>
 
         <div className="md:col-span-3 bg-[#1A1A1A] text-[#D4FF00] p-6 text-center border-4 border-[#1A1A1A] shadow-[4px_4px_0px_#FFF]">
-            <span className="text-[9px] font-black uppercase tracking-[0.4em] block mb-2 opacity-50">Efficiency_Gap</span>
-            <div className="text-3xl font-black italic">
-               {Math.abs((gDiff / (g1 || 1)) * 100).toFixed(1)}%
-            </div>
+          <span className="text-[9px] font-black uppercase tracking-[0.4em] block mb-2 opacity-50">
+            Efficiency_Gap
+          </span>
+          <div className="text-3xl font-black italic">
+            {Math.abs((gDiff / (g1 || 1)) * 100).toFixed(1)}%
+          </div>
         </div>
       </div>
     </motion.div>

@@ -313,31 +313,32 @@ export class ChemicalParser {
    *
    * @throws {ParseError} on any structural or formula-level malformation.
    */
-  public static parseReaction(expression: string): {
-    reactants: ReactionPart[];
-    products: ReactionPart[];
-    timestamp: number;
-  } {
+  public static parseReaction(expression: string) {
     if (typeof expression !== "string" || !expression.trim()) {
       throw new ParseError("Reaction expression must be a non-empty string.");
     }
 
-    const arrowIndex = expression.indexOf("->");
+    const normalized = expression
+    .replace(/\s*[⇌⟶→⟹⟺↔]\s*/g, " -> ")
+    .replace(/\s*-->\s*/g, " -> ")
+    .trim();
+
+    const arrowIndex = normalized.indexOf("->");
     if (arrowIndex === -1) {
       throw new ParseError(
         'Malformed expression: missing "->". Expected "Reactants -> Products".',
         "MALFORMED_EXPRESSION",
       );
     }
-    if (expression.indexOf("->", arrowIndex + 1) !== -1) {
+    if (normalized.indexOf("->", arrowIndex + 1) !== -1) {
       throw new ParseError(
         'Malformed expression: multiple "->" found. Expected exactly one arrow.',
         "MALFORMED_EXPRESSION",
       );
     }
 
-    const reactantStr = expression.slice(0, arrowIndex);
-    const productStr = expression.slice(arrowIndex + 2);
+    const reactantStr = normalized.slice(0, arrowIndex);
+    const productStr = normalized.slice(arrowIndex + 2);
 
     if (!reactantStr.trim()) {
       throw new ParseError(
@@ -385,7 +386,7 @@ export class ChemicalParser {
       // Match optional integer coefficient followed by a formula starting
       // with an uppercase letter. Coefficient and formula may be separated
       // by optional whitespace.
-      const match = token.match(/^(\d+)?\s*([A-Z][A-Za-z0-9()[\]]*)\s*$/);
+      const match = token.match(/^(\d+)?\s*([A-Z][A-Za-z0-9()]*)\s*$/);
       if (!match) {
         throw new ParseError(
           `Cannot parse ${side} "${token}". ` +
