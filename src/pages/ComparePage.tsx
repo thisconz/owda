@@ -13,6 +13,7 @@ import {
   ChevronRight,
   ChevronLeft,
 } from "lucide-react";
+import { COMPARE_VERSION } from "../config/version";
 
 // --- Types ---
 interface ReactionData {
@@ -82,7 +83,7 @@ export function ComparePage() {
               </span>
             </h1>
             <p className="text-[10px] font-mono font-black mt-1 uppercase opacity-70 text-[#1A1A1A]">
-              OWDA_COMPARE_V{process.env.COMPARE_VERSION}
+              OWDA_COMPARE_V{COMPARE_VERSION}
             </p>
           </div>
         </div>

@@ -17,15 +17,10 @@ export const ReactionTypeSchema = z.enum([
 
 export const ClaudeAnalysisSchema = z.object({
   overview: z.string().min(1),
-
   mechanism: z.string().min(1),
-
   reactionType: ReactionTypeSchema,
-
   enthalpy: z.number().optional(),
-
   entropy: z.number().optional(),
-
   gibbs: z.number().optional(),
 });
 

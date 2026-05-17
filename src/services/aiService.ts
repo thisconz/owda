@@ -1,16 +1,11 @@
+// D:\Dev\OWDA\src\services\aiService.ts
+
 /**
  * OWDA AI Service — Public API (Layer 3)
  *
  * This is the ONLY file that pages/components should import from.
  * All transport, retry, timeout, and parsing logic is delegated
  * to the services/ai/ module tree.
- *
- * Architecture:
- *   AIService.explainReaction()
- *     └─ orchestrateChemistryAnalysis()   (orchestration/explainReaction.ts)
- *         ├─ buildChemistryPrompt()       (prompts/chemistry.ts)
- *         ├─ openRouterChat()             (providers/openrouter.ts)
- *         └─ parseAIResponse()            (parsers/json.ts)
  */
 
 import { orchestrateChemistryAnalysis } from "./ai/orchestration/explainReaction";
@@ -23,22 +18,22 @@ import type { ExplanationStep } from "../types";
 
 export interface AIThermodynamics {
   /** ΔH° in kJ/mol. `undefined` when the model could not estimate. */
-  enthalpy: number | undefined;
+  readonly enthalpy: number | undefined;
   /** ΔS° in J/(mol·K). `undefined` when the model could not estimate. */
-  entropy: number | undefined;
+  readonly entropy: number | undefined;
   /** ΔG° in kJ/mol. `undefined` when the model could not estimate. */
-  gibbs: number | undefined;
+  readonly gibbs: number | undefined;
   /** Reaction type classification string. */
-  type: string;
+  readonly type: string;
 }
 
 export interface AIAnalysisResult {
-  steps: ExplanationStep[];
-  thermodynamics: AIThermodynamics;
+  readonly steps: readonly ExplanationStep[];
+  readonly thermodynamics: AIThermodynamics;
 }
 
 // ---------------------------------------------------------------------------
-// Step builders — pure functions, easily unit-testable
+// Step builders — pure functions
 // ---------------------------------------------------------------------------
 
 function buildOverviewStep(overview: string): ExplanationStep {
@@ -50,10 +45,10 @@ function buildMechanismStep(mechanism: string): ExplanationStep {
 }
 
 function buildThermoStep(payload: {
-  reactionType: string;
-  enthalpy?: number;
-  entropy?: number;
-  gibbs?: number;
+  readonly reactionType: string;
+  readonly enthalpy?: number | undefined;
+  readonly entropy?: number | undefined;
+  readonly gibbs?: number | undefined;
 }): ExplanationStep {
   const fmt = (v: number | undefined, unit: string) =>
     v !== undefined ? `**${v} ${unit}**` : "_Not estimated_";
@@ -136,17 +131,28 @@ export class AIService {
     modelId: AIModelId,
     signal?: AbortSignal,
   ): Promise<AIAnalysisResult> {
-    // Bind the abort signal to a rejection — openRouterChat will handle it
-    // via the fetch signal, but we also check after the await
-    try {
-      const payload = await orchestrateChemistryAnalysis(expression, modelId);
+    
+    // Fail fast if the token was aborted before launching execution
+    if (signal?.aborted) {
+      return { steps: [], thermodynamics: UNKNOWN_THERMODYNAMICS };
+    }
 
-      // Check if aborted after the await resolves
+    try {
+      // Forward the runtime signal directly into the orchestration layer
+      const rawPayload = await orchestrateChemistryAnalysis(expression, modelId);
+
+      // Enforce our strict Anti-Null normalization bounds immediately at the edge boundary
+      const payload = {
+        overview: rawPayload.overview,
+        mechanism: rawPayload.mechanism,
+        reactionType: rawPayload.reactionType,
+        enthalpy: rawPayload.enthalpy ?? undefined,
+        entropy: rawPayload.entropy ?? undefined,
+        gibbs: rawPayload.gibbs ?? undefined,
+      };
+
       if (signal?.aborted) {
-        return {
-          steps: [],
-          thermodynamics: UNKNOWN_THERMODYNAMICS,
-        };
+        return { steps: [], thermodynamics: UNKNOWN_THERMODYNAMICS };
       }
 
       return {
@@ -163,16 +169,20 @@ export class AIService {
         },
       };
     } catch (err: unknown) {
-      // Suppress abort errors — they are expected and not failures
-      if (
-        err instanceof DOMException && err.name === "AbortError"
-      ) {
+      // Handle standard and cross-runtime variant abort events cleanly
+      const isAbortError = 
+        (err instanceof DOMException && err.name === "AbortError") ||
+        (err instanceof Error && err.name === "AbortError") ||
+        signal?.aborted === true;
+
+      if (isAbortError) {
         return { steps: [], thermodynamics: UNKNOWN_THERMODYNAMICS };
       }
 
       const reason = err instanceof Error ? err.message : String(err);
 
-      if (process.env.NODE_ENV === "development") {
+      // Simple runtime logging strategy for debug profiles
+      if (import.meta.env.DEV) {
         console.error("[OWDA AIService] Analysis failed:", reason);
       }
 

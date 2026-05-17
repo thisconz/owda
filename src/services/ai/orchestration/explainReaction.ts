@@ -1,24 +1,21 @@
+// D:\Dev\OWDA\src\services\ai\orchestration\explainReaction.ts
+
 /**
  * OWDA AI Orchestration — Chemistry Analysis
  *
  * This module is the single entry point for chemistry AI analysis.
  * It composes: prompt building → transport → response parsing → validation.
- *
- * Separation of concerns:
- *   buildChemistryPrompt()  ← prompts/chemistry.ts
- *   openRouterChat()        ← providers/openrouter.ts (handles retry/timeout)
- *   parseAIResponse()       ← parsers/json.ts (handles JSON extraction + Zod)
  */
 
 import { openRouterChat } from "../providers/openrouter";
 import { parseAIResponse } from "../parsers/json";
 import { buildChemistryPrompt, buildSystemPrompt } from "../prompts/chemistry";
 import {
-  AI_MODEL_REGISTRY,
   AIModelId,
   getModelDefinition,
 } from "../../../config/models";
 import type { ClaudeAnalysisPayload } from "../schemas/analysis";
+import { AIParseError } from "../core/errors";
 
 // ---------------------------------------------------------------------------
 // Request builder
@@ -39,7 +36,7 @@ function buildRequestBody(
     temperature:     modelDef.temperature,
     max_tokens:      modelDef.maxTokens,
     response_format: { type: "json_object" },
-    // OpenRouter metadata
+    // OpenRouter metadata configuration
     "X-Title": "OWDA Chemistry Engine",
   };
 }
@@ -48,23 +45,46 @@ function buildRequestBody(
 // Response extractor
 // ---------------------------------------------------------------------------
 
+interface OpenRouterChoiceMessage {
+  readonly role?: string;
+  readonly content?: string;
+}
+
+interface OpenRouterChoice {
+  readonly message?: OpenRouterChoiceMessage;
+  readonly finish_reason?: string;
+}
+
+interface OpenRouterEnvelope {
+  readonly choices?: readonly OpenRouterChoice[];
+}
+
 function extractContent(envelope: unknown): string {
-  if (
-    typeof envelope !== "object" ||
-    envelope === null ||
-    !("choices" in envelope)
-  ) {
-    throw new Error("Invalid API response structure: missing 'choices' field.");
+  // Check against unallocated profiles or primitives strictly matching undefined rules
+  if (typeof envelope !== "object" || envelope === undefined || envelope === null) {
+    throw new AIParseError("Invalid API response envelope topology: target is not an object.");
   }
 
-  const choices = (envelope as { choices: unknown[] }).choices;
-  if (!Array.isArray(choices) || choices.length === 0) {
-    throw new Error("API response has empty 'choices' array.");
+  const typedEnvelope = envelope as OpenRouterEnvelope;
+
+  if (typedEnvelope.choices === undefined || !Array.isArray(typedEnvelope.choices)) {
+    throw new AIParseError("Invalid API response structure: missing or unallocated 'choices' block.");
   }
 
-  const content = (choices[0] as any)?.message?.content;
-  if (typeof content !== "string" || !content.trim()) {
-    throw new Error("API response message content is empty or not a string.");
+  if (typedEnvelope.choices.length === 0) {
+    throw new AIParseError("API provider response stream arrived with an empty choices array configuration.");
+  }
+
+  const primaryChoice = typedEnvelope.choices[0];
+  if (primaryChoice === undefined) {
+    throw new AIParseError("API provider response first option index resolved to an undefined state.");
+  }
+
+  const content = primaryChoice.message?.content;
+
+  // Strict handling for empty configurations or explicit null bindings injected by proxy arrays
+  if (typeof content !== "string" || content.trim().length === 0) {
+    throw new AIParseError("API response message content target is empty, unallocated, or not a string.");
   }
 
   return content;
@@ -84,7 +104,7 @@ function extractContent(envelope: unknown): string {
  * @param expression - Balanced or unbalanced reaction string
  * @param modelId    - Which AI model to use (from config/models.ts)
  * @returns Validated payload matching ClaudeAnalysisPayload schema
- * @throws On network error, parse failure, or schema validation failure
+ * @throws AIError variants on network error, parse failure, or schema validation failure
  */
 export async function orchestrateChemistryAnalysis(
   expression: string,

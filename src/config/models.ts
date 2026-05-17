@@ -1,5 +1,7 @@
+// D:\Dev\OWDA\src\config\models.ts
+
 /**
- * OWDA AI Model Registry — Single Source of Truth
+ * OWDA AI Model Registry — Single Source of Truth (100% Free Tiers)
  *
  * ALL AI model definitions live here. No other file should
  * duplicate model IDs, API strings, or provider metadata.
@@ -13,10 +15,11 @@
 // ---------------------------------------------------------------------------
 
 export type AIModelId =
-  | "claude-3-7-sonnet"
-  | "gpt-4o"
-  | "gemini-2-5-pro"
-  | "o1-mini";
+  | "gemini-flash-free"
+  | "llama-3-3-free"
+  | "deepseek-v3-free"
+  | "mistral-small-free"
+  | "qwen-coder-free";
 
 export interface AIModelDefinition {
   readonly id: AIModelId;
@@ -24,58 +27,64 @@ export interface AIModelDefinition {
   readonly label: string;
   /** Provider company name shown in the Settings UI */
   readonly provider: string;
-  /** Full model string passed to the API (e.g. "anthropic/claude-3.7-sonnet") */
+  /** Full model string passed to OpenRouter API (must include :free suffix) */
   readonly apiModel: string;
   /** API endpoint URL — all models currently route through OpenRouter */
   readonly apiUrl: string;
   readonly maxTokens: number;
-  /**
-   * Sampling temperature.
-   * Note: o1 models require temperature = 1.0 and ignore lower values.
-   */
+  /** Sampling temperature. */
   readonly temperature: number;
 }
 
 // ---------------------------------------------------------------------------
-// Registry
+// Registry (Populated exclusively with reliable, free OpenRouter endpoints)
 // ---------------------------------------------------------------------------
 
 export const AI_MODEL_REGISTRY = {
-  "claude-3-7-sonnet": {
-    id: "claude-3-7-sonnet",
-    label: "Claude 3.7 Sonnet",
-    provider: "Anthropic",
-    apiModel: "anthropic/claude-3.7-sonnet",
+  "gemini-flash-free": {
+    id: "gemini-flash-free",
+    label: "Gemini 2.5 Flash (Free)",
+    provider: "Google",
+    apiModel: "google/gemini-2.5-flash:free",
     apiUrl: "https://openrouter.ai/api/v1/chat/completions",
-    maxTokens: 1024,
+    maxTokens: 4096,
     temperature: 0.2,
   },
-  "gpt-4o": {
-    id: "gpt-4o",
-    label: "GPT-4o",
-    provider: "OpenAI",
-    apiModel: "openai/gpt-4o",
+  "llama-3-3-free": {
+    id: "llama-3-3-free",
+    label: "Llama 3.3 70B Instruct (Free)",
+    provider: "Meta",
+    apiModel: "meta-llama/llama-3.3-70b-instruct:free",
     apiUrl: "https://openrouter.ai/api/v1/chat/completions",
-    maxTokens: 1024,
+    maxTokens: 2048,
     temperature: 0.3,
   },
-  "gemini-2-5-pro": {
-    id: "gemini-2-5-pro",
-    label: "Gemini 2.5 Pro",
-    provider: "Google",
-    apiModel: "google/gemini-2.5-pro",
+  "deepseek-v3-free": {
+    id: "deepseek-v3-free",
+    label: "DeepSeek V3 (Free)",
+    provider: "DeepSeek",
+    apiModel: "deepseek/deepseek-chat:free",
     apiUrl: "https://openrouter.ai/api/v1/chat/completions",
     maxTokens: 2048,
     temperature: 0.2,
   },
-  "o1-mini": {
-    id: "o1-mini",
-    label: "o1-mini",
-    provider: "OpenAI",
-    apiModel: "openai/o1-mini",
+  "mistral-small-free": {
+    id: "mistral-small-free",
+    label: "Mistral Small 24B (Free)",
+    provider: "Mistral",
+    apiModel: "mistralai/mistral-small-3.1-24b-instruct:free",
     apiUrl: "https://openrouter.ai/api/v1/chat/completions",
-    maxTokens: 1024,
-    temperature: 1.0, // o1 models require temperature ≥ 1
+    maxTokens: 2048,
+    temperature: 0.2,
+  },
+  "qwen-coder-free": {
+    id: "qwen-coder-free",
+    label: "Qwen 2.5 Coder 32B (Free)",
+    provider: "Alibaba",
+    apiModel: "qwen/qwen-2.5-coder-32b-instruct:free",
+    apiUrl: "https://openrouter.ai/api/v1/chat/completions",
+    maxTokens: 2048,
+    temperature: 0.2,
   },
 } as const satisfies Record<AIModelId, AIModelDefinition>;
 
@@ -88,7 +97,7 @@ export const AI_MODELS_LIST: readonly AIModelDefinition[] =
   Object.values(AI_MODEL_REGISTRY);
 
 /** Default model used on first load and after factory reset */
-export const DEFAULT_MODEL_ID: AIModelId = "claude-3-7-sonnet";
+export const DEFAULT_MODEL_ID: AIModelId = "gemini-flash-free";
 
 /** Type guard — returns true if `id` is a valid AIModelId */
 export function isValidModelId(id: unknown): id is AIModelId {

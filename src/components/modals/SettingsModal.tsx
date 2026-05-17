@@ -301,7 +301,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   </div>
                   <DiagnosticLine
                     label="Active_Model"
-                    value={settings.AIModel.split("-")[0]}
+                    value={(settings.AIModel?.split("-")[0]) ?? ""}
                   />
                   <DiagnosticLine
                     label="Latency_Mode"

@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { ReactionWorkspace }  from "../components/ui/ReactionWorkspace";
 import { useCurrentReaction, useCurrentSteps } from "../store";
-import { EnthalpyTooltip, EnergyTooltip } from "../components/ui/ChartTooltip";
+import { EnergyTooltip } from "../components/ui/ChartTooltip";
 import {
   AreaChart, Area, Tooltip, ResponsiveContainer,
   ReferenceLine, YAxis, CartesianGrid,

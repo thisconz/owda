@@ -1,3 +1,5 @@
+// D:\Dev\OWDA\src\components\ReactionWorkspace.tsx
+
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   Terminal, Activity, Cpu, ChevronDown, Filter, Hexagon, Sparkles,
@@ -13,15 +15,32 @@ import type { AIModelId }  from "../../config/models";
 import type { ChemicalReaction, ExplanationStep, ReactionType } from "@/src/types";
 
 // ---------------------------------------------------------------------------
+// Helpers — Formats chemical alphanumeric tokens to structural sub-scripts
+// ---------------------------------------------------------------------------
+function formatSubscripts(formula: string): React.ReactNode {
+  const subscriptMap: Record<string, string> = {
+    "0": "₀", "1": "₁", "2": "₂", "3": "₃", "4": "₄",
+    "5": "₅", "6": "₆", "7": "₇", "8": "₈", "9": "₉"
+  };
+  
+  return formula.split(/([0-9]+)/).map((segment, idx) => {
+    if (/^[0-9]+$/.test(segment)) {
+      const converted = segment.split("").map(char => subscriptMap[char] ?? char).join("");
+      return <sub key={idx} className="bottom-[-0.2em] text-[0.75em] font-bold tracking-normal">{converted}</sub>;
+    }
+    return <span key={idx}>{segment}</span>;
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Reaction catalog — defined outside component to avoid reallocation
 // ---------------------------------------------------------------------------
-
 const REACTION_CATALOG = [
   {
     category: "Basic Reactions",
     icon: <Filter className="w-4 h-4" />,
     items: [
-      { label: "Haber Process (Ammonia)",  formula: "N2 + H2 -> NH3",          difficulty: "L1" },
+      { label: "Haber Process (Ammonia)",  formula: "N2 + H2 -> NH3",       difficulty: "L1" },
       { label: "Methane Combustion",        formula: "CH4 + O2 -> CO2 + H2O",   difficulty: "L2" },
       { label: "Water Formation",           formula: "H2 + O2 -> H2O",           difficulty: "L1" },
       { label: "Iron Rusting",              formula: "Fe + O2 -> Fe2O3",          difficulty: "L2" },
@@ -33,10 +52,10 @@ const REACTION_CATALOG = [
     category: "Acid-Base",
     icon: <FlaskConical className="w-4 h-4" />,
     items: [
-      { label: "Neutralisation",                formula: "HCl + NaOH -> NaCl + H2O",           difficulty: "L1" },
+      { label: "Neutralisation",                formula: "HCl + NaOH -> NaCl + H2O",            difficulty: "L1" },
       { label: "Sulfuric Acid Neutralisation",   formula: "H2SO4 + NaOH -> Na2SO4 + H2O",      difficulty: "L2" },
       { label: "Carbonate + Acid",               formula: "CaCO3 + HCl -> CaCl2 + H2O + CO2",  difficulty: "L2" },
-      { label: "Ammonium Sulfate Formation",     formula: "NH3 + H2SO4 -> (NH4)2SO4",           difficulty: "L3" },
+      { label: "Ammonium Sulfate Formation",     formula: "NH3 + H2SO4 -> (NH4)2SO4",            difficulty: "L3" },
       { label: "Acetic Acid Neutralisation",     formula: "CH3COOH + NaOH -> CH3COONa + H2O",  difficulty: "L2" },
     ],
   },
@@ -99,9 +118,8 @@ const REACTION_CATALOG = [
 ] as const;
 
 // ---------------------------------------------------------------------------
-// Component
+// Main Component View
 // ---------------------------------------------------------------------------
-
 export const ReactionWorkspace: React.FC = () => {
   const inputExpression = useOWDAStore((s) => s.inputExpression);
   const isProcessing    = useOWDAStore((s) => s.isProcessing);
@@ -114,29 +132,30 @@ export const ReactionWorkspace: React.FC = () => {
     addToHistory, setError, clearError, setSteps, appendReactionLog,
   } = actions;
 
-  const [localInput,        setLocalInput]        = useState(inputExpression);
+  const [localInput,        setLocalInput]        = useState<string>(inputExpression);
   const [expandedCategory,  setExpandedCategory]  = useState<string | null>(null);
-  const [showPicker,        setShowPicker]        = useState(false);
+  const [showPicker,        setShowPicker]        = useState<boolean>(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  // Sync external expression changes into local input (e.g. history load)
   useEffect(() => {
     setLocalInput(inputExpression);
   }, [inputExpression]);
 
-  // Abort any in-flight request on unmount
-  useEffect(() => () => { abortRef.current?.abort(); }, []);
+  useEffect(() => () => {
+    if (abortRef.current !== null) {
+      abortRef.current.abort();
+    }
+  }, []);
 
-  // ---------------------------------------------------------------------------
-  // Solve handler — memoized, stable reference
-  // ---------------------------------------------------------------------------
   const handleSolve = useCallback(async () => {
     const trimmed = localInput.trim();
-    if (!trimmed || isProcessing) return;
+    if (trimmed === "" || isProcessing) return;
 
-    abortRef.current?.abort();
+    if (abortRef.current !== null) {
+      abortRef.current.abort();
+    }
     const controller = new AbortController();
     abortRef.current = controller;
 
@@ -146,27 +165,23 @@ export const ReactionWorkspace: React.FC = () => {
     addToHistory(trimmed);
 
     try {
-      // ── 1. Deterministic balancing ──────────────────────────────────────
       const balanced = ReactionSolver.balance(trimmed);
-
-      // ── 2. AI analysis ───────────────────────────────────────────────────
       let aiResult;
+      
       if (settings.enableAI) {
         aiResult = await AIService.explainReaction(
           trimmed,
-          settings.AIModel as AIModelId, // now actually routed to selected model
+          settings.AIModel as AIModelId,
           controller.signal,
         );
       } else {
         aiResult = AIService.disabledResult();
       }
 
-      // Abort was triggered while AI was in-flight
       if (controller.signal.aborted) return;
 
       const { thermodynamics, steps } = aiResult;
 
-      // ── 3. Assemble final reaction ───────────────────────────────────────
       const finalReaction: ChemicalReaction = balanced.isBalanced
         ? {
             ...balanced,
@@ -211,15 +226,17 @@ export const ReactionWorkspace: React.FC = () => {
     setReaction(undefined);
     setSteps([]);
     clearError();
-    inputRef.current?.focus();
+    if (inputRef.current !== null) {
+      inputRef.current.focus();
+    }
   }, [setInputExpression, setReaction, setSteps, clearError]);
 
   const handlePickerInsert = useCallback((text: string) => {
     const el = inputRef.current;
 
     if (text === "\b") {
-      if (el) {
-        const start = el.selectionStart ?? localInput.length;
+      if (el !== null) {
+        const start = el.selectionStart !== null ? el.selectionStart : localInput.length;
         if (start > 0) {
           const newVal = localInput.slice(0, start - 1) + localInput.slice(start);
           setLocalInput(newVal);
@@ -231,9 +248,9 @@ export const ReactionWorkspace: React.FC = () => {
       return;
     }
 
-    if (el) {
-      const start = el.selectionStart ?? localInput.length;
-      const end   = el.selectionEnd   ?? localInput.length;
+    if (el !== null) {
+      const start = el.selectionStart !== null ? el.selectionStart : localInput.length;
+      const end   = el.selectionEnd !== null ? el.selectionEnd : localInput.length;
       const newVal = localInput.slice(0, start) + text + localInput.slice(end);
       setLocalInput(newVal);
       const nextPos = start + text.length;
@@ -246,13 +263,9 @@ export const ReactionWorkspace: React.FC = () => {
     }
   }, [localInput]);
 
-  // ---------------------------------------------------------------------------
-  // Render
-  // ---------------------------------------------------------------------------
-
   return (
-    <div className="flex flex-col gap-5 p-5 bg-[#FDFCFB] relative">
-      {/* Header */}
+    <div className="flex flex-col gap-5 p-5 bg-[#FDFCFB] relative min-w-0 min-h-0">
+      {/* Module Header */}
       <div className="flex items-center justify-between border-b border-[#1A1A1A] pb-4">
         <div className="flex items-center gap-3">
           <div className="p-2 border border-[#1A1A1A] bg-[#EAE8E4]">
@@ -287,7 +300,7 @@ export const ReactionWorkspace: React.FC = () => {
         </div>
       </div>
 
-      {/* Input */}
+      {/* Control Input Element Bar */}
       <div className="relative flex items-center bg-white border-2 border-[#1A1A1A] overflow-hidden focus-within:shadow-[4px_4px_0px_#1A1A1A] transition-all">
         <div className="pl-5 shrink-0">
           <Sparkles className="w-5 h-5 text-[#1A1A1A]" />
@@ -318,7 +331,7 @@ export const ReactionWorkspace: React.FC = () => {
           >
             <Table2 className="w-4 h-4" />
           </button>
-          {localInput && (
+          {localInput !== "" && (
             <button
               onClick={handleClear}
               title="Clear"
@@ -329,7 +342,7 @@ export const ReactionWorkspace: React.FC = () => {
           )}
           <button
             onClick={handleSolve}
-            disabled={isProcessing || !localInput.trim()}
+            disabled={isProcessing || localInput.trim() === ""}
             className="px-6 py-3 ml-2 border border-[#1A1A1A] bg-[#D4FF00] hover:bg-[#1A1A1A] disabled:opacity-50 disabled:bg-[#EAE8E4] disabled:text-[#1A1A1A]/50 hover:text-white text-[#1A1A1A] transition-all flex items-center gap-2 font-black uppercase text-[10px] tracking-widest active:translate-y-1"
           >
             {isProcessing ? <Activity className="animate-spin w-3 h-3" /> : <Cpu className="w-3 h-3" />}
@@ -338,17 +351,14 @@ export const ReactionWorkspace: React.FC = () => {
         </div>
       </div>
 
-      {/* Element Picker */}
       <ElementPicker isOpen={showPicker} onClose={() => setShowPicker(false)} onInsert={handlePickerInsert} />
 
-      {/* Reaction Catalog — fixed grid: 1 col mobile, 2 col sm+ */}
+      {/* Reaction Catalog Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {REACTION_CATALOG.map((cat) => (
           <div key={cat.category} className="relative">
             <button
-              onClick={() =>
-                setExpandedCategory(expandedCategory === cat.category ? null : cat.category)
-              }
+              onClick={() => setExpandedCategory(expandedCategory === cat.category ? null : cat.category)}
               className={`w-full flex items-center justify-between p-3 border-2 border-[#1A1A1A] text-[10px] font-bold uppercase tracking-widest transition-all ${
                 expandedCategory === cat.category
                   ? "bg-[#1A1A1A] text-white"
@@ -359,11 +369,7 @@ export const ReactionWorkspace: React.FC = () => {
                 {cat.icon}
                 {cat.category}
               </div>
-              <ChevronDown
-                className={`w-3 h-3 transition-transform ${
-                  expandedCategory === cat.category ? "rotate-180" : ""
-                }`}
-              />
+              <ChevronDown className={`w-3 h-3 transition-transform ${expandedCategory === cat.category ? "rotate-180" : ""}`} />
             </button>
 
             <AnimatePresence>
@@ -371,8 +377,8 @@ export const ReactionWorkspace: React.FC = () => {
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{   opacity: 0, y: -10 }}
-                  className="absolute left-0 right-0 mt-2 z-[60] bg-[#FDFCFB] border-2 border-[#1A1A1A] shadow-[4px_4px_0px_#1A1A1A] p-2 flex flex-col gap-1"
+                  exit={{ opacity: 0, y: -10 }}
+                  className="absolute left-0 right-0 mt-2 z-60 bg-[#FDFCFB] border-2 border-[#1A1A1A] shadow-[4px_4px_0px_#1A1A1A] p-2 flex flex-col gap-1"
                 >
                   {cat.items.map((item, idx) => (
                     <button
@@ -380,7 +386,9 @@ export const ReactionWorkspace: React.FC = () => {
                       onClick={() => {
                         setLocalInput(item.formula);
                         setExpandedCategory(null);
-                        inputRef.current?.focus();
+                        if (inputRef.current !== null) {
+                          inputRef.current.focus();
+                        }
                       }}
                       className="flex flex-col p-2.5 border border-transparent hover:border-[#1A1A1A] hover:bg-[#D4FF00] transition-all text-left group"
                     >
@@ -388,7 +396,7 @@ export const ReactionWorkspace: React.FC = () => {
                         <span className="text-[8px] font-mono text-[#1A1A1A] font-bold">{item.label}</span>
                         <span className="text-[7px] px-1 border border-[#1A1A1A] bg-white font-bold">{item.difficulty}</span>
                       </div>
-                      <span className="text-xs font-mono font-bold text-[#1A1A1A]">{item.formula}</span>
+                      <span className="text-xs font-mono font-bold text-[#1A1A1A]">{formatSubscripts(item.formula)}</span>
                     </button>
                   ))}
                 </motion.div>
@@ -398,14 +406,14 @@ export const ReactionWorkspace: React.FC = () => {
         ))}
       </div>
 
-      {/* Result */}
+      {/* Solution Manifest Section */}
       <AnimatePresence mode="wait">
-        {currentReaction && (
+        {currentReaction !== undefined && (
           <motion.div
             key="result"
             initial={{ opacity: 0, scale: 0.99 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{   opacity: 0, y: 10 }}
+            exit={{ opacity: 0, y: 10 }}
             className="mt-2 bg-white border-2 border-[#1A1A1A] p-6 relative overflow-hidden shadow-[4px_4px_0px_#1A1A1A]"
           >
             <div className="flex items-center justify-between border-b border-[#1A1A1A] pb-4 mb-6">
@@ -420,9 +428,8 @@ export const ReactionWorkspace: React.FC = () => {
             </div>
 
             <div className="flex flex-col items-center justify-center gap-8 py-4">
-              {/* Equation */}
               <div className="flex flex-wrap items-center justify-center gap-4 text-2xl md:text-3xl font-black tracking-tighter text-[#1A1A1A]">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-wrap justify-center">
                   {currentReaction.reactants.molecules.map((m, i) => (
                     <React.Fragment key={i}>
                       <div className="flex items-center gap-1.5">
@@ -430,7 +437,7 @@ export const ReactionWorkspace: React.FC = () => {
                           <span className="text-[#1A1A1A] font-black text-xl mt-1">{m.coefficient}</span>
                         )}
                         <span className="font-mono bg-white px-3 py-1 border-2 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A]">
-                          {m.molecule.formula}
+                          {formatSubscripts(m.molecule.formula)}
                         </span>
                       </div>
                       {i < currentReaction.reactants.molecules.length - 1 && (
@@ -440,9 +447,9 @@ export const ReactionWorkspace: React.FC = () => {
                   ))}
                 </div>
 
-                <ArrowRightLeft className="w-8 h-8 mx-2" />
+                <ArrowRightLeft className="w-8 h-8 mx-2 shrink-0" />
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-wrap justify-center">
                   {currentReaction.products.molecules.map((m, i) => (
                     <React.Fragment key={i}>
                       <div className="flex items-center gap-1.5">
@@ -450,7 +457,7 @@ export const ReactionWorkspace: React.FC = () => {
                           <span className="text-[#1A1A1A] font-black text-xl mt-1">{m.coefficient}</span>
                         )}
                         <span className="font-mono bg-white px-3 py-1 border-2 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A]">
-                          {m.molecule.formula}
+                          {formatSubscripts(m.molecule.formula)}
                         </span>
                       </div>
                       {i < currentReaction.products.molecules.length - 1 && (
@@ -461,35 +468,22 @@ export const ReactionWorkspace: React.FC = () => {
                 </div>
               </div>
 
-              {/* Thermodynamics */}
               {currentReaction.isBalanced && (
-                <div className="w-full grid grid-cols-3 gap-4 border-t border-[#1A1A1A] pt-6">
+                <div className="w-full grid grid-cols-3 gap-4 border-t border-[#1A1A1A] pt-6 min-w-0">
                   <ThermMetric
                     label="Enthalpy ΔH"
-                    value={currentReaction.enthalpy !== undefined
-                      ? `${currentReaction.enthalpy} kJ/mol`
-                      : "Pending AI…"}
-                    good={currentReaction.enthalpy !== undefined
-                      ? currentReaction.enthalpy < 0
-                      : undefined}
+                    value={currentReaction.enthalpy !== undefined ? `${currentReaction.enthalpy} kJ/mol` : "Pending AI…"}
+                    good={currentReaction.enthalpy !== undefined ? currentReaction.enthalpy < 0 : undefined}
                   />
                   <ThermMetric
                     label="Entropy ΔS"
-                    value={currentReaction.entropy !== undefined
-                      ? `${currentReaction.entropy} J/K·mol`
-                      : "Pending AI…"}
-                    good={currentReaction.entropy !== undefined
-                      ? currentReaction.entropy > 0
-                      : undefined}
+                    value={currentReaction.entropy !== undefined ? `${currentReaction.entropy} J/K·mol` : "Pending AI…"}
+                    good={currentReaction.entropy !== undefined ? currentReaction.entropy > 0 : undefined}
                   />
                   <ThermMetric
                     label="Gibbs ΔG"
-                    value={currentReaction.gibbs !== undefined
-                      ? `${currentReaction.gibbs} kJ/mol`
-                      : "Pending AI…"}
-                    good={currentReaction.gibbs !== undefined
-                      ? currentReaction.gibbs < 0
-                      : undefined}
+                    value={currentReaction.gibbs !== undefined ? `${currentReaction.gibbs} kJ/mol` : "Pending AI…"}
+                    good={currentReaction.gibbs !== undefined ? currentReaction.gibbs < 0 : undefined}
                   />
                 </div>
               )}
@@ -502,27 +496,22 @@ export const ReactionWorkspace: React.FC = () => {
 };
 
 // ---------------------------------------------------------------------------
-// ThermMetric — handles undefined thermodynamic values gracefully
+// Component Layout — ThermMetric Element Card
 // ---------------------------------------------------------------------------
-
 interface ThermMetricProps {
-  label: string;
-  value: string;
-  /** true = favorable, false = unfavorable, undefined = not yet known */
-  good: boolean | undefined;
+  readonly label: string;
+  readonly value: string;
+  readonly good: boolean | undefined;
 }
 
 const ThermMetric: React.FC<ThermMetricProps> = ({ label, value, good }) => (
-  <div className={`flex flex-col gap-1 p-3 border-2 border-[#1A1A1A] transition-colors ${
-    good === undefined ? "bg-[#F5F5F5] opacity-70" :
-    good              ? "bg-[#EAE8E4]" : "bg-white"
+  <div className={`flex flex-col gap-1 p-3 border-2 border-[#1A1A1A] transition-colors min-w-0 overflow-hidden ${
+    good === undefined ? "bg-[#F5F5F5] opacity-70" : good ? "bg-[#EAE8E4]" : "bg-white"
   }`}>
-    <span className="text-[8px] font-black text-[#1A1A1A] uppercase tracking-widest">{label}</span>
-    <span className="text-xs md:text-sm font-mono font-black text-[#1A1A1A]">{value}</span>
+    <span className="text-[8px] font-black text-[#1A1A1A] uppercase tracking-widest block truncate">{label}</span>
+    <span className="text-xs md:text-sm font-mono font-black text-[#1A1A1A] block truncate">{value}</span>
     {good !== undefined && (
-      <span className={`text-[7px] font-black uppercase tracking-wider ${
-        good ? "text-green-700" : "text-red-600"
-      }`}>
+      <span className={`text-[7px] font-black uppercase tracking-wider block ${good ? "text-green-700" : "text-red-600"}`}>
         {good ? "▲ FAVORABLE" : "▼ UNFAVORABLE"}
       </span>
     )}

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   Atom,
   Activity,
@@ -22,6 +22,13 @@ interface SideBarProps {
   isCompact?: boolean;
 }
 
+interface UtilityIconButtonProps {
+  icon: React.ReactNode;
+  onClick: () => void;
+  compact: boolean;
+  title: string;
+}
+
 const SECTION_HEADER_STYLE = "text-[9px] font-black text-[#1A1A1A]/40 uppercase tracking-[0.2em] mb-3 px-2 flex items-center gap-2 overflow-hidden whitespace-nowrap";
 
 export const SideBar: React.FC<SideBarProps> = ({
@@ -31,23 +38,24 @@ export const SideBar: React.FC<SideBarProps> = ({
   openNetwork,
   isCompact = false,
 }) => {
-  const tabs = [
-    { id: "workspace", icon: FlaskConical, label: "Synthesis Lab", desc: "CORE_PROCESSOR" },
-    { id: "simulation", icon: Atom, label: "Simulation", desc: "STATE_ENGINE" },
-    { id: "analytics", icon: Activity, label: "Analytics", desc: "DATA_UPLINK" },
-    { id: "compare", icon: Layers, label: "Comparison", desc: "DIFF_BUFFER" },
-  ];
+  // Memoized tabs configuration array to avoid allocations on state adjustments
+  const tabs = useMemo(() => [
+    { id: "workspace" as const, icon: FlaskConical, label: "Synthesis Lab", desc: "CORE_PROCESSOR" },
+    { id: "simulation" as const, icon: Atom, label: "Simulation", desc: "STATE_ENGINE" },
+    { id: "analytics" as const, icon: Activity, label: "Analytics", desc: "DATA_UPLINK" },
+    { id: "compare" as const, icon: Layers, label: "Comparison", desc: "DIFF_BUFFER" },
+  ], []);
 
   return (
-    <nav className={`h-full flex flex-col items-stretch z-50 bg-[#FDFCFB] transition-all duration-500 ease-[cubic-bezier(0.2,1,0.2,1)]`}>
+    <nav className="h-full flex flex-col items-stretch z-50 bg-[#FDFCFB] transition-all duration-500 ease-[cubic-bezier(0.2,1,0.2,1)]">
       
       {/* 1. BRANDING & VERSIONING */}
       <div className={`flex flex-col p-6 border-b-4 border-[#1A1A1A] bg-[#FF6B6B] relative overflow-hidden transition-all duration-500 ${isCompact ? 'items-center px-2' : ''}`}>
         <div className="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(#1A1A1A_1px,transparent_1px)] bg-[size:10px_10px]" />
         
-        <div className="relative z-10 flex flex-col gap-4">
+        <div className="relative z-10 flex flex-col gap-4 w-full items-center">
           {!isCompact && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 self-start">
               <div className="w-2 h-2 bg-white border border-[#1A1A1A] rounded-full animate-pulse" />
               <span className="text-[8px] font-black text-[#1A1A1A] uppercase bg-white px-1.5 shadow-[2px_2px_0px_#1A1A1A]">
                 OS_ACTIVE
@@ -55,8 +63,8 @@ export const SideBar: React.FC<SideBarProps> = ({
             </div>
           )}
           
-          <div className="bg-[#D4FF00] border-4 border-[#1A1A1A] p-3 shadow-[4px_4px_0px_#1A1A1A] flex items-center justify-center">
-            <h1 className="text-xl font-black italic tracking-tighter text-[#1A1A1A] leading-none">
+          <div className="bg-[#D4FF00] border-4 border-[#1A1A1A] p-3 shadow-[4px_4px_0px_#1A1A1A] flex items-center justify-center w-full">
+            <h1 className="text-xl font-black italic tracking-tighter text-[#1A1A1A] leading-none select-none">
               {isCompact ? "O" : "OWDA"}<span className="text-[#FF6B6B]">.</span>OS
             </h1>
           </div>
@@ -64,7 +72,7 @@ export const SideBar: React.FC<SideBarProps> = ({
       </div>
 
       {/* 2. NAVIGATION MODULES */}
-      <div className={`flex-1 flex flex-col px-3 md:px-4 gap-3 md:py-8 overflow-y-auto no-scrollbar transition-all ${isCompact ? 'px-2' : ''}`}>
+      <div className={`flex-1 flex flex-col px-3 md:px-4 gap-3 md:py-8 overflow-y-auto no-scrollbar transition-all ${isCompact ? 'px-2 py-4' : ''}`}>
         {!isCompact && (
           <p className={SECTION_HEADER_STYLE}>
             <Terminal size={10}/> <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }}>Main_Modules</motion.span>
@@ -73,28 +81,30 @@ export const SideBar: React.FC<SideBarProps> = ({
         
         {tabs.map((item) => {
           const isActive = activeTab === item.id;
+          const IconComponent = item.icon;
           return (
             <button
               key={item.id}
-              onClick={() => setActiveTab(item.id as TabType)}
-              title={isCompact ? item.label : ""}
-              className={`relative group flex items-center transition-all border-4 border-[#1A1A1A] ${
-                isCompact ? 'justify-center p-3' : 'gap-4 p-3.5'
+              onClick={() => setActiveTab(item.id)}
+              title={isCompact ? item.label : undefined}
+              className={`relative group flex items-center transition-all border-4 border-[#1A1A1A] outline-none ${
+                isCompact ? 'justify-center p-3 w-12 h-12 self-center' : 'gap-4 p-3.5 w-full'
               } ${
                 isActive
                   ? "bg-[#1A1A1A] text-white shadow-[4px_4px_0px_#D4FF00]"
                   : "bg-white text-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A] hover:bg-[#F5F5F5] hover:shadow-[4px_4px_0px_#D4FF00] hover:-translate-y-0.5"
               }`}
             >
-              <item.icon className={`shrink-0 transition-transform duration-300 ${isCompact ? 'w-6 h-6' : 'w-5 h-5'} ${isActive ? "scale-110" : "group-hover:rotate-12"}`} />
+              <IconComponent className={`shrink-0 transition-transform duration-300 ${isCompact ? 'w-5 h-5' : 'w-4 h-4'} ${isActive ? "scale-110" : "group-hover:rotate-12"}`} />
 
-              <AnimatePresence>
+              <AnimatePresence mode="wait">
                 {!isCompact && (
                   <motion.div 
-                    initial={{ opacity: 0, x: -10 }}
+                    initial={{ opacity: 0, x: -6 }}
                     animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -10 }}
-                    className="flex flex-col items-start overflow-hidden whitespace-nowrap"
+                    exit={{ opacity: 0, x: -6 }}
+                    transition={{ duration: 0.15 }}
+                    className="flex flex-col items-start overflow-hidden whitespace-nowrap text-left"
                   >
                     <span className="text-[10px] font-black uppercase tracking-tight">
                       {item.label}
@@ -108,8 +118,9 @@ export const SideBar: React.FC<SideBarProps> = ({
 
               {isActive && (
                 <motion.div 
-                  layoutId="active-pill"
-                  className="absolute left-[-4px] top-2 bottom-2 w-1 bg-[#D4FF00]"
+                  layoutId="sidebar-active-indicator"
+                  className="absolute left-[-4px] top-1 bottom-1 w-1 bg-[#D4FF00]"
+                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
                 />
               )}
             </button>
@@ -118,16 +129,16 @@ export const SideBar: React.FC<SideBarProps> = ({
       </div>
 
       {/* 3. UTILITY & DIAGNOSTICS */}
-      <div className={`flex mt-auto flex-col p-4 gap-3 border-t-4 border-[#1A1A1A] bg-[#EAE8E4] transition-all ${isCompact ? 'p-2' : ''}`}>
+      <div className={`flex mt-auto flex-col p-4 gap-3 border-t-4 border-[#1A1A1A] bg-[#EAE8E4] transition-all ${isCompact ? 'p-2 items-center' : ''}`}>
         {!isCompact && <p className={SECTION_HEADER_STYLE}>System_Tools</p>}
         
-        <div className={`grid gap-2 ${isCompact ? 'grid-cols-1' : 'grid-cols-2'}`}>
-          <UtilityIconButton icon={<Settings size={16}/>} onClick={openSettings} compact={isCompact} />
-          <UtilityIconButton icon={<Globe size={16}/>} onClick={openNetwork} compact={isCompact} />
+        <div className={`grid gap-2 w-full ${isCompact ? 'grid-cols-1' : 'grid-cols-2'}`}>
+          <UtilityIconButton icon={<Settings size={14}/>} onClick={openSettings} compact={isCompact} title="Settings" />
+          <UtilityIconButton icon={<Globe size={14}/>} onClick={openNetwork} compact={isCompact} title="Network Uplink" />
         </div>
 
-        {/* Real-time Health Widget */}
-        <div className={`bg-white border-4 border-[#1A1A1A] shadow-[4px_4px_0px_#1A1A1A] relative overflow-hidden transition-all ${isCompact ? 'p-2 flex justify-center' : 'p-3'}`}>
+        {/* Real-time Hardware Engine Health Widget */}
+        <div className={`bg-white border-4 border-[#1A1A1A] shadow-[4px_4px_0px_#1A1A1A] relative overflow-hidden w-full transition-all ${isCompact ? 'p-2 flex justify-center h-12 w-12 self-center' : 'p-3'}`}>
           {!isCompact ? (
             <>
               <div className="flex justify-between items-center mb-2">
@@ -146,9 +157,9 @@ export const SideBar: React.FC<SideBarProps> = ({
               </div>
             </>
           ) : (
-            <div className="flex flex-col items-center gap-1">
+            <div className="flex flex-col items-center justify-center gap-1">
               <Cpu size={14} className="text-[#1A1A1A] animate-pulse" />
-              <div className="w-1 h-4 bg-[#D4FF00] border border-[#1A1A1A]" />
+              <div className="w-1.5 h-1 bg-[#D4FF00] border border-[#1A1A1A]" />
             </div>
           )}
         </div>
@@ -157,10 +168,11 @@ export const SideBar: React.FC<SideBarProps> = ({
   );
 };
 
-const UtilityIconButton = ({ icon, onClick, compact }: { icon: React.ReactNode, onClick: () => void, compact: boolean }) => (
+const UtilityIconButton: React.FC<UtilityIconButtonProps> = ({ icon, onClick, compact, title }) => (
   <button
     onClick={onClick}
-    className={`flex items-center justify-center bg-white border-2 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A] hover:bg-[#D4FF00] transition-all active:translate-y-0.5 group ${compact ? 'p-2' : 'p-3'}`}
+    title={compact ? title : undefined}
+    className={`flex items-center justify-center bg-white border-2 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A] hover:bg-[#D4FF00] transition-all active:translate-y-0.5 outline-none group ${compact ? 'p-2 w-12 h-12 self-center' : 'p-3 w-full'}`}
   >
     <span className="group-hover:rotate-90 transition-transform duration-300 text-[#1A1A1A]">
       {icon}

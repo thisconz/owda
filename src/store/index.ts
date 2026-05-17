@@ -434,10 +434,11 @@ export const useOWDAStore = create<OWDAStore>()(
           const settings = state["settings"] as Record<string, unknown> | undefined;
           if (settings) {
             const modelMap: Record<string, string> = {
-              "claude-3-5":  "claude-3-7-sonnet",
-              "gpt-4o":      "gpt-4o",
-              "o1-mini":     "o1-mini",
-              "gemini-1-5":  "gemini-2-5-pro",
+              "qwen":        "qwen-coder-free",
+              "mistral":     "mistral-small-free",
+              "deepseek":    "deepseek-v3-free",
+              "llama":       "llama-3-3-free",
+              "gemini":      "gemini-flash-free",
             };
             const oldModel = settings["AIModel"] as string | undefined;
             if (oldModel && oldModel in modelMap) {
