@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Settings,
@@ -7,11 +7,9 @@ import {
   Bot,
   Sliders,
   CheckCircle2,
-  Terminal,
   Hash,
   ChevronRight,
   Activity,
-  LucideProps,
 } from "lucide-react";
 import {
   useOWDAStore,

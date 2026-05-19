@@ -18,7 +18,7 @@ const finiteNumber = z
   .finite()
   .refine((n) => !Number.isNaN(n), { message: "Value must not be NaN" });
 
-/** Thermodynamic value — optional finite number */
+/** Thermodynamic value — optional finite number adhering to strict anti-null rules */
 const thermoValue = finiteNumber.optional();
 
 // ---------------------------------------------------------------------------
@@ -45,8 +45,7 @@ export type ReactionType = z.infer<typeof ReactionTypeSchema>;
 
 /**
  * Zod schema for the full chemistry analysis payload returned by AI models.
- * This is the single validation boundary — everything inside the app trusts
- * values that passed this schema.
+ * Rebuilt to seamlessly handle fallback defaults for modern Zod pipeline standards.
  */
 export const ChemistryAnalysisSchema = z.object({
   /** Plain-English overview of the reaction */
@@ -55,7 +54,7 @@ export const ChemistryAnalysisSchema = z.object({
   /** Technical mechanistic explanation */
   mechanism: z.string().min(10, "Mechanism is too short").max(4000),
 
-  /** Reaction classification */
+  /** Reaction classification - Uses Zod v4 clean fallback catch block */
   reactionType: ReactionTypeSchema.catch("Unknown"),
 
   /**
@@ -85,11 +84,11 @@ export type ChemistryAnalysisPayload = z.infer<typeof ChemistryAnalysisSchema>;
 
 /**
  * Validates a parsed JSON object against the chemistry analysis schema.
- * Returns a discriminated union { success: true, data } | { success: false, error }.
+ * Using ReturnType ensures absolute compatibility across Zod v3/v4 shifts.
  */
 export function validateChemistryAnalysis(
   input: unknown,
-): z.SafeParseReturnType<ChemistryAnalysisPayload, ChemistryAnalysisPayload> {
+): ReturnType<typeof ChemistryAnalysisSchema.safeParse> {
   return ChemistryAnalysisSchema.safeParse(input);
 }
 

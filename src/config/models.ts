@@ -15,11 +15,10 @@
 // ---------------------------------------------------------------------------
 
 export type AIModelId =
-  | "gemini-flash-free"
-  | "llama-3-3-free"
-  | "deepseek-v3-free"
-  | "mistral-small-free"
-  | "qwen-coder-free";
+  | "nvidia/nemotron-3-super-120b-a12b:free"
+  | "openrouter/owl-alpha"
+  | "openai/gpt-oss-20b:free"
+  | "poolside/laguna-m.1:free"
 
 export interface AIModelDefinition {
   readonly id: AIModelId;
@@ -41,49 +40,40 @@ export interface AIModelDefinition {
 // ---------------------------------------------------------------------------
 
 export const AI_MODEL_REGISTRY = {
-  "gemini-flash-free": {
-    id: "gemini-flash-free",
-    label: "Gemini 2.5 Flash (Free)",
-    provider: "Google",
-    apiModel: "google/gemini-2.5-flash:free",
+  "nvidia/nemotron-3-super-120b-a12b:free": {
+    id: "nvidia/nemotron-3-super-120b-a12b:free",
+    label: "Nemotron 3 Super 120B (Free)",
+    provider: "NVIDIA",
+    apiModel: "nvidia/nemotron-3-super-120b-a12b:free",
     apiUrl: "https://openrouter.ai/api/v1/chat/completions",
     maxTokens: 4096,
     temperature: 0.2,
   },
-  "llama-3-3-free": {
-    id: "llama-3-3-free",
-    label: "Llama 3.3 70B Instruct (Free)",
-    provider: "Meta",
-    apiModel: "meta-llama/llama-3.3-70b-instruct:free",
+  "openrouter/owl-alpha": {
+    id: "openrouter/owl-alpha",
+    label: "OWL Alpha (Free)",
+    provider: "OpenRouter",
+    apiModel: "openrouter/owl-alpha",
     apiUrl: "https://openrouter.ai/api/v1/chat/completions",
-    maxTokens: 2048,
-    temperature: 0.3,
-  },
-  "deepseek-v3-free": {
-    id: "deepseek-v3-free",
-    label: "DeepSeek V3 (Free)",
-    provider: "DeepSeek",
-    apiModel: "deepseek/deepseek-chat:free",
-    apiUrl: "https://openrouter.ai/api/v1/chat/completions",
-    maxTokens: 2048,
+    maxTokens: 4096,
     temperature: 0.2,
   },
-  "mistral-small-free": {
-    id: "mistral-small-free",
-    label: "Mistral Small 24B (Free)",
-    provider: "Mistral",
-    apiModel: "mistralai/mistral-small-3.1-24b-instruct:free",
+  "openai/gpt-oss-20b:free": {
+    id: "openai/gpt-oss-20b:free",
+    label: "GPT-OSS 20B (Free)",
+    provider: "OpenAI",
+    apiModel: "gpt-oss-20b:free",
     apiUrl: "https://openrouter.ai/api/v1/chat/completions",
-    maxTokens: 2048,
+    maxTokens: 4096,
     temperature: 0.2,
   },
-  "qwen-coder-free": {
-    id: "qwen-coder-free",
-    label: "Qwen 2.5 Coder 32B (Free)",
-    provider: "Alibaba",
-    apiModel: "qwen/qwen-2.5-coder-32b-instruct:free",
+  "poolside/laguna-m.1:free": {
+    id: "poolside/laguna-m.1:free",
+    label: "Laguna M.1 (Free)",
+    provider: "Poolside",
+    apiModel: "poolside/laguna-m.1:free",
     apiUrl: "https://openrouter.ai/api/v1/chat/completions",
-    maxTokens: 2048,
+    maxTokens: 4096,
     temperature: 0.2,
   },
 } as const satisfies Record<AIModelId, AIModelDefinition>;
@@ -97,7 +87,7 @@ export const AI_MODELS_LIST: readonly AIModelDefinition[] =
   Object.values(AI_MODEL_REGISTRY);
 
 /** Default model used on first load and after factory reset */
-export const DEFAULT_MODEL_ID: AIModelId = "gemini-flash-free";
+export const DEFAULT_MODEL_ID: AIModelId = "nvidia/nemotron-3-super-120b-a12b:free";
 
 /** Type guard — returns true if `id` is a valid AIModelId */
 export function isValidModelId(id: unknown): id is AIModelId {

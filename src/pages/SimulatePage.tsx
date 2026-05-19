@@ -1,52 +1,30 @@
-import React, { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
-  Activity,
-  Thermometer,
-  Wind,
-  Rotate3D,
-  Maximize,
-  Orbit,
-  Gauge,
-  ScanLine,
-  Lock,
-  Unlock,
-  Zap,
-  BarChart3,
-  Snowflake,
-  Waves,
+  Activity, Thermometer, Wind, Rotate3D, Maximize, Orbit,
+  Gauge, ScanLine, Lock, Unlock, Zap, BarChart3, Snowflake, Waves,
 } from "lucide-react";
 import {
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  ReferenceLine,
-  Area,
-  AreaChart,
+  XAxis, YAxis, Tooltip, ResponsiveContainer,
+  ReferenceLine, Area, AreaChart,
 } from "recharts";
-import { MolecularExplorer } from "../components/visualization/MolecularExplorer";
+import { MolecularExplorer }  from "../components/visualization/MolecularExplorer";
 import { useCurrentReaction } from "../store";
-import { renderFormula } from "../utils/renderFormula";
-import { SIMULATE_VERSION } from "../config/version";
+import { renderFormula }      from "../utils/renderFormula";
+import { SIMULATE_VERSION }   from "../config/version";
 
-// ─── Constants & Physics Calculations ──────────────────────────────────────────
+// ─── Physics constants ────────────────────────────────────────────────────────
+const BOLTZMANN = 1.380649e-23;
+const AVOGADRO  = 6.02214076e23;
 
-const BOLTZMANN = 1.380649e-23; // J/K
-const AVOGADRO = 6.02214076e23;
-const GAS_CONSTANT = 8.314; // J/(mol·K)
-
-/** Maxwell-Boltzmann speed probability density f(v) at temperature T */
 function maxwellBoltzmann(v: number, T: number, molarMassKg: number): number {
   if (T <= 0 || molarMassKg <= 0 || v < 0) return 0;
-  const m = molarMassKg / AVOGADRO; // mass per molecule (kg)
+  const m  = molarMassKg / AVOGADRO;
   const kT = BOLTZMANN * T;
   return (
-    4 *
-    Math.PI *
+    4 * Math.PI *
     Math.pow(m / (2 * Math.PI * kT), 1.5) *
-    v *
-    v *
+    v * v *
     Math.exp(-(m * v * v) / (2 * kT))
   );
 }
@@ -55,73 +33,49 @@ function buildMBData(T: number, molarMassKg: number, T_ref = 298) {
   const vMax = Math.sqrt(
     (2 * BOLTZMANN * Math.max(T, T_ref) * 3) / (molarMassKg / AVOGADRO),
   );
-  const N = 60;
-  const step = vMax / N;
-  return Array.from({ length: N + 1 }, (_, i) => {
+  const step = vMax / 60;
+  return Array.from({ length: 61 }, (_, i) => {
     const v = i * step;
     return {
-      v: Math.round(v),
-      f: maxwellBoltzmann(v, T, molarMassKg) * 1e-3, // scale for display
+      v:     Math.round(v),
+      f:     maxwellBoltzmann(v, T,     molarMassKg) * 1e-3,
       f_ref: maxwellBoltzmann(v, T_ref, molarMassKg) * 1e-3,
     };
   });
 }
 
-function vmp(T: number, molarMassKg: number) {
+function vmp(T: number, molarMassKg: number): number {
   return Math.sqrt((2 * BOLTZMANN * T) / (molarMassKg / AVOGADRO));
 }
 
-// ─── Phase State Configuration ─────────────────────────────────────────────
-
-const MOLECULE_PHASES: Record<
-  string,
-  { meltK: number; boilK: number; name: string }
-> = {
-  H2O: { meltK: 273.15, boilK: 373.15, name: "Water" },
-  NH3: { meltK: 195.4, boilK: 239.8, name: "Ammonia" },
-  CH4: { meltK: 90.7, boilK: 111.7, name: "Methane" },
-  CO2: { meltK: 194.7, boilK: 194.7, name: "Carbon Dioxide" },
-  HCl: { meltK: 159.0, boilK: 188.1, name: "Hydrogen Chloride" },
-  O2: { meltK: 54.4, boilK: 90.2, name: "Oxygen" },
-  N2: { meltK: 63.2, boilK: 77.4, name: "Nitrogen" },
-  H2: { meltK: 14.0, boilK: 20.3, name: "Hydrogen" },
+// ─── Phase data ───────────────────────────────────────────────────────────────
+const MOLECULE_PHASES: Record<string, { meltK: number; boilK: number }> = {
+  H2O: { meltK: 273.15, boilK: 373.15 },
+  NH3: { meltK: 195.4,  boilK: 239.8  },
+  CH4: { meltK: 90.7,   boilK: 111.7  },
+  CO2: { meltK: 194.7,  boilK: 194.7  },
+  HCl: { meltK: 159.0,  boilK: 188.1  },
+  O2:  { meltK: 54.4,   boilK: 90.2   },
+  N2:  { meltK: 63.2,   boilK: 77.4   },
+  H2:  { meltK: 14.0,   boilK: 20.3   },
 };
 
 function getPhase(formula: string, T: number): "solid" | "liquid" | "gas" {
   const data = MOLECULE_PHASES[formula];
-  if (!data) return "gas"; 
+  if (!data) return "gas";
   if (T < data.meltK) return "solid";
   if (T < data.boilK) return "liquid";
   return "gas";
 }
 
-const PHASE_CONFIG: Record<
-  "solid" | "liquid" | "gas",
-  { icon: React.ReactNode; label: string; color: string; bg: string }
-> = {
-  solid: {
-    icon: <Snowflake className="w-4 h-4" />,
-    label: "Solid",
-    color: "text-[#1A1A1A]",
-    bg: "bg-white border-2 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A]",
-  },
-  liquid: {
-    icon: <Waves className="w-4 h-4" />,
-    label: "Liquid",
-    color: "text-[#1A1A1A]",
-    bg: "bg-[#D4FF00] border-2 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A]",
-  },
-  gas: {
-    icon: <Wind className="w-4 h-4" />,
-    label: "Gas",
-    color: "text-white",
-    bg: "bg-[#1A1A1A] border-2 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A]",
-  },
-};
+const PHASE_CONFIG = {
+  solid:  { icon: <Snowflake className="w-4 h-4" />, label: "Solid",  color: "text-[#1A1A1A]", bg: "bg-white border-2 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A]"    },
+  liquid: { icon: <Waves     className="w-4 h-4" />, label: "Liquid", color: "text-[#1A1A1A]", bg: "bg-[#D4FF00] border-2 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A]" },
+  gas:    { icon: <Wind      className="w-4 h-4" />, label: "Gas",    color: "text-white",      bg: "bg-[#1A1A1A] border-2 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A]" },
+} as const;
 
-// ─── Hashing & Deterministic Spectrometry Data Helpers ───────────────────────
-
-function cyrb53Hash(str: string): number {
+// ─── Deterministic IR spectrum ────────────────────────────────────────────────
+function cyrb53(str: string): number {
   let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
   for (let i = 0; i < str.length; i++) {
     const ch = str.charCodeAt(i);
@@ -140,134 +94,120 @@ function seededRandom(seed: number): number {
   return x - Math.floor(x);
 }
 
-function buildIRSpectrum(formula: string): { wn: number; intensity: number; label: string }[] {
+interface IRPeak { wn: number; intensity: number; label: string }
+
+function buildIRSpectrum(formula: string): IRPeak[] {
   const counts: Record<string, number> = {};
-  const matches = formula.matchAll(/([A-Z][a-z]*)(\d*)/g);
-  for (const m of matches) {
-    counts[m[1]] = (counts[m[1]] ?? 0) + parseInt(m[2] || "1", 10);
+  for (const m of formula.matchAll(/([A-Z][a-z]*)(\d*)/g)) {
+    const el  = m[1] ?? "";
+    const cnt = parseInt(m[2] ?? "1", 10);
+    if (el) counts[el] = (counts[el] ?? 0) + cnt;
   }
 
-  const peaks: { wn: number; intensity: number; label: string }[] = [];
+  const peaks: IRPeak[] = [];
+  if (counts["O"] && counts["H"]) peaks.push({ wn: 3450, intensity: 95, label: "O–H str."    });
+  if (counts["N"] && counts["H"]) peaks.push({ wn: 3380, intensity: 80, label: "N–H str."    });
+  if (counts["C"] && counts["H"]) peaks.push({ wn: 2950, intensity: 70, label: "C–H str."    });
+  if (counts["C"] && counts["O"]) peaks.push({ wn: 1720, intensity:100, label: "C=O str."    });
+  if (counts["C"] && counts["C"]) peaks.push({ wn: 1640, intensity: 50, label: "C=C str."    });
+  if (counts["N"] && counts["O"]) peaks.push({ wn: 1540, intensity: 85, label: "N–O str."    });
+  if (counts["C"])                peaks.push({ wn: 1460, intensity: 40, label: "C–H bend"    });
+  if (counts["S"])                peaks.push({ wn: 1120, intensity: 60, label: "S=O str."    });
+  if (counts["C"] && counts["O"]) peaks.push({ wn: 1050, intensity: 55, label: "C–O str."    });
+  if (counts["C"] && counts["N"]) peaks.push({ wn: 2220, intensity: 75, label: "C≡N str."    });
 
-  if (counts["O"] && counts["H"]) peaks.push({ wn: 3450, intensity: 95, label: "O–H str." });
-  if (counts["N"] && counts["H"]) peaks.push({ wn: 3380, intensity: 80, label: "N–H str." });
-  if (counts["C"] && counts["H"]) peaks.push({ wn: 2950, intensity: 70, label: "C–H str." });
-  if (counts["C"] && counts["O"]) peaks.push({ wn: 1720, intensity: 100, label: "C=O str." });
-  if (counts["C"] && counts["C"]) peaks.push({ wn: 1640, intensity: 50, label: "C=C str." });
-  if (counts["N"] && counts["O"]) peaks.push({ wn: 1540, intensity: 85, label: "N–O str." });
-  if (counts["C"]) peaks.push({ wn: 1460, intensity: 40, label: "C–H bend" });
-  if (counts["S"]) peaks.push({ wn: 1120, intensity: 60, label: "S=O str." });
-  if (counts["C"] && counts["O"]) peaks.push({ wn: 1050, intensity: 55, label: "C–O str." });
-  if (counts["C"] && counts["N"]) peaks.push({ wn: 2220, intensity: 75, label: "C≡N str." });
-
-  const baseHash = cyrb53Hash(formula);
+  const baseHash = cyrb53(formula);
   let seedCounter = 0;
   for (let wn = 600; wn <= 1400; wn += 100) {
     if (!peaks.find((p) => Math.abs(p.wn - wn) < 80)) {
-      peaks.push({
-        wn,
-        intensity: seededRandom(baseHash + seedCounter++) * 20 + 5,
-        label: "fingerprint",
-      });
+      peaks.push({ wn, intensity: seededRandom(baseHash + seedCounter++) * 20 + 5, label: "fingerprint" });
     }
   }
   return peaks.sort((a, b) => a.wn - b.wn);
 }
 
-// ─── Main Viewport Component ───────────────────────────────────────────────────
-
+// ─── Main component ───────────────────────────────────────────────────────────
 export function SimulatePage() {
   const currentReaction = useCurrentReaction();
 
-  const targetMolecule = useMemo(() => {
-    // Enforcing strict type configurations without using native null mappings
-    const firstProduct = currentReaction?.products.molecules[0]?.molecule;
-    if (firstProduct !== undefined) {
-      return firstProduct;
-    }
-    return {
-      formula: "H2O",
-      molarMass: 18.015,
-    };
-  }, [currentReaction]);
+  const targetMolecule = useMemo(
+    () =>
+      currentReaction?.products.molecules[0]?.molecule ?? {
+        formula: "H2O", molarMass: 18.015,
+      },
+    [currentReaction],
+  );
 
-  const [envParams, setEnvParams] = useState({ temp: 298, pressure: 1.0 });
-  const [isLocked, setIsLocked] = useState(false);
-  const [activeSpectralPeak, setActiveSpectralPeak] = useState<number | undefined>(undefined);
+  const [envParams,          setEnvParams]          = useState({ temp: 298, pressure: 1.0 });
+  const [isLocked,           setIsLocked]           = useState(false);
+  const [activeSpectralPeak, setActiveSpectralPeak] = useState<number | undefined>();
 
-  const molarMassKg = useMemo(() => (targetMolecule.molarMass || 18) / 1000, [targetMolecule.molarMass]);
+  const molarMassKg = (targetMolecule.molarMass || 18) / 1000;
 
-  // Kinetics calculations
   const kinetics = useMemo(() => {
-    const T = envParams.temp;
+    const { temp: T } = envParams;
     const M = molarMassKg;
-
-    const vrms = Math.sqrt((3 * GAS_CONSTANT * T) / M).toFixed(0);
-    const vavg = Math.sqrt((8 * GAS_CONSTANT * T) / (Math.PI * M)).toFixed(0);
-    const vmpStr = vmp(T, M).toFixed(0);
-
+    const R = 8.314;
     return {
-      vrms,
-      vavg,
-      vmp: vmpStr,
+      vrms:          Math.sqrt((3 * R * T) / M).toFixed(0),
+      vavg:          Math.sqrt((8 * R * T) / (Math.PI * M)).toFixed(0),
+      vmp:           vmp(T, M).toFixed(0),
       collisionFreq: ((envParams.pressure * T) / 200).toFixed(2),
-      stability: T > 1000 ? "CRITICAL" : T > 600 ? "WARNING" : "NOMINAL",
+      stability:     T > 1000 ? "CRITICAL" : T > 600 ? "WARNING" : "NOMINAL",
     };
   }, [envParams, molarMassKg]);
 
-  const phase = useMemo(() => getPhase(targetMolecule.formula, envParams.temp), [targetMolecule.formula, envParams.temp]);
+  const phase       = useMemo(() => getPhase(targetMolecule.formula, envParams.temp), [targetMolecule.formula, envParams.temp]);
   const phaseConfig = PHASE_CONFIG[phase];
-  const mbData = useMemo(() => buildMBData(envParams.temp, molarMassKg), [envParams.temp, molarMassKg]);
-  const irSpectrum = useMemo(() => buildIRSpectrum(targetMolecule.formula), [targetMolecule.formula]);
+  const mbData      = useMemo(() => buildMBData(envParams.temp, molarMassKg), [envParams.temp, molarMassKg]);
+  const irSpectrum  = useMemo(() => buildIRSpectrum(targetMolecule.formula), [targetMolecule.formula]);
 
   const onRangeChange = useCallback(
     (key: "temp" | "pressure") => (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (!isLocked) {
-        setEnvParams((p) => ({ ...p, [key]: parseFloat(e.target.value) }));
-      }
+      if (!isLocked) setEnvParams((p) => ({ ...p, [key]: parseFloat(e.target.value) }));
     },
     [isLocked],
   );
 
-  const resetToSTP = useCallback(() => {
-    setEnvParams({ temp: 298, pressure: 1.0 });
-  }, []);
-
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="w-full h-full flex flex-col gap-6 p-4 select-none font-mono text-[#1A1A1A]"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0  }}
+      className="w-full max-w-7xl mx-auto flex flex-col gap-6 font-sans p-4"
     >
-      {/* ─── HUD HEADER ─── */}
-      <header className="grid grid-cols-1 md:grid-cols-12 border-4 border-[#1A1A1A] bg-white shadow-[8px_8px_0px_#1A1A1A] overflow-hidden shrink-0">
-        <div className="md:col-span-4 p-5 flex items-center gap-4 bg-[#D4FF00] border-b-4 md:border-b-0 md:border-r-4 border-[#1A1A1A]">
-          <div className="bg-[#1A1A1A] p-3 rotate-3 shadow-[4px_4px_0px_#FF6B6B]">
-            <Orbit className="w-8 h-8 text-[#D4FF00] animate-[spin_12s_linear_infinite]" />
+      {/* Header */}
+      <header className="flex flex-col md:flex-row items-center justify-between px-6 py-6 bg-white border-4 border-[#1A1A1A] shadow-[8px_8px_0px_#1A1A1A]">
+        <div className="flex items-center gap-4">
+          <div className="bg-[#ff6b6b] p-3 border-2 border-[#1A1A1A] rotate-3">
+            <Orbit className="w-8 h-8 text-white animate-[spin_12s_linear_infinite]" />
           </div>
           <div>
-            <h1 className="text-2xl font-black uppercase italic tracking-tighter">
-              Horizon - <span className="bg-white px-1 border-2 border-[#1A1A1A] not-italic">OS</span>
-            </h1>
-            <p className="text-[10px] font-mono font-black opacity-60">
-              OWDA_SIMULATE_V{SIMULATE_VERSION}
-            </p>
+            <h2 className="text-2xl font-black tracking-tighter text-[#1A1A1A] uppercase italic">
+              Horizon{" "}
+              <span className="bg-[#D4FF00] px-2 border-2 border-[#1A1A1A] not-italic">Simulator</span>
+            </h2>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-[10px] font-mono bg-[#1A1A1A] text-white px-2 py-0.5">
+                V{SIMULATE_VERSION}
+              </span>
+              <span className="text-[10px] font-black text-[#1A1A1A] uppercase tracking-widest">
+                Kinetic_Engine — Maxwell–Boltzmann
+              </span>
+            </div>
           </div>
         </div>
 
-        <div className="md:col-span-8 p-6 flex flex-wrap items-center justify-start md:justify-end gap-4 bg-white">
-          <StatHUD icon={<Thermometer className="w-4 h-4" />} label="Temp" value={`${envParams.temp} K`} color="text-[#1A1A1A]" />
-          <StatHUD icon={<Gauge className="w-4 h-4" />} label="Press" value={`${envParams.pressure.toFixed(2)} atm`} color="text-[#1A1A1A]" />
-          
+        <div className="flex items-center gap-4 mt-4 md:mt-0 flex-wrap">
+          <StatHUD icon={<Thermometer className="w-4 h-4" />} label="Temp"  value={`${envParams.temp} K`}                   color="text-[#1A1A1A]" />
+          <StatHUD icon={<Gauge       className="w-4 h-4" />} label="Press" value={`${envParams.pressure.toFixed(2)} atm`}  color="text-[#1A1A1A]" />
           <div className={`flex items-center gap-2 px-3 py-2 text-[10px] font-black uppercase ${phaseConfig.bg} ${phaseConfig.color}`}>
             {phaseConfig.icon}
             <span>{phaseConfig.label}</span>
           </div>
-
           <button
             onClick={() => setIsLocked((p) => !p)}
-            className={`p-3 transition-all border-2 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none ${
-              isLocked ? "bg-[#ff6b6b] text-[#1A1A1A]" : "bg-white text-[#1A1A1A] hover:bg-[#EAE8E4]"
+            className={`p-3 transition-all border-2 shadow-[2px_2px_0px_#1A1A1A] ${
+              isLocked ? "bg-[#ff6b6b] border-[#1A1A1A] text-[#1A1A1A]" : "bg-white border-[#1A1A1A] hover:bg-[#EAE8E4]"
             }`}
           >
             {isLocked ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
@@ -275,66 +215,52 @@ export function SimulatePage() {
         </div>
       </header>
 
-      {/* ─── MAXIMIZED VIEWPORT WORKSPACE GRID ─── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start flex-1 overflow-y-auto">
-        
-        {/* UPPER LEFT ROW MODULE: Target Tracking & Vector Shifting Controls */}
-        <div className="lg:col-span-4 flex flex-col gap-6 h-full">
-          {/* Target Vector Card */}
-          <section className="bg-white border-4 border-[#1A1A1A] shadow-[8px_8px_0px_#1A1A1A] p-6 relative overflow-hidden">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] mb-4 flex items-center gap-2 border-b-2 border-[#1A1A1A] pb-2">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Controls */}
+        <aside className="lg:col-span-3 flex flex-col gap-5">
+          <section className="bg-white border-2 border-[#1A1A1A] shadow-[4px_4px_0px_#1A1A1A] p-6">
+            <h3 className="text-[10px] font-black text-[#1A1A1A] uppercase tracking-[0.2em] mb-4 flex items-center gap-2 border-b border-[#1A1A1A] pb-2">
               <ScanLine className="w-3 h-3" /> Target_Vector
             </h3>
-            <div className="text-6xl font-black text-center my-8 tracking-tighter italic text-[#1A1A1A]">
+            <div className="text-5xl font-black text-center mb-6 tracking-tighter">
               {renderFormula(targetMolecule.formula)}
             </div>
-            <div className="grid grid-cols-1 gap-3">
-              <MetricDisplay label="M (molar)" value={`${targetMolecule.molarMass} g/mol`} />
-              <MetricDisplay label="V_RMS" value={`${kinetics.vrms} m/s`} />
-              <MetricDisplay label="V_avg" value={`${kinetics.vavg} m/s`} />
-              <MetricDisplay label="V_mp" value={`${kinetics.vmp} m/s`} />
+            <div className="grid gap-4">
+              <MetricDisplay label="M (molar)"  value={`${targetMolecule.molarMass} g/mol`} />
+              <MetricDisplay label="V_RMS"      value={`${kinetics.vrms} m/s`}              />
+              <MetricDisplay label="V_avg"      value={`${kinetics.vavg} m/s`}              />
+              <MetricDisplay label="V_mp"       value={`${kinetics.vmp} m/s`}               />
               <MetricDisplay
                 label="Stability"
                 value={kinetics.stability}
                 color={
-                  kinetics.stability === "NOMINAL"
-                    ? "text-[#1A1A1A] bg-[#D4FF00]"
-                    : kinetics.stability === "WARNING"
-                      ? "text-[#1A1A1A] bg-orange-400"
-                      : "text-white bg-[#ff6b6b]"
+                  kinetics.stability === "NOMINAL"   ? "text-[#1A1A1A] bg-[#D4FF00]" :
+                  kinetics.stability === "WARNING"   ? "text-[#1A1A1A] bg-orange-400" :
+                                                       "text-white bg-[#ff6b6b]"
                 }
               />
             </div>
           </section>
 
-          {/* Environmental Conditions Controller */}
           <section
-            className={`bg-[#EAE8E4] border-4 border-[#1A1A1A] shadow-[8px_8px_0px_#1A1A1A] p-6 space-y-6 transition-all duration-300 flex-1 ${
-              isLocked ? "grayscale opacity-40 pointer-events-none" : ""
+            className={`bg-[#EAE8E4] border-2 border-[#1A1A1A] shadow-[4px_4px_0px_#1A1A1A] p-6 space-y-6 transition-all ${
+              isLocked ? "grayscale opacity-50 pointer-events-none" : ""
             }`}
           >
-            <h3 className="text-[10px] font-black border-b-2 border-[#1A1A1A] pb-2 uppercase tracking-[0.2em]">
+            <h3 className="text-[10px] font-black text-[#1A1A1A] border-b border-[#1A1A1A] pb-2 uppercase tracking-[0.2em]">
               Environment_Shift
             </h3>
 
-            <div className="space-y-3 pt-2">
+            <div className="space-y-3">
               <div className="flex justify-between items-end">
                 <span className="text-[10px] font-black uppercase tracking-widest">Temperature</span>
                 <span className="text-sm font-mono font-black border border-[#1A1A1A] px-2 bg-white">{envParams.temp} K</span>
               </div>
-              <input
-                type="range"
-                min="10"
-                max="1500"
-                step="1"
-                value={envParams.temp}
+              <input type="range" min="10" max="1500" step="1" value={envParams.temp}
                 onChange={onRangeChange("temp")}
                 className="w-full h-8 appearance-none bg-white border-2 border-[#1A1A1A] cursor-pointer accent-[#1A1A1A]"
               />
-              <div className="flex justify-between text-[8px] font-bold">
-                <span>10 K</span>
-                <span>1500 K</span>
-              </div>
+              <div className="flex justify-between text-[8px] font-bold"><span>10 K</span><span>1500 K</span></div>
             </div>
 
             <div className="space-y-3">
@@ -342,38 +268,28 @@ export function SimulatePage() {
                 <span className="text-[10px] font-black uppercase tracking-widest">Pressure</span>
                 <span className="text-sm font-mono font-black border border-[#1A1A1A] px-2 bg-white">{envParams.pressure.toFixed(1)} atm</span>
               </div>
-              <input
-                type="range"
-                min="0.1"
-                max="250"
-                step="0.1"
-                value={envParams.pressure}
+              <input type="range" min="0.1" max="250" step="0.1" value={envParams.pressure}
                 onChange={onRangeChange("pressure")}
                 className="w-full h-8 appearance-none bg-white border-2 border-[#1A1A1A] cursor-pointer accent-[#1A1A1A]"
               />
-              <div className="flex justify-between text-[8px] font-bold">
-                <span>0.1 atm</span>
-                <span>250 atm</span>
-              </div>
+              <div className="flex justify-between text-[8px] font-bold"><span>0.1</span><span>250 atm</span></div>
             </div>
 
-            <div className="pt-4">
-              <button
-                onClick={resetToSTP}
-                className="w-full py-4 border-2 border-[#1A1A1A] bg-white shadow-[4px_4px_0px_#1A1A1A] text-[10px] font-black uppercase tracking-widest hover:bg-[#1A1A1A] hover:text-white transition-all active:translate-y-1 active:shadow-none"
-              >
-                Reset to STP
-              </button>
-            </div>
+            <button
+              onClick={() => setEnvParams({ temp: 298, pressure: 1.0 })}
+              className="w-full py-3 border-2 border-[#1A1A1A] bg-white shadow-[2px_2px_0px_#1A1A1A] text-[10px] font-black uppercase hover:bg-[#1A1A1A] hover:text-white transition-all"
+            >
+              Reset to STP
+            </button>
           </section>
-        </div>
+        </aside>
 
-        {/* EXPANDED UPPER RIGHT ROW: Primary Massive Simulation Canvas Box */}
-        <main className="lg:col-span-8 bg-white border-4 border-[#1A1A1A] shadow-[8px_8px_0px_#1A1A1A] relative overflow-hidden flex flex-col group h-235 w-full">
+        {/* 3D Viewer */}
+        <main className="lg:col-span-5 bg-white border-2 border-[#1A1A1A] shadow-[4px_4px_0px_#1A1A1A] relative overflow-hidden flex flex-col min-h-[420px]">
           <div className="absolute top-6 left-6 right-6 z-30 flex justify-between items-start pointer-events-none">
-            <div className="bg-white px-4 py-2 border-2 border-[#1A1A1A] shadow-[4px_4px_0px_#1A1A1A] flex items-center gap-3">
+            <div className="bg-white px-4 py-2 border-2 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A] flex items-center gap-3">
               <div className={`w-3 h-3 border border-[#1A1A1A] ${isLocked ? "bg-[#ff6b6b]" : "bg-[#D4FF00] animate-pulse"}`} />
-              <span className="text-[10px] font-mono font-black uppercase tracking-wider">Feed: Engine_Core_Simulation_Viewport</span>
+              <span className="text-[10px] font-mono font-black uppercase">Feed: Orbital_Node_01</span>
             </div>
             <div className="flex gap-2 pointer-events-auto">
               <IconButton icon={<Maximize className="w-4 h-4" />} />
@@ -381,124 +297,65 @@ export function SimulatePage() {
             </div>
           </div>
 
-          <div className="flex-1 relative w-full h-full bg-[#FAFAFA]">
-            <MolecularExplorer formula={targetMolecule.formula} />
+          <div className="flex-1 relative">
+            <MolecularExplorer formula={targetMolecule.formula} mode='3D' />
           </div>
 
           <div className="absolute bottom-6 left-6 right-6 z-30 flex justify-between items-end pointer-events-none">
             <div className="flex gap-3">
               <DataBadge label="Collision" value={`${kinetics.collisionFreq} THz`} />
-              <DataBadge label="Phase" value={phaseConfig.label} />
+              <DataBadge label="Phase"     value={phaseConfig.label}               />
             </div>
-            <div className="bg-white p-4 border-2 border-[#1A1A1A] shadow-[4px_4px_0px_#1A1A1A] pointer-events-auto">
-              <Rotate3D className="w-5 h-5 hover:text-[#D4FF00] cursor-pointer transition-colors" />
+            <div className="bg-white p-4 border-2 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A] pointer-events-auto">
+              <Rotate3D className="w-5 h-5 text-[#1A1A1A] hover:text-[#D4FF00] cursor-pointer transition-colors" />
             </div>
           </div>
         </main>
 
-        {/* LOWER GRID MATRIX LAYER: Full Width Triple Analytics Diagnostics Array */}
-        <div className="lg:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
-          
-          {/* MB Distribution Area Chart */}
-          <section className="bg-white border-4 border-[#1A1A1A] shadow-[8px_8px_0px_#1A1A1A] p-6">
-            <h3 className="text-[10px] font-black border-b-2 border-[#1A1A1A] pb-2 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+        {/* Analytics */}
+        <aside className="lg:col-span-4 flex flex-col gap-5">
+          {/* MB Chart */}
+          <section className="bg-white border-2 border-[#1A1A1A] shadow-[4px_4px_0px_#1A1A1A] p-6">
+            <h3 className="text-[10px] font-black border-b border-[#1A1A1A] pb-2 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
               <Zap className="w-3 h-3" /> MB Distribution
             </h3>
-            <p className="text-[9px] font-bold mb-4 px-2 bg-[#EAE8E4] border border-[#1A1A1A] inline-block">
+            <p className="text-[9px] font-bold text-[#1A1A1A]/70 mb-4 px-2 bg-[#EAE8E4] border border-[#1A1A1A] inline-block">
               Solid = {envParams.temp}K · Dashed = 298K
             </p>
-            <div className="h-48">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={mbData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-                  <XAxis
-                    dataKey="v"
-                    tick={{ fontSize: 10, fill: "#1A1A1A", fontWeight: "bold" }}
-                    label={{
-                      value: "v (m/s)",
-                      position: "insideBottomRight",
-                      offset: -4,
-                      fontSize: 10,
-                      fill: "#1A1A1A",
-                      fontWeight: "bold",
-                    }}
+            <div className="h-44">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                <AreaChart data={mbData} margin={{ top:4, right:4, left:-20, bottom:0 }}>
+                  <XAxis dataKey="v" tick={{ fontSize:10, fill:"#1A1A1A", fontWeight:"bold" }}
+                    label={{ value:"v (m/s)", position:"insideBottomRight", offset:-4, fontSize:10, fill:"#1A1A1A" }}
                   />
                   <YAxis tick={false} />
                   <Tooltip
-                    content={({ active, payload }) =>
-                      active && payload?.length ? (
+                    content={({ active, payload: pl }) =>
+                      active && pl && pl.length > 0 ? (
                         <div className="bg-white border-2 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A] p-2 text-[10px] font-mono font-bold">
-                          <p>Line: v = {payload[0]?.payload?.v} m/s</p>
-                          <p>Prob: {Number(payload[0]?.value).toExponential(2)}</p>
+                          <p>v = {pl[0]?.payload?.v as number | undefined} m/s</p>
+                          <p>Prob: {Number(pl[0]?.value).toExponential(2)}</p>
                         </div>
                       ) : null
                     }
                   />
                   <Area type="monotone" dataKey="f_ref" stroke="#1A1A1A" strokeWidth={2} fill="transparent" strokeDasharray="4 2" />
-                  <Area type="step" dataKey="f" stroke="#1A1A1A" strokeWidth={3} fill="#D4FF00" fillOpacity={1} />
+                  <Area type="step"     dataKey="f"     stroke="#1A1A1A" strokeWidth={3} fill="#D4FF00" fillOpacity={1} />
                   <ReferenceLine x={Math.round(vmp(envParams.temp, molarMassKg))} stroke="#1A1A1A" strokeWidth={2} strokeDasharray="3 3" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
           </section>
 
-          {/* Activation Energy Graph Pathways */}
-          <section className="bg-white border-4 border-[#1A1A1A] shadow-[8px_8px_0px_#1A1A1A] p-6">
-            <h3 className="text-[10px] font-black border-b-2 border-[#1A1A1A] pb-2 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+          {/* Reaction Pathway */}
+          <section className="bg-white border-2 border-[#1A1A1A] shadow-[4px_4px_0px_#1A1A1A] p-6">
+            <h3 className="text-[10px] font-black border-b border-[#1A1A1A] pb-2 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
               <Activity className="w-3 h-3" /> Reaction Pathway
             </h3>
-            {currentReaction && currentReaction.isBalanced ? (
-              (() => {
-                const baseEnergy = 100;
-                const deltaH = currentReaction.enthalpy ?? 0;
-                const isExothermic = deltaH < 0;
-                const finalEnergy = Math.max(10, baseEnergy + deltaH);
-                const ea = currentReaction.activationEnergy ?? 60;
-                const peak = Math.max(baseEnergy, finalEnergy) + ea;
-                const dynamicEnergyData = [
-                  { step: "Reactants", energy: baseEnergy, label: "Reactants" },
-                  { step: "TS", energy: peak, label: "Transition State" },
-                  { step: "Products", energy: finalEnergy, label: "Products" },
-                ];
-                return (
-                  <>
-                    <div className="flex items-center gap-2 mb-4">
-                      <span className={`text-[8px] font-mono font-bold px-1 py-0.5 border border-[#1A1A1A] ${isExothermic ? "bg-[#D4FF00]" : "bg-[#EAE8E4]"}`}>
-                        {isExothermic ? "EXOTHERMIC" : "ENDOTHERMIC"}
-                      </span>
-                      <span className="text-[9px] font-mono font-bold text-[#1A1A1A]/70 px-2 bg-[#EAE8E4] border border-[#1A1A1A]">
-                        ΔH = {deltaH.toFixed(1)} kJ
-                      </span>
-                    </div>
-                    <div className="h-36 w-full">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={dynamicEnergyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                          <defs>
-                            <linearGradient id="energyGradSim" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor={isExothermic ? "#ff6b6b" : "#1A1A1A"} stopOpacity={1} />
-                              <stop offset="95%" stopColor={isExothermic ? "#ff6b6b" : "#1A1A1A"} stopOpacity={0.2} />
-                            </linearGradient>
-                          </defs>
-                          <XAxis dataKey="step" tick={{ fontSize: 10, fill: "#1A1A1A", fontWeight: "bold" }} stroke="#1A1A1A" />
-                          <YAxis tick={false} stroke="#1A1A1A" />
-                          <Tooltip
-                            content={({ active, payload }) =>
-                              active && payload?.length ? (
-                                <div className="bg-white border-2 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A] p-2 text-[10px] font-mono font-bold">
-                                  <p className="uppercase tracking-wider">{payload[0]?.payload?.label}</p>
-                                  <p className="mt-1">E: {payload[0]?.value} kJ/mol</p>
-                                </div>
-                              ) : null
-                            }
-                          />
-                          <Area type="monotone" dataKey="energy" stroke="#1A1A1A" fill="url(#energyGradSim)" strokeWidth={2} dot={{ r: 4, fill: "#1A1A1A" }} />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </>
-                );
-              })()
+            {currentReaction?.isBalanced ? (
+              <EnergyPathChart reaction={currentReaction} />
             ) : (
-              <div className="h-36 w-full flex items-center justify-center border-2 border-dashed border-[#1A1A1A] bg-[#EAE8E4]">
+              <div className="h-24 w-full flex items-center justify-center border-2 border-dashed border-[#1A1A1A] bg-[#EAE8E4]">
                 <span className="text-[10px] font-mono font-bold text-[#1A1A1A]/50 uppercase tracking-widest">
                   Awaiting Reaction Data
                 </span>
@@ -506,58 +363,62 @@ export function SimulatePage() {
             )}
           </section>
 
-          {/* Infrared Spectrum Diagnostics Array */}
-          <section className="bg-[#EAE8E4] border-4 border-[#1A1A1A] shadow-[8px_8px_0px_#1A1A1A] p-6 flex flex-col relative">
-            <h3 className="text-[10px] font-black border-b-2 border-[#1A1A1A] pb-2 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+          {/* IR Spectrum */}
+          <section className="bg-[#EAE8E4] border-2 border-[#1A1A1A] shadow-[4px_4px_0px_#1A1A1A] p-6 flex-1 flex flex-col">
+            <h3 className="text-[10px] font-black border-b border-[#1A1A1A] pb-2 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
               <BarChart3 className="w-3 h-3" /> IR_Spectral_Analysis
             </h3>
 
-            <div className="relative h-28 flex flex-row items-end gap-0.5 border-l-2 border-b-2 border-[#1A1A1A] pt-4 pl-1 pb-0 pr-1 bg-white">
+            {/* Spectrum bars */}
+            <div className="relative h-36 flex flex-row items-end gap-0.5 border-l-2 border-b-2 border-[#1A1A1A] pt-4 pl-1 pr-1 overflow-visible bg-white">
               {irSpectrum.map((peak, i) => {
                 const isActive = activeSpectralPeak === i;
                 return (
-                  <div
+                  <motion.div
                     key={i}
-                    className="flex-1 cursor-pointer border-t border-x border-[#1A1A1A]/30 flex flex-col justify-end h-full"
+                    className="flex-1 cursor-pointer border border-[#1A1A1A]"
+                    style={{ height: `${Math.max(peak.intensity, 4)}%` }}
                     onMouseEnter={() => setActiveSpectralPeak(i)}
                     onMouseLeave={() => setActiveSpectralPeak(undefined)}
                   >
-                    <motion.div
-                      animate={{ height: `${Math.max(peak.intensity, 6)}%` }}
-                      className={`w-full transition-colors duration-150 ${isActive ? "bg-[#1A1A1A]" : "bg-[#1A1A1A]/20 hover:bg-[#D4FF00]"}`}
-                    />
-                  </div>
+                    <div className={`w-full h-full transition-colors ${isActive ? "bg-[#1A1A1A]" : "bg-[#1A1A1A]/20 hover:bg-[#D4FF00]"}`} />
+                  </motion.div>
                 );
               })}
 
               <AnimatePresence>
-                {activeSpectralPeak !== undefined && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    className="absolute -top-12 left-0 right-0 text-center text-[10px] font-black pointer-events-none z-50 bg-white border-2 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A] py-1 px-2 mx-auto max-w-[85%]"
-                  >
-                    {irSpectrum[activeSpectralPeak].wn} cm⁻¹ — {irSpectrum[activeSpectralPeak].label}
-                  </motion.div>
-                )}
+                {activeSpectralPeak !== undefined && (() => {
+                  // noUncheckedIndexedAccess: guard with optional access
+                  const peak = irSpectrum[activeSpectralPeak];
+                  if (!peak) return null;
+                  return (
+                    <motion.div
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      className="absolute -top-10 left-0 right-0 text-center text-[10px] font-black pointer-events-none z-50 text-[#1A1A1A] bg-white border-2 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A] py-1 px-2 mx-auto max-w-[80%]"
+                    >
+                      {peak.wn} cm⁻¹ — {peak.label}
+                    </motion.div>
+                  );
+                })()}
               </AnimatePresence>
             </div>
-            
-            <div className="flex justify-between text-[8px] font-bold mt-2 mb-4">
+
+            <div className="flex justify-between text-[8px] font-bold mt-2">
               <span>4000 cm⁻¹</span>
               <span>600 cm⁻¹</span>
             </div>
 
-            {/* Electronic Properties Grid Wrapper */}
-            <div className="space-y-3 pt-3 border-t-2 border-[#1A1A1A] mt-auto">
-              <TelemetryRow label="Dipole Moment" value="1.85 D" progress={65} color="bg-[#D4FF00]" />
-              <TelemetryRow label="Polarizability" value="1.45 Å³" progress={42} color="bg-[#1A1A1A]" />
-              <TelemetryRow label="HOMO-LUMO Gap" value="5.2 eV" progress={88} color="bg-white" />
+            {/* Electronic properties */}
+            <div className="space-y-3 mt-6 pt-4 border-t-2 border-[#1A1A1A]">
+              <p className="text-[10px] font-black uppercase tracking-widest">Electronic Props</p>
+              <TelemetryRow label="Dipole Moment"  value="1.85 D"  progress={65} color="bg-[#D4FF00]"                       />
+              <TelemetryRow label="Polarizability" value="1.45 Å³" progress={42} color="bg-[#1A1A1A]"                       />
+              <TelemetryRow label="HOMO-LUMO Gap"  value="5.2 eV"  progress={88} color="bg-white border-r-2 border-[#1A1A1A]" />
             </div>
           </section>
-
-        </div>
+        </aside>
       </div>
     </motion.div>
   );
@@ -565,48 +426,81 @@ export function SimulatePage() {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function MetricDisplay({
-  label,
-  value,
-  color = "text-[#1A1A1A]",
-}: {
-  label: string;
-  value: string;
-  color?: string;
-}) {
+function EnergyPathChart({ reaction }: { reaction: { isBalanced: true; enthalpy?: number; activationEnergy?: number } }) {
+  const deltaH       = reaction.enthalpy ?? 0;
+  const isExothermic = deltaH < 0;
+  const base         = 100;
+  const final        = Math.max(10, base + deltaH);
+  const ea           = reaction.activationEnergy ?? 60;
+  const peak         = Math.max(base, final) + ea;
+
+  const data = [
+    { step:"R",  energy: base,  label:"Reactants"       },
+    { step:"TS", energy: peak,  label:"Transition State" },
+    { step:"P",  energy: final, label:"Products"         },
+  ];
+
+  return (
+    <>
+      <div className="flex items-center gap-2 mb-4">
+        <span className={`text-[8px] font-mono font-bold px-1 py-0.5 border border-[#1A1A1A] ${isExothermic ? "bg-[#D4FF00]" : "bg-[#EAE8E4]"}`}>
+          {isExothermic ? "EXOTHERMIC" : "ENDOTHERMIC"}
+        </span>
+        <span className="text-[9px] font-mono font-bold text-[#1A1A1A]/70 px-2 bg-[#EAE8E4] border border-[#1A1A1A]">
+          ΔH = {deltaH.toFixed(1)} kJ
+        </span>
+      </div>
+      <div className="h-32 w-full border-b border-[#1A1A1A]">
+        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+          <AreaChart data={data} margin={{ top:10, right:10, left:-20, bottom:0 }}>
+            <defs>
+              <linearGradient id="energyGradSim" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%"  stopColor={isExothermic ? "#ff6b6b" : "#1A1A1A"} stopOpacity={1}   />
+                <stop offset="95%" stopColor={isExothermic ? "#ff6b6b" : "#1A1A1A"} stopOpacity={0.2} />
+              </linearGradient>
+            </defs>
+            <XAxis dataKey="step" tick={{ fontSize:10, fill:"#1A1A1A", fontWeight:"bold" }} stroke="#1A1A1A" />
+            <YAxis tick={false} stroke="#1A1A1A" />
+            <Tooltip
+              content={({ active, payload: pl }) =>
+                active && pl && pl.length > 0 ? (
+                  <div className="bg-white border-2 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A] p-2 text-[10px] font-mono font-bold">
+                    <p className="uppercase tracking-wider">{pl[0]?.payload?.label as string | undefined}</p>
+                    <p>E: {pl[0]?.value as number | undefined}</p>
+                  </div>
+                ) : null
+              }
+            />
+            <Area type="monotone" dataKey="energy" stroke="#1A1A1A" fill="url(#energyGradSim)" strokeWidth={2}
+              dot={{ r:4, fill:"#1A1A1A", strokeWidth:2 }}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+    </>
+  );
+}
+
+function MetricDisplay({ label, value, color = "text-[#1A1A1A]" }: { label: string; value: string; color?: string }) {
   return (
     <div className="flex items-center justify-between bg-white px-3 py-2 border-2 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A]">
       <p className="text-[10px] font-black uppercase tracking-widest">{label}</p>
-      <p className={`text-xs md:text-sm font-mono font-black ${color} ${color.includes("bg-") ? "px-2 py-0.5 border border-[#1A1A1A]" : ""}`}>
+      <p className={`text-sm font-mono font-black ${color} ${color.includes("bg-") ? "px-2 py-0.5 border border-[#1A1A1A]" : ""}`}>
         {value}
       </p>
     </div>
   );
 }
 
-function TelemetryRow({
-  label,
-  value,
-  progress,
-  color,
-}: {
-  label: string;
-  value: string;
-  progress: number;
-  color: string;
-}) {
+function TelemetryRow({ label, value, progress, color }: { label: string; value: string; progress: number; color: string }) {
   return (
-    <div className="space-y-1 p-2 border-2 border-[#1A1A1A] bg-white">
+    <div className="space-y-1.5 p-2 border-2 border-[#1A1A1A] bg-white">
       <div className="flex justify-between text-[9px] font-mono font-black">
         <span className="uppercase">{label}</span>
         <span>{value}</span>
       </div>
-      <div className="h-2.5 w-full bg-[#EAE8E4] border border-[#1A1A1A] overflow-hidden">
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${progress}%` }}
-          className={`h-full border-r-2 border-[#1A1A1A] ${color}`}
-        />
+      <div className="h-3 w-full bg-[#EAE8E4] border border-[#1A1A1A] overflow-hidden">
+        <motion.div initial={{ width:0 }} animate={{ width:`${progress}%` }} className={`h-full border-r-2 border-[#1A1A1A] ${color}`} />
       </div>
     </div>
   );
@@ -614,33 +508,19 @@ function TelemetryRow({
 
 function DataBadge({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-white px-4 py-2 border-2 border-[#1A1A1A] shadow-[4px_4px_0px_#1A1A1A]">
-      <p className="text-[10px] font-black uppercase tracking-widest mb-0.5 border-b border-[#1A1A1A] pb-1 inline-block">
-        {label}
-      </p>
+    <div className="bg-white px-4 py-2 border-2 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A]">
+      <p className="text-[10px] font-black uppercase tracking-widest mb-0.5 border-b border-[#1A1A1A] pb-1 inline-block">{label}</p>
       <p className="text-sm font-mono font-black pt-1">{value}</p>
     </div>
   );
 }
 
-function StatHUD({
-  icon,
-  label,
-  value,
-  color,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  color: string;
-}) {
+function StatHUD({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: string; color: string }) {
   return (
     <div className="flex items-center gap-3 bg-white px-4 py-2 border-2 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A]">
       <span className={color}>{icon}</span>
       <div className="flex flex-col">
-        <span className="text-[10px] uppercase font-black tracking-tighter line-height-none">
-          {label}
-        </span>
+        <span className="text-[10px] uppercase font-black tracking-tighter">{label}</span>
         <span className={`text-xs font-mono font-black ${color}`}>{value}</span>
       </div>
     </div>
@@ -649,7 +529,7 @@ function StatHUD({
 
 function IconButton({ icon }: { icon: React.ReactNode }) {
   return (
-    <button className="p-3 bg-white border-2 border-[#1A1A1A] shadow-[4px_4px_0px_#1A1A1A] text-[#1A1A1A] hover:bg-[#EAE8E4] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all">
+    <button className="p-3 bg-white border-2 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A] hover:bg-[#D4FF00] transition-all active:translate-y-0.5 active:shadow-none">
       {icon}
     </button>
   );

@@ -1,5 +1,3 @@
-// D:\Dev\OWDA\src\services\ai\orchestration\explainReaction.ts
-
 /**
  * OWDA AI Orchestration — Chemistry Analysis
  *
@@ -8,14 +6,19 @@
  */
 
 import { openRouterChat } from "../providers/openrouter";
-import { parseAIResponse } from "../parsers/json";
+import { parseChemistryResponse } from "../parsers/chemistry";
 import { buildChemistryPrompt, buildSystemPrompt } from "../prompts/chemistry";
 import {
   AIModelId,
   getModelDefinition,
 } from "../../../config/models";
-import type { ClaudeAnalysisPayload } from "../schemas/analysis";
+import type { ChemistryAnalysisPayload } from "../parsers/validation";
 import { AIParseError } from "../core/errors";
+
+interface OrchestrationOptions {
+  /** Optional AbortSignal to cleanly propagate cancellations across the AI cycle */
+  signal?: AbortSignal;
+}
 
 // ---------------------------------------------------------------------------
 // Request builder
@@ -97,21 +100,37 @@ function extractContent(envelope: unknown): string {
 /**
  * Orchestrates a full chemistry analysis request:
  *   1. Builds typed API request body
- *   2. Sends via OpenRouter (with retry + timeout via openRouterChat)
- *   3. Extracts content string from envelope
- *   4. Parses and Zod-validates the JSON response
+ *   2. Sends via OpenRouter with integrated AbortSignal capabilities
+ *   3. Extracts content string from envelope safely
+ *   4. Parses and Zod-validates the chemical structure values
  *
  * @param expression - Balanced or unbalanced reaction string
  * @param modelId    - Which AI model to use (from config/models.ts)
- * @returns Validated payload matching ClaudeAnalysisPayload schema
+ * @param options    - Optional runtime settings containing abort boundaries
+ * @returns Validated payload matching ChemistryAnalysisPayload schema
  * @throws AIError variants on network error, parse failure, or schema validation failure
  */
 export async function orchestrateChemistryAnalysis(
   expression: string,
   modelId: AIModelId,
-): Promise<ClaudeAnalysisPayload> {
+  options?: OrchestrationOptions
+): Promise<ChemistryAnalysisPayload> {
+  const signal = options?.signal;
+
+  // Short-circuit execution if the orchestration signal has already aborted
+  if (signal?.aborted) {
+    throw signal.reason || new DOMException("The operation was aborted.", "AbortError");
+  }
+
   const body = buildRequestBody(expression, modelId);
-  const envelope = await openRouterChat(body);
+  
+  // Conditionally provide the configuration object to bypass exactOptionalPropertyTypes compilation roadblocks
+  const providerOptions = signal ? { signal } : {};
+  
+  // Forward the safely isolated options down to the provider transport layer
+  const envelope = await openRouterChat(body, providerOptions);
+  
   const content = extractContent(envelope);
-  return parseAIResponse(content);
+  
+  return parseChemistryResponse(content);
 }

@@ -2,7 +2,6 @@
  * OWDA Chemistry AI Prompts
  *
  * All prompt strings live here so they can be:
- * - Unit tested independently of the transport layer
  * - Updated without touching service orchestration code
  * - A/B tested by swapping implementations
  */
@@ -34,7 +33,7 @@ The JSON must match this exact schema:
 }
 
 Critical rules:
-1. If you cannot reliably estimate a thermodynamic value, OMIT that key entirely. Do not return 0, null, or a guess.
+1. If you cannot reliably estimate a thermodynamic value, OMIT that key entirely. Do NOT return 0, null, or a guess. Omission is treated as undefined.
 2. The JSON must be parseable by JSON.parse() with zero preprocessing.
 3. No trailing commas, no JavaScript-style comments, no extra fields.
 4. Thermodynamic values must be numbers, not strings.`;
@@ -49,6 +48,6 @@ export function buildSystemPrompt(): string {
     "You are a chemistry expert assistant that always responds with strict, valid JSON.",
     "Never include markdown code fences, preambles, explanations, or any text outside the JSON object.",
     "Your response must be directly parseable by JSON.parse() without any preprocessing.",
-    "Thermodynamic values must be numbers. Omit keys you cannot reliably estimate.",
+    "Thermodynamic values must be numbers. Omit keys you cannot reliably estimate. Never use null values.",
   ].join(" ");
 }

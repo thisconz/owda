@@ -50,28 +50,45 @@ function buildThermoStep(payload: {
   readonly entropy?: number | undefined;
   readonly gibbs?: number | undefined;
 }): ExplanationStep {
-  const fmt = (v: number | undefined, unit: string) =>
-    v !== undefined ? `**${v} ${unit}**` : "_Not estimated_";
+  // Safe string formatting with fixed decimals
+  const fmtVal = (v: number | undefined, unit: string): string =>
+    v !== undefined ? `${v.toFixed(2)} ${unit}` : "Not estimated";
+
+  // Isolate statuses and paddings cleanly
+  const entSign = payload.enthalpy !== undefined 
+    ? (payload.enthalpy < 0 ? "▼ Exothermic" : "▲ Endothermic")
+    : "—";
+
+  const entOrder = payload.entropy !== undefined
+    ? (payload.entropy > 0 ? "Increasing Disorder" : "Decreasing Disorder")
+    : "—";
 
   const spontaneity = (() => {
-    if (payload.gibbs === undefined) return "_Cannot determine (ΔG unavailable)_";
-    return payload.gibbs < 0
-      ? "**✓ Spontaneous** (ΔG < 0)"
-      : "**✗ Non-spontaneous** (ΔG > 0)";
+    if (payload.gibbs === undefined) return "UNKNOWN (ΔG MISSING)";
+    return payload.gibbs < 0 ? "✓ SPONTANEOUS" : "✗ NON-SPONTANEOUS";
   })();
 
+  // Plain-text key-value matrices are 100% stable across all markdown parsers
   const description = [
-    `**Reaction Type:** ${payload.reactionType}`,
-    "",
-    `| Property   | Value |`,
-    `|---|---|`,
-    `| Enthalpy ΔH° | ${fmt(payload.enthalpy, "kJ/mol")} |`,
-    `| Entropy ΔS°  | ${fmt(payload.entropy, "J/(mol·K)")} |`,
-    `| Gibbs ΔG°    | ${fmt(payload.gibbs, "kJ/mol")} |`,
-    `| Spontaneity  | ${spontaneity} |`,
+    `**Classification:** ${payload.reactionType}`,
+    ``,
+    `\`\`\``,
+    `METRIC             | VALUE            | STATUS / SIGNATURE`,
+    `-------------------|------------------|--------------------`,
+    `Enthalpy (ΔH°)     | ${fmtVal(payload.enthalpy, "kJ/mol").padEnd(16)} | ${entSign}`,
+    `Entropy (ΔS°)      | ${fmtVal(payload.entropy, "J/mol·K").padEnd(16)} | ${entOrder}`,
+    `Gibbs Energy (ΔG°) | ${fmtVal(payload.gibbs, "kJ/mol").padEnd(16)} | Real-time Core Value`,
+    `Feasibility        | ${spontaneity.padEnd(16)} | System State`,
+    `\`\`\``,
+    ``,
+    `> **System Notice:** Matrix parameters generated assuming standard state conditions (STP).`,
   ].join("\n");
 
-  return { title: "Thermodynamic Analysis", description, mode: "machine" };
+  return { 
+    title: "Thermodynamic Analysis", 
+    description, 
+    mode: "machine",
+  };
 }
 
 function buildErrorStep(expression: string, reason: string): ExplanationStep {
@@ -84,7 +101,7 @@ function buildErrorStep(expression: string, reason: string): ExplanationStep {
       "",
       `**Reason:** ${reason}`,
       "",
-      "_Enable AI in settings and retry, or check your network connection._",
+      `_Enable AI in settings and retry, or check your network connection._`,
     ].join("\n"),
     mode: "machine",
   };
@@ -138,8 +155,11 @@ export class AIService {
     }
 
     try {
+      // Build options object conditionally to satisfy strict exactOptionalPropertyTypes compilation rules
+      const orchestrationOptions = signal !== undefined ? { signal } : {};
+
       // Forward the runtime signal directly into the orchestration layer
-      const rawPayload = await orchestrateChemistryAnalysis(expression, modelId);
+      const rawPayload = await orchestrateChemistryAnalysis(expression, modelId, orchestrationOptions);
 
       // Enforce our strict Anti-Null normalization bounds immediately at the edge boundary
       const payload = {

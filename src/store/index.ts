@@ -434,11 +434,10 @@ export const useOWDAStore = create<OWDAStore>()(
           const settings = state["settings"] as Record<string, unknown> | undefined;
           if (settings) {
             const modelMap: Record<string, string> = {
-              "qwen":        "qwen-coder-free",
-              "mistral":     "mistral-small-free",
-              "deepseek":    "deepseek-v3-free",
-              "llama":       "llama-3-3-free",
-              "gemini":      "gemini-flash-free",
+              "nvidia/nemotron-3-super-120b-a12b:free": "nvidia/nemotron-3-super-120b-a12b:free",
+              "openrouter/owl-alpha": "openrouter/owl-alpha",
+              "openai/gpt-oss-20b:free": "openai/gpt-oss-20b:free",
+              "poolside/laguna-m.1:free": "poolside/laguna-m.1:free",
             };
             const oldModel = settings["AIModel"] as string | undefined;
             if (oldModel && oldModel in modelMap) {

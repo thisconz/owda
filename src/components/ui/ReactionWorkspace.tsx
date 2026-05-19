@@ -288,7 +288,7 @@ export const ReactionWorkspace: React.FC = () => {
               : "border-[#1A1A1A] text-[#1A1A1A]/50 bg-[#EAE8E4]"
           }`}>
             {settings.enableAI ? <Bot className="w-3 h-3" /> : <BotOff className="w-3 h-3" />}
-            {settings.enableAI ? "AI ON" : "AI OFF"} — {settings.AIModel}
+            {settings.enableAI ? "AI ON" : "AI OFF"} — {settings.AIModel.toUpperCase()}
           </div>
           <div className={`px-3 py-1 border text-[9px] font-mono font-bold transition-colors ${
             isProcessing

@@ -70,7 +70,8 @@ export function AnalyticsPage() {
           </div>
           <div>
             <h1 className="text-2xl font-black uppercase italic leading-none tracking-tighter">
-              Analytics -<span className="bg-white px-1 border-2 border-[#1A1A1A] not-italic">OS</span>
+              Analytics -{" "}
+              <span className="bg-white px-1 border-2 border-[#1A1A1A] not-italic">OS</span>
             </h1>
             <p className="text-[10px] font-mono font-black mt-1 uppercase opacity-70">OWDA_analytics_V{process.env.ANALYTIC_VERSION}</p>
           </div>

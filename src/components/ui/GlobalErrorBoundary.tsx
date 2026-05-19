@@ -1,39 +1,44 @@
 import React, { ErrorInfo } from "react";
 import {
-  AlertTriangle, TerminalSquare, RefreshCw, ShieldAlert,
-  Clipboard, ClipboardCheck, Database, Cpu, Activity, Info
+  TerminalSquare, RefreshCw, ShieldAlert,
+  Clipboard, ClipboardCheck, Database, Cpu, Activity, Info,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
+// AlertTriangle removed — was imported but never rendered (TS noUnusedLocals)
+
 interface Props {
-  children: React.ReactNode;
-  version?: string;
+  children:  React.ReactNode;
+  version?:  string;
   onReport?: (error: Error, info: ErrorInfo) => void;
 }
 
 interface State {
-  hasError: boolean;
-  error: Error | null;
-  errorInfo: ErrorInfo | null;
+  hasError:     boolean;
+  error:        Error | null;
+  errorInfo:    ErrorInfo | null;
   recoveryStep: "idle" | "rebooting";
-  copied: boolean;
-  timestamp: string;
+  copied:       boolean;
+  timestamp:    string;
 }
 
 /**
- * OWDA_SYS_CORE: Global Error Boundary
- * High-stakes UI for critical engine failure.
+ * OWDA_SYS_CORE — Global Error Boundary
+ *
+ * Catches any unhandled React render error and shows a high-stakes
+ * diagnostic UI. The `version` prop is included in copy-to-clipboard output
+ * to assist with bug reports.
  */
 export class GlobalErrorBoundary extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = {
-      hasError: false,
-      error: null,
-      errorInfo: null,
+      hasError:     false,
+      error:        null,
+      errorInfo:    null,
       recoveryStep: "idle",
-      copied: false,
-      timestamp: new Date().toISOString().replace('T', ' ').split('.')[0]
+      copied:       false,
+      timestamp:    new Date().toISOString().replace("T", " ").split(".")[0]!,
     };
   }
 
@@ -53,29 +58,40 @@ export class GlobalErrorBoundary extends React.Component<Props, State> {
       try {
         localStorage.clear();
         sessionStorage.clear();
-      } catch (e) {}
+      } catch {
+        // Storage access denied in some environments — continue anyway
+      }
       window.location.reload();
-    }, 1800);
+    }, 1_800);
   };
 
   copyToClipboard = async () => {
-    const telemetry = `Browser: ${navigator.userAgent}\nOS: ${navigator.platform}\nMemory: ${((performance as any).memory?.usedJSHeapSize / 1048576).toFixed(2)}MB used`;
+    const mem = (performance as Performance & { memory?: { usedJSHeapSize: number } })
+      .memory;
+    const memStr = mem
+      ? `${(mem.usedJSHeapSize / 1_048_576).toFixed(2)} MB`
+      : "unavailable";
+
     const text = [
       `[OWDA_FATAL_ERROR] ${this.state.timestamp}`,
       `VERSION: ${this.props.version ?? "unknown"}`,
-      `ID: ${this.state.error?.name}`,
-      `MSG: ${this.state.error?.message}`,
-      `TRACE:\n${this.state.error?.stack}`,
-      `\n--- COMPONENT_TREE ---\n${this.state.errorInfo?.componentStack}`,
-      `\n--- TELEMETRY ---\n${telemetry}`
-    ].filter(Boolean).join("\n");
+      `ID: ${this.state.error?.name ?? "Error"}`,
+      `MSG: ${this.state.error?.message ?? ""}`,
+      `TRACE:\n${this.state.error?.stack ?? ""}`,
+      `\n--- COMPONENT_TREE ---\n${this.state.errorInfo?.componentStack ?? ""}`,
+      `\n--- TELEMETRY ---`,
+      `Browser: ${navigator.userAgent}`,
+      `Memory: ${memStr}`,
+    ]
+      .filter(Boolean)
+      .join("\n");
 
     try {
       await navigator.clipboard.writeText(text);
       this.setState({ copied: true });
-      setTimeout(() => this.setState({ copied: false }), 2000);
-    } catch (e) {
-      console.error("Clipboard blocked.");
+      setTimeout(() => this.setState({ copied: false }), 2_000);
+    } catch {
+      console.error("Clipboard write blocked.");
     }
   };
 
@@ -84,45 +100,51 @@ export class GlobalErrorBoundary extends React.Component<Props, State> {
 
     return (
       <div className="min-h-screen bg-[#FDFCFB] text-[#1A1A1A] font-mono flex flex-col items-center justify-center p-6 relative select-none">
-        {/* CRT Scanline & Grain Overlay */}
-        <div className="absolute inset-0 pointer-events-none z-100 opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
-        
         <motion.div
           initial={{ x: -2, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
+          animate={{ x:  0, opacity: 1 }}
           className="w-full max-w-6xl z-10 flex flex-col gap-6"
         >
-          {/* TOP BAR: SYSTEM STATUS */}
+          {/* Status bar */}
           <div className="flex flex-col md:flex-row items-center justify-between border-b-4 border-[#1A1A1A] pb-4 gap-4">
             <div className="flex items-center gap-4">
-              <motion.div 
+              <motion.div
                 animate={{ scale: [1, 1.1, 1] }}
-                transition={{ repeat: Infinity, duration: 0.2 }}
+                transition={{ repeat: Infinity, duration: 0.5 }}
                 className="p-3 bg-[#ff4d4d] border-2 border-[#1A1A1A] shadow-[4px_4px_0px_#1A1A1A]"
               >
                 <ShieldAlert className="w-8 h-8 text-white" />
               </motion.div>
               <div>
-                <h1 className="text-3xl font-black uppercase tracking-tighter leading-none">Kernel_Panic.0x88</h1>
-                <div className="flex gap-2 mt-2">
-                  <span className="text-[9px] font-black bg-[#1A1A1A] text-white px-2 py-0.5">CORE: HALTED</span>
-                  <span className="text-[9px] font-black bg-[#D4FF00] border border-[#1A1A1A] px-2 py-0.5">TIME: {this.state.timestamp}</span>
-                  <span className="text-[9px] font-black bg-[#D4FF00] border border-[#1A1A1A] px-2 py-0.5">v{this.props.version ?? "?"}</span>
+                <h1 className="text-3xl font-black uppercase tracking-tighter leading-none">
+                  Kernel_Panic.0x88
+                </h1>
+                <div className="flex gap-2 mt-2 flex-wrap">
+                  <span className="text-[9px] font-black bg-[#1A1A1A] text-white px-2 py-0.5">
+                    CORE: HALTED
+                  </span>
+                  <span className="text-[9px] font-black bg-[#D4FF00] border border-[#1A1A1A] px-2 py-0.5">
+                    TIME: {this.state.timestamp}
+                  </span>
+                  <span className="text-[9px] font-black bg-[#D4FF00] border border-[#1A1A1A] px-2 py-0.5">
+                    v{this.props.version ?? "?"}
+                  </span>
                 </div>
               </div>
             </div>
-            
             <div className="text-right flex flex-col items-end">
-              <span className="text-[10px] font-bold text-[#1A1A1A] opacity-40 uppercase">Architecture: TypeScript/React</span>
+              <span className="text-[10px] font-bold opacity-40 uppercase">
+                Architecture: TypeScript / React
+              </span>
               <div className="flex items-center gap-2 mt-1">
                 <Activity className="w-3 h-3 text-[#ff4d4d]" />
-                <span className="text-[10px] font-black">Memory_Heap_Overload_Risk: LOW</span>
+                <span className="text-[10px] font-black">Heap_Risk: LOW</span>
               </div>
             </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* LOG CONSOLE */}
+            {/* Log console */}
             <div className="lg:col-span-8 flex flex-col gap-4">
               <div className="bg-[#1A1A1A] text-[#D4FF00] p-1 flex justify-between px-4 items-center">
                 <span className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
@@ -130,83 +152,96 @@ export class GlobalErrorBoundary extends React.Component<Props, State> {
                 </span>
                 <span className="text-[8px]">ASCII_ENCODING_UTF8</span>
               </div>
-              
+
               <div className="bg-white border-4 border-[#1A1A1A] shadow-[12px_12px_0px_rgba(26,26,26,0.1)] h-[55vh] overflow-hidden flex flex-col">
                 <div className="flex-1 p-6 overflow-y-auto font-mono text-[11px] leading-relaxed bg-[#F9F8F6]">
                   <div className="text-white bg-[#1A1A1A] p-4 border-l-8 border-[#ff4d4d] mb-6">
-                    <p className="font-black text-sm uppercase mb-1 underline italic">Critical_Fault_Summary:</p>
-                    {this.state.error?.message || "No error message provided by core."}
+                    <p className="font-black text-sm uppercase mb-1 underline italic">
+                      Critical_Fault_Summary:
+                    </p>
+                    {this.state.error?.message ?? "No error message provided."}
                   </div>
-                  
                   <div className="space-y-4 opacity-80">
                     <p className="text-[#1A1A1A] whitespace-pre-wrap">
                       <span className="text-[#ff4d4d] font-black mr-2">[STACK_TRACE]</span>
                       {this.state.error?.stack}
                     </p>
                     <div className="border-t-2 border-dashed border-[#1A1A1A]/20 pt-4">
-                      <span className="text-[#1A1A1A] font-black mr-2 text-[10px] uppercase">[Component_Hierarchy_State]</span>
-                      <p className="mt-2 whitespace-pre-wrap">{this.state.errorInfo?.componentStack}</p>
+                      <span className="text-[#1A1A1A] font-black mr-2 text-[10px] uppercase">
+                        [Component_Hierarchy]
+                      </span>
+                      <p className="mt-2 whitespace-pre-wrap">
+                        {this.state.errorInfo?.componentStack}
+                      </p>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* ACTION SIDEBAR */}
+            {/* Action sidebar */}
             <div className="lg:col-span-4 flex flex-col gap-6">
               <div className="bg-white border-4 border-[#1A1A1A] p-6 shadow-[6px_6px_0px_#1A1A1A]">
                 <div className="flex items-center gap-2 mb-6 border-b-2 border-[#1A1A1A] pb-2">
                   <Info size={14} />
                   <h3 className="font-black text-xs uppercase">Resolution_Protocols</h3>
                 </div>
-                
                 <div className="space-y-3">
-                  <ActionButton 
+                  <ActionButton
                     onClick={() => this.setState({ hasError: false })}
-                    label="Re-Initialize_Node" 
+                    label="Re-Initialize_Node"
                     icon={<Cpu size={14} />}
                     variant="primary"
                   />
-                  <ActionButton 
+                  <ActionButton
                     onClick={this.handleHardReset}
-                    label="Purge_&_Hard_Reboot" 
+                    label="Purge_&_Hard_Reboot"
                     icon={<RefreshCw size={14} />}
                     variant="danger"
                   />
-                  <ActionButton 
+                  <ActionButton
                     onClick={this.copyToClipboard}
-                    label={this.state.copied ? "Logs_Captured" : "Copy_Diagnostic_Bundle"} 
-                    icon={this.state.copied ? <ClipboardCheck size={14}/> : <Clipboard size={14}/>}
+                    label={this.state.copied ? "Logs_Captured" : "Copy_Diagnostic_Bundle"}
+                    icon={
+                      this.state.copied
+                        ? <ClipboardCheck size={14} />
+                        : <Clipboard size={14} />
+                    }
                     variant="ghost"
                   />
                 </div>
               </div>
 
               <div className="bg-[#D4FF00] border-4 border-[#1A1A1A] p-4 flex flex-col gap-2 shadow-[6px_6px_0px_#1A1A1A]">
-                 <span className="text-[10px] font-black flex items-center gap-2">
-                    <Database size={12} /> ENGINE_ADVISORY
-                 </span>
-                 <p className="text-[9px] font-bold leading-tight uppercase">
-                    Cache persistence detected. If errors continue, use "Purge & Hard Reboot" to clear all local indexedDB/LocalStorage entries.
-                 </p>
+                <span className="text-[10px] font-black flex items-center gap-2">
+                  <Database size={12} /> ENGINE_ADVISORY
+                </span>
+                <p className="text-[9px] font-bold leading-tight uppercase">
+                  Cache persistence detected. If errors continue, use "Purge &
+                  Hard Reboot" to clear all localStorage/IndexedDB entries.
+                </p>
               </div>
             </div>
           </div>
         </motion.div>
 
-        {/* REBOOT OVERLAY */}
+        {/* Reboot overlay */}
         <AnimatePresence>
           {this.state.recoveryStep === "rebooting" && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              exit={{   opacity: 0 }}
               className="fixed inset-0 z-200 bg-[#1A1A1A] text-[#D4FF00] flex flex-col items-center justify-center font-mono"
             >
               <RefreshCw className="w-12 h-12 animate-spin mb-4" />
               <div className="flex flex-col items-center gap-2">
-                <span className="text-lg font-black tracking-widest animate-pulse">CLEANING_REGISTRY...</span>
-                <span className="text-[10px] opacity-60 uppercase">Deleting local data clusters</span>
+                <span className="text-lg font-black tracking-widest animate-pulse">
+                  CLEANING_REGISTRY...
+                </span>
+                <span className="text-[10px] opacity-60 uppercase">
+                  Deleting local data clusters
+                </span>
               </div>
             </motion.div>
           )}
@@ -216,21 +251,27 @@ export class GlobalErrorBoundary extends React.Component<Props, State> {
   }
 }
 
-// Sub-component for UI consistency
-const ActionButton = ({ onClick, label, icon, variant }: any) => {
-  const styles = {
-    primary: "bg-[#D4FF00] text-[#1A1A1A]",
-    danger: "bg-[#ff4d4d] text-white",
-    ghost: "bg-white text-[#1A1A1A]"
-  };
+// ─── Sub-component ─────────────────────────────────────────────────────────────
 
-  return (
-    <button
-      onClick={onClick}
-      className={`w-full py-4 px-4 border-2 border-[#1A1A1A] shadow-[3px_3px_0px_#1A1A1A] active:translate-y-0.5 active:shadow-none transition-all flex items-center justify-between font-black text-[10px] uppercase ${styles[variant as keyof typeof styles]}`}
-    >
-      {label}
-      {icon}
-    </button>
-  );
+type Variant = "primary" | "danger" | "ghost";
+
+const VARIANT_STYLES: Record<Variant, string> = {
+  primary: "bg-[#D4FF00] text-[#1A1A1A]",
+  danger:  "bg-[#ff4d4d] text-white",
+  ghost:   "bg-white text-[#1A1A1A]",
 };
+
+const ActionButton: React.FC<{
+  onClick: () => void;
+  label:   string;
+  icon:    React.ReactNode;
+  variant: Variant;
+}> = ({ onClick, label, icon, variant }) => (
+  <button
+    onClick={onClick}
+    className={`w-full py-4 px-4 border-2 border-[#1A1A1A] shadow-[3px_3px_0px_#1A1A1A] active:translate-y-0.5 active:shadow-none transition-all flex items-center justify-between font-black text-[10px] uppercase ${VARIANT_STYLES[variant]}`}
+  >
+    {label}
+    {icon}
+  </button>
+);

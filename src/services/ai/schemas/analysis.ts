@@ -15,13 +15,24 @@ export const ReactionTypeSchema = z.enum([
   "Unknown",
 ]);
 
-export const ClaudeAnalysisSchema = z.object({
+export const AnalysisSchema = z.object({
+  /** Plain-English overview of the reaction */
   overview: z.string().min(1),
+
+  /** Technical mechanistic explanation */
   mechanism: z.string().min(1),
-  reactionType: ReactionTypeSchema,
-  enthalpy: z.number().optional(),
-  entropy: z.number().optional(),
-  gibbs: z.number().optional(),
+
+  /** Reaction classification - Uses Zod v4 clean fallback catch block */
+  reactionType: ReactionTypeSchema.catch("Unknown"),
+
+  /** Standard enthalpy ΔH° in kJ/mol. Adheres to strict anti-null rules */
+  enthalpy: z.number().finite().optional(),
+
+  /** Standard entropy ΔS° in J/(mol·K). Adheres to strict anti-null rules */
+  entropy: z.number().finite().optional(),
+
+  /** Standard Gibbs free energy ΔG° in kJ/mol. Adheres to strict anti-null rules */
+  gibbs: z.number().finite().optional(),
 });
 
-export type ClaudeAnalysisPayload = z.infer<typeof ClaudeAnalysisSchema>;
+export type AnalysisPayload = z.infer<typeof AnalysisSchema>;

@@ -315,7 +315,7 @@ export function WorkspacePage() {
           <div className="bg-[#1A1A1A] text-[#D4FF00] p-4 font-mono text-[10px] h-48 border-4 border-[#1A1A1A] shadow-[4px_4px_0px_#D4FF00] flex flex-col">
             <div className="flex justify-between border-b border-[#D4FF00]/20 pb-2 mb-2 uppercase font-black tracking-widest">
               <span>Sys_Terminal</span>
-              <span>v4.0</span>
+              <span>V1.0.0</span>
             </div>
             <div className="flex-1 overflow-y-auto space-y-1 custom-scrollbar">
               {logs.map((l, i) => (
